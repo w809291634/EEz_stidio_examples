@@ -69,8 +69,9 @@ EEZ_stidio_examples/
 | [`font-entry-form/`](font-entry-form/) | 中文字体条目正确形态：`renderingEngine` + `lvglRanges` 数字表 + 相对路径 | ★ 决定性变量是条目形态不是字体文件；CLI 不烘字体 .c（P-0140） |
 | [`two-state-styles/`](two-state-styles/) | DEFAULT/CHECKED 两态样式 + `checkedState` 初始态 + 子元素颜色继承 | ★ 两态都要写全（只写默认态被主题盖住）；toggle 按钮要显式加 CHECKABLE |
 | [`gesture-page-switch/`](gesture-page-switch/) | 多独立 screen + GESTURE 离散切屏（3 页循环），不靠 CHECKED 高亮 | ★ Switch 的 `evt` 输入要 `type:'any'` 否则 Checks 空转；双线裸 `GESTURE` 防静默丢线；手势只能 PC_SIM/真机验收（P-0141） |
+| [`one-way-gesture-switch/`](one-way-gesture-switch/) | **只允许单向手势**：仅接 LEFT（左滑循环 A→B→C→A），右滑根本不画组件/不连线 | ★ 单向 = 干脆不生成另一方向的 Switch/Action（别"画了不连"否则 Checks 报 not connected）；其余安全要点与双向版一致 |
 
-> 验证状态（2026-10-19）：五个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
+> 验证状态（2026-10-19）：六个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
 > 产物清单对账）。GUI/Run 目检与 `font-entry-form` 的字体 .c 提取需 GUI 会话，
-> 受单实例限制未自动执行，步骤见各示例 README。手势运行时行为（gesture-page-switch）
-> 按 P-0141 必须在 PC_SIM/真机验收，Run 预览不产生 GESTURE 事件。
+> 受单实例限制未自动执行，步骤见各示例 README。手势运行时行为（gesture-page-switch /
+> one-way-gesture-switch）按 P-0141 必须在 PC_SIM/真机验收，Run 预览不产生 GESTURE 事件。
