@@ -1,5 +1,9 @@
 # w1-animation-image — EEZ 手册 W1. AnimationImage 多帧动画图
 
+> **手动操作入门**：想在 EEZ Studio 软件里用鼠标手动添加 AnimationImage？
+> 看 [GUI-操作指南.md](GUI-操作指南.md)（导入帧图 → 拖控件 → Images/Duration/Repeat
+> 三件套设置 → Build，含常见问题对照表）。
+
 ## 演示点
 
 EEZ 控件面板 **Visualiser 组的 AnimationImage**（控件手册 W1 节）："多帧 Image"——
