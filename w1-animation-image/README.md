@@ -15,22 +15,31 @@ spinner（240° 渐暗尾巴）+ 800ms/轮 + 无限循环。
   （即 `EEZ-Studio-reference-guide.pdf` 的 W1 节；手册 EXAMPLES 节为空，故本示例即补位）；
 - 官方 LVGL 文档：https://docs.lvgl.io/master/widgets/animimg.html
 
-**属性三件套（手册原文）**：
+**属性三件套（手册原文）**——手册里 AnimationImage 可改属性就这 4 个
+（几何/flags/样式/hiddenExpr 属于全控件通用属性，非本控件特有）：
 | 属性 | 含义 | 本例 |
 |---|---|---|
-| Images | 帧位图名列表（按数组顺序播放） | anim_frame_0..7 |
+| Images | 帧位图名列表（按数组顺序播放） | anim_frame_0..7（两个控件共用） |
 | Duration | 一整轮时长（ms） | 800 |
-| Repeat infinite / Repeat count | 无限循环开关 / 有限次数 | 无限 |
+| Repeat infinite | 无限循环开关 | 左侧 = true |
+| Repeat count | 关闭无限后的次数 | 右侧 = 3（播 3 轮自动停） |
+
+**示例布局**：左右双 AnimationImage 对照——左 `repeat infinite`（蓝标），右
+`repeat count = 3`（橙标，3 轮后停在末帧），4 个属性全覆盖。
 
 **生成代码**（`src/ui/screens.c`，与手册语义一一对应）：
 
 ```c
+// 左：repeat infinite = true
 lv_obj_t *obj = lv_animimg_create(parent_obj);
 static const lv_image_dsc_t *images[8] = { &img_anim_frame_0, ... };
 lv_animimg_set_src(obj, (const void **)images, 8);
 lv_animimg_set_duration(obj, 800);
 lv_animimg_set_repeat_count(obj, LV_ANIM_REPEAT_INFINITE);
 lv_animimg_start(obj);
+
+// 右：repeatInfinite = false, repeat = 3
+lv_animimg_set_repeat_count(obj, 3);   // 播 3 轮自动停在末帧
 ```
 
 ## 工程结构

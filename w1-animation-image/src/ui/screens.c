@@ -13,7 +13,7 @@
 objects_t objects;
 
 static const char *screen_names[] = { "Main" };
-static const char *object_names[] = { "main", "lbl_title", "lbl_info", "anim_spinner" };
+static const char *object_names[] = { "main", "lbl_title", "lbl_inf", "lbl_rep", "lbl_info", "anim_infinite", "anim_repeat3" };
 
 //
 // Event handlers
@@ -61,11 +61,49 @@ void create_screen_main() {
             lv_label_set_text_static(obj, "W1. AnimationImage");
         }
         {
+            // lbl_inf
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.lbl_inf = obj;
+            lv_obj_set_pos(obj, 40, 204);
+            lv_obj_set_size(obj, 160, 30);
+            lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
+            lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
+            lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_bottom(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_row(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_column(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_outline_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0x8fd3ff), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text_static(obj, "repeat infinite");
+        }
+        {
+            // lbl_rep
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.lbl_rep = obj;
+            lv_obj_set_pos(obj, 280, 204);
+            lv_obj_set_size(obj, 160, 30);
+            lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
+            lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
+            lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_bottom(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_row(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_column(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_outline_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xffd38f), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text_static(obj, "repeat count = 3");
+        }
+        {
             // lbl_info
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.lbl_info = obj;
-            lv_obj_set_pos(obj, 40, 220);
-            lv_obj_set_size(obj, 400, 36);
+            lv_obj_set_pos(obj, 40, 258);
+            lv_obj_set_size(obj, 400, 30);
             lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
             lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
             lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -77,13 +115,13 @@ void create_screen_main() {
             lv_obj_set_style_border_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_outline_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(obj, lv_color_hex(0xcccccc), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_label_set_text_static(obj, "8 frames x 800 ms / loop, repeat infinite");
+            lv_label_set_text_static(obj, "8 frames x 800 ms / loop");
         }
         {
-            // anim_spinner
+            // anim_infinite
             lv_obj_t *obj = lv_animimg_create(parent_obj);
-            objects.anim_spinner = obj;
-            lv_obj_set_pos(obj, 192, 90);
+            objects.anim_infinite = obj;
+            lv_obj_set_pos(obj, 72, 100);
             lv_obj_set_size(obj, 96, 96);
             static const lv_image_dsc_t *images[8] = {
                 &img_anim_frame_0,
@@ -98,6 +136,28 @@ void create_screen_main() {
             lv_animimg_set_src(obj, (const void **)images, 8);
             lv_animimg_set_duration(obj, 800);
             lv_animimg_set_repeat_count(obj, LV_ANIM_REPEAT_INFINITE);
+            lv_animimg_start(obj);
+            lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
+        }
+        {
+            // anim_repeat3
+            lv_obj_t *obj = lv_animimg_create(parent_obj);
+            objects.anim_repeat3 = obj;
+            lv_obj_set_pos(obj, 312, 100);
+            lv_obj_set_size(obj, 96, 96);
+            static const lv_image_dsc_t *images[8] = {
+                &img_anim_frame_0,
+                &img_anim_frame_1,
+                &img_anim_frame_2,
+                &img_anim_frame_3,
+                &img_anim_frame_4,
+                &img_anim_frame_5,
+                &img_anim_frame_6,
+                &img_anim_frame_7,
+            };
+            lv_animimg_set_src(obj, (const void **)images, 8);
+            lv_animimg_set_duration(obj, 800);
+            lv_animimg_set_repeat_count(obj, 3);
             lv_animimg_start(obj);
             lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
         }

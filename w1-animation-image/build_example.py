@@ -172,15 +172,28 @@ def build_project():
             "alwaysBuild": False,
         })
 
-    anim = widget(
+    # 手册 W1 全部 4 个属性的双组合演示：
+    #   左：Images + Duration + Repeat infinite=true      （无限循环）
+    #   右：Images + Duration + repeatInfinite=false + repeat=3（播 3 轮自动停）
+    anim_inf = widget(
         "LVGLAnimationImageWidget",
-        (SCREEN_W - FRAME) // 2, 90, FRAME, FRAME,
-        identifier="anim_spinner",
+        120 - FRAME // 2, 100, FRAME, FRAME,
+        identifier="anim_infinite",
         children=[],
         images=[{"objID": oid(), "image": f["name"]} for f in frames],
         duration=DURATION_MS,
         repeatInfinite=True,
         repeat=1,
+    )
+    anim_n = widget(
+        "LVGLAnimationImageWidget",
+        360 - FRAME // 2, 100, FRAME, FRAME,
+        identifier="anim_repeat3",
+        children=[],
+        images=[{"objID": oid(), "image": f["name"]} for f in frames],
+        duration=DURATION_MS,
+        repeatInfinite=False,
+        repeat=3,
     )
 
     screen = widget(
@@ -192,11 +205,15 @@ def build_project():
         children=[
             label(40, 30, 400, 36, "W1. AnimationImage",
                   color="0xFFFFFF", identifier="lbl_title"),
-            label(40, 220, 400, 36,
-                  "%d frames x %d ms / loop, repeat infinite"
-                  % (N_FRAMES, DURATION_MS),
+            label(40, 204, 160, 30, "repeat infinite",
+                  color="0x8FD3FF", identifier="lbl_inf"),
+            label(280, 204, 160, 30, "repeat count = 3",
+                  color="0xFFD38F", identifier="lbl_rep"),
+            label(40, 258, 400, 30,
+                  "%d frames x %d ms / loop" % (N_FRAMES, DURATION_MS),
                   color="0xCCCCCC", identifier="lbl_info"),
-            anim,
+            anim_inf,
+            anim_n,
         ],
     )
     page = {
