@@ -70,6 +70,7 @@ EEZ_stidio_examples/
 | [`two-state-styles/`](two-state-styles/) | DEFAULT/CHECKED 两态样式 + `checkedState` 初始态 + 子元素颜色继承 | ★ 两态都要写全（只写默认态被主题盖住）；toggle 按钮要显式加 CHECKABLE |
 | [`gesture-page-switch/`](gesture-page-switch/) | 多独立 screen + GESTURE 离散切屏（3 页循环），不靠 CHECKED 高亮 | ★ Switch 的 `evt` 输入要 `type:'any'` 否则 Checks 空转；双线裸 `GESTURE` 防静默丢线；手势只能 PC_SIM/真机验收（P-0141） |
 | [`one-way-gesture-switch/`](one-way-gesture-switch/) | **只允许单向手势**：仅接 LEFT（左滑循环 A→B→C→A），右滑根本不画组件/不连线 | ★ 单向 = 干脆不生成另一方向的 Switch/Action（别"画了不连"否则 Checks 报 not connected）；其余安全要点与双向版一致 |
+| [`tabview-swipe-switch/`](tabview-swipe-switch/) | **Tabview 隐藏 tab 栏 + 原生跟手滑动切页**（与手势版互补：跟手可弹回 vs 离散整页翻） | ★ `tabviewSize=0` 即 `lv_tabview_set_tab_bar_size(tv,0)` 隐藏 bar；滑动吸附是 tabview 原生行为（SNAP_CENTER + SCROLL_END），零流组件零连线；Tab 控件裁掉滚动族 flag 防抢手势 |
 
 > 验证状态（2026-10-19）：六个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
 > 产物清单对账）。手势运行时行为（gesture-page-switch / one-way-gesture-switch）按 P-0141
@@ -77,7 +78,7 @@ EEZ_stidio_examples/
 > `font-entry-form` 的字体 .c 已落地：`src/ui/ui_font_cn14.c` / `ui_font_cn20.c`
 > （黑体子集 159 字形，lv_font_conv bpp4 生成，仿真器链接通过）。
 >
-> **六个示例均另通过了 PC_SIM 仿真器一键编译验证（编译+链接 0 错，方法见第 4 节）。**
+> **七个示例均另通过了 PC_SIM 仿真器一键编译验证（编译+链接 0 错，方法见第 4 节）。**
 
 ---
 
