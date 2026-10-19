@@ -1,0 +1,3 @@
+# 构建产物（可再生产物，重新构建即再生）
+src/
+.eez-project-build
