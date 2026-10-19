@@ -93,18 +93,22 @@ EEZ_stidio_examples/
 
 | 文件 | 作用 |
 |---|---|
-| `run_sim.bat` | 注入本工程绝对路径到 `SIM_TARGET_PROJ_DIR`，删 `build_rel` 强制重配置，再调 PC_SIM 的 `build.bat` |
+| `run_sim.bat` | 注入本工程绝对路径到 `SIM_TARGET_PROJ_DIR`，直接调 `setup_env.bat` + cmake；**build_rel 生成在本 bat 同目录**（每工程独立缓存） |
 | `main.c` | 仿真入口：`lv_init` + SDL 窗口/鼠标/滚轮/键盘 + `ui_init` 主循环 |
 | `lv_conf.h` | 本工程专用仿真配置（经 `LV_CONF_PATH` 传入） |
 
 ### 4.2 用法
 
 ```
-双击  <工程>\design\sim_cmake\run_sim.bat        → 编译（产物 PC_SIM\...\bin\main_rel.exe）
-双击  <工程>\design\sim_cmake\run_sim.bat run    → 编译并运行（手势/点击在窗口里验）
+双击  <工程>\design\sim_cmake\run_sim.bat        → 编译并启动仿真器窗口
+运行  run_sim.bat build                          → 只编译不启动
 ```
 
-首次编译全量编 LVGL 较慢（ccache 缓存加速）；之后换工程重跑即可。
+- 产物：`PC_SIM\lv_port_pc_vscode_v9.5\bin\main.exe`（每次编译覆盖，即"当前工程"的仿真器）。
+- **缓存**：`build_rel` 在各工程 `design\sim_cmake\` 下、永不删除；每个示例首次编译全量编
+  LVGL 一次（ccache 加速），之后增量秒级（`ninja: no work to do`）；切换工程互不污染。
+- 旧机制（共享 `PC_SIM\build_rel` + 每次删除重编）已废弃；PC_SIM 下遗留的
+  `build_rel`/`build_dbg` 不再被 run_sim.bat 使用，可手动删除腾空间。
 
 ### 4.3 关键坑（已解决，改回/新工程时注意）
 
@@ -115,8 +119,8 @@ EEZ_stidio_examples/
    它的 `main` 转调 `SDL_main`，定义了反而报 undefined reference to SDL_main）。
 3. **run_sim.bat 必须 ASCII**：bat 里写中文注释会被 GBK 控制台搞坏字节导致 set 失效；
    括号块内的 echo 文本不能含 `)`（会被当成块结束括号，报"此时不应有 …"且退出码 255）。
-4. **切换工程靠重配置**：PC_SIM 的 CMakeLists 内容不变时 cmake 不会重配置，会一直编旧工程，
-   所以 run_sim.bat 删 `build_rel` 强制重配置——代价是每次全量重编（ccache 已大幅缓解）。
+4. **换工程零成本**：每示例独立 `build_rel`（bat 同目录），环境变量恒定、cmake 自动增量
+   重配置，不需要任何删除动作；绝不要把别的示例的 build 目录拷过来混用。
 5. **首次全量编译偶发 ninja 依赖文件目录竞态**（个别 LVGL 文件报
    `opening dependency file ...: No such file or directory`）：重跑一次 run_sim.bat 即过。
 6. **路径层级**：`SIM_TARGET_PROJ_DIR` 必须是**工程根**（CMakeLists 往后拼
