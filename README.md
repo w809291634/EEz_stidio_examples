@@ -64,4 +64,11 @@ EEZ_stidio_examples/
 
 | 目录 | 演示什么 | 一句话 / 关键坑 |
 |---|---|---|
-| （暂无；新增示例后在此加行） | | |
+| [`minimal-lvgl-project/`](minimal-lvgl-project/) | 最小可构建工程：`.eez-project` JSON 骨架 + headless 构建判据 | ★ "构建成功"≠有产物，要判据+产物对账；`destinationFolder` 要显式配 |
+| [`widget-gallery/`](widget-gallery/) | 7 类常用控件（Button/Slider/Switch/Bar/Spinner/Checkbox/Panel）的正确 JSON 形态 | ★ widgetFlags 漏 `CHECKABLE` → 控件变装饰件（LVGL 9.4 `lv_obj.c` 硬条件） |
+| [`font-entry-form/`](font-entry-form/) | 中文字体条目正确形态：`renderingEngine` + `lvglRanges` 数字表 + 相对路径 | ★ 决定性变量是条目形态不是字体文件；CLI 不烘字体 .c（P-0140） |
+| [`two-state-styles/`](two-state-styles/) | DEFAULT/CHECKED 两态样式 + `checkedState` 初始态 + 子元素颜色继承 | ★ 两态都要写全（只写默认态被主题盖住）；toggle 按钮要显式加 CHECKABLE |
+
+> 验证状态（2026-10-19）：四个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
+> 产物清单对账）。GUI/Run 目检与 `font-entry-form` 的字体 .c 提取需 GUI 会话，
+> 受单实例限制未自动执行，步骤见各示例 README。

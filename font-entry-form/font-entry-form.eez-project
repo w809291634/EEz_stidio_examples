@@ -1,0 +1,1140 @@
+{
+  "themesVersion": 1,
+  "objID": "98a68d39-db81-408e-82ff-ba6e5bceab0f",
+  "settings": {
+    "objID": "657de626-7601-4620-a4b1-4638a7e21a42",
+    "general": {
+      "objID": "c6c6c1b1-5557-48ea-a897-a02bb04c6697",
+      "projectVersion": "v3",
+      "projectType": "lvgl",
+      "lvglVersion": "9.4.0",
+      "extensions": [],
+      "imports": [],
+      "flowSupport": true,
+      "displayWidth": 480,
+      "displayHeight": 320,
+      "circularDisplay": false,
+      "displayBorderRadius": 0,
+      "darkTheme": true,
+      "colorBpp": "16",
+      "bitmapColorFormat": "BGR",
+      "resourceFiles": [],
+      "hiddenWidgetLines": "dimmed",
+      "dimmedLinesOpacity": "20",
+      "embedBitmaps": true,
+      "embedFonts": true,
+      "cacheFonts": true
+    },
+    "build": {
+      "objID": "b9972f0d-7dc5-4a9f-82cd-e44831ceccef",
+      "configurations": [
+        {
+          "objID": "5067ff67-2dd1-4430-a20a-02fad38d7676",
+          "name": "Default"
+        }
+      ],
+      "destinationFolder": "src\\ui",
+      "separateFolderForImagesAndFonts": true,
+      "imageExportMode": "source",
+      "fontExportMode": "source",
+      "fileSystemPath": "",
+      "lvglInclude": "lvgl.h",
+      "screensLifetimeSupport": false,
+      "useDockerDesktop": true,
+      "generateSourceCodeForEezFramework": true,
+      "compressFlowDefinition": false,
+      "executionQueueSize": 1000,
+      "expressionEvaluatorStackSize": 20,
+      "files": [
+        {
+          "objID": "01ee6267-888e-403b-814c-99c701a34995",
+          "fileName": "screens.h",
+          "template": "#ifndef EEZ_LVGL_UI_SCREENS_H\r\n#define EEZ_LVGL_UI_SCREENS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_SCREENS_DECL}\r\n//${eez-studio LVGL_SCREENS_DECL_EXT}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_SCREENS_H*/"
+        },
+        {
+          "objID": "0adc951e-4a31-433e-b5e8-3e9ecee41d92",
+          "fileName": "screens.c",
+          "template": "#include <string.h>\n\n#include \"screens.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n#include \"actions.h\"\n#include \"vars.h\"\n#include \"styles.h\"\n#include \"ui.h\"\n\n//${eez-studio LVGL_SCREENS_DEF}\n//${eez-studio LVGL_SCREENS_DEF_EXT}"
+        },
+        {
+          "objID": "ee4b90a3-b8ae-4961-805a-75800c9f6edd",
+          "fileName": "actions.h",
+          "template": "#ifndef EEZ_LVGL_UI_EVENTS_H\r\n#define EEZ_LVGL_UI_EVENTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_ACTIONS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_EVENTS_H*/"
+        },
+        {
+          "objID": "78709e1f-de5a-4d8a-9506-3bd9199e1a08",
+          "fileName": "vars.h",
+          "template": "#ifndef EEZ_LVGL_UI_VARS_H\r\n#define EEZ_LVGL_UI_VARS_H\r\n\r\n#include <stdint.h>\r\n#include <stdbool.h>\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n// enum declarations\r\n\r\n//${eez-studio FLOW_ENUMS}\r\n\r\n// Flow global variables\r\n\r\n//${eez-studio FLOW_GLOBAL_VARIABLES_ENUM}\r\n\r\n// Native global variables\r\n\r\n//${eez-studio LVGL_VARS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_VARS_H*/"
+        },
+        {
+          "objID": "9c15d09f-f3a1-42e1-b4ea-2d35415594b4",
+          "fileName": "structs.h",
+          "template": "#ifndef EEZ_LVGL_UI_STRUCTS_H\n#define EEZ_LVGL_UI_STRUCTS_H\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n\n#include <eez/flow/flow.h>\n#include <stdint.h>\n#include <stdbool.h>\n\n#include \"vars.h\"\n\nusing namespace eez;\n\n//${eez-studio FLOW_STRUCTS}\n\n//${eez-studio FLOW_STRUCT_VALUES}\n\n#endif\n\n#endif /*EEZ_LVGL_UI_STRUCTS_H*/\n"
+        },
+        {
+          "objID": "1745a0ff-bdc0-4c23-9298-34cb87ccd3f1",
+          "fileName": "images.h",
+          "template": "#ifndef EEZ_LVGL_UI_IMAGES_H\r\n#define EEZ_LVGL_UI_IMAGES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_IMAGES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_IMAGES_H*/"
+        },
+        {
+          "objID": "a86293b9-c155-4ac4-8f52-38f5878d5085",
+          "fileName": "images.c",
+          "template": "#include \"images.h\"\n\n//${eez-studio LVGL_IMAGES_DEF}"
+        },
+        {
+          "objID": "a68524c1-4617-4305-b5fe-251a2a19b2a0",
+          "fileName": "fonts.h",
+          "template": "#ifndef EEZ_LVGL_UI_FONTS_H\r\n#define EEZ_LVGL_UI_FONTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_FONTS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_FONTS_H*/"
+        },
+        {
+          "objID": "34c5f280-3038-4922-85d3-5753346e0149",
+          "fileName": "styles.h",
+          "template": "#ifndef EEZ_LVGL_UI_STYLES_H\r\n#define EEZ_LVGL_UI_STYLES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_STYLES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_STYLES_H*/"
+        },
+        {
+          "objID": "f141e8da-16d2-4029-a29e-8f74ccc28e48",
+          "fileName": "styles.c",
+          "template": "#include \"styles.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n\n//${eez-studio LVGL_STYLES_DEF}\n"
+        },
+        {
+          "objID": "4420206b-224b-4c48-b464-0f654f04fd15",
+          "fileName": "ui.h",
+          "template": "#ifndef EEZ_LVGL_UI_GUI_H\n#define EEZ_LVGL_UI_GUI_H\n\n//${eez-studio LVGL_INCLUDE}\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n#include <eez/flow/lvgl_api.h>\n#endif\n\n#if !defined(EEZ_FOR_LVGL)\n#include \"screens.h\"\n#endif\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n//${eez-studio GUI_ASSETS_DECL}\n\nvoid ui_init();\nvoid ui_tick();\n\n#if !defined(EEZ_FOR_LVGL)\nvoid loadScreen(enum ScreensEnum screenId);\n#endif\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // EEZ_LVGL_UI_GUI_H"
+        },
+        {
+          "objID": "792bd66a-ab2b-400d-96bf-b9e69e7b0bf9",
+          "fileName": "ui.c",
+          "template": "#if defined(EEZ_FOR_LVGL)\n#include <eez/core/vars.h>\n#endif\n\n#include \"ui.h\"\n#include \"screens.h\"\n#include \"images.h\"\n#include \"actions.h\"\n#include \"vars.h\"\n\n//${eez-studio GUI_ASSETS_DEF}\n\n//${eez-studio LVGL_NATIVE_VARS_TABLE_DEF}\n\n//${eez-studio LVGL_ACTIONS_ARRAY_DEF}\n\n#if defined(EEZ_FOR_LVGL)\n\nvoid ui_init() {\n    eez_flow_init(assets, sizeof(assets), (lv_obj_t **)&objects, sizeof(objects), images, sizeof(images), actions);\n}\n\nvoid ui_tick() {\n    eez_flow_tick();\n    tick_screen(g_currentScreen);\n}\n\n#else\n\nstatic int16_t currentScreen = -1;\n\nstatic lv_obj_t *getLvglObjectFromIndex(int32_t index) {\n    if (index == -1) {\n        return 0;\n    }\n    return ((lv_obj_t **)&objects)[index];\n}\n\nvoid loadScreen(enum ScreensEnum screenId) {\n    currentScreen = screenId - 1;\n    lv_obj_t *screen = getLvglObjectFromIndex(currentScreen);\n    lv_scr_load_anim(screen, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);\n}\n\nvoid ui_init() {\n    create_screens();\n//${eez-studio LVGL_LOAD_FIRST_SCREEN}\n}\n\nvoid ui_tick() {\n    tick_screen(currentScreen);\n}\n\n#endif\n"
+        }
+      ]
+    }
+  },
+  "variables": {
+    "objID": "9873c512-0791-41f6-b294-604a7b5c709e",
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "userPages": [
+    {
+      "objID": "a3ef2afb-9831-434f-99a9-c9f1c42bd128",
+      "components": [
+        {
+          "objID": "8b806bbe-c5d4-4b09-8604-bb22ad54a4ce",
+          "type": "LVGLScreenWidget",
+          "left": 0,
+          "top": 0,
+          "width": 480,
+          "height": 320,
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "objID": "fb1a30bb-1de9-4183-aed2-8c3b2bb31704",
+            "useStyle": "default",
+            "conditionalStyles": [],
+            "childStyles": []
+          },
+          "timeline": [],
+          "eventHandlers": [],
+          "leftUnit": "px",
+          "topUnit": "px",
+          "widthUnit": "px",
+          "heightUnit": "px",
+          "children": [
+            {
+              "objID": "9a82362c-fa8f-4136-9425-0c92d8afe742",
+              "type": "LVGLLabelWidget",
+              "left": 40,
+              "top": 36,
+              "width": 400,
+              "height": 32,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "129ad5ee-858c-4104-b8ff-95357addaae3",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE",
+              "hiddenFlagType": "literal",
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "d368a005-14f4-47ae-910d-8ba07dedd8c3",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "text_color": "0xFFFFFF",
+                      "text_font": "cn20"
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "text": "EEZ 字体示例",
+              "textType": "literal",
+              "longMode": "WRAP",
+              "recolor": false,
+              "useStaticText": true
+            },
+            {
+              "objID": "62c5b4a7-c0cb-4b3f-b0ca-19833412c72c",
+              "type": "LVGLLabelWidget",
+              "left": 40,
+              "top": 88,
+              "width": 400,
+              "height": 24,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "8dfb7e79-3201-4c11-a7ce-95156b499a41",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE",
+              "hiddenFlagType": "literal",
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "ce1b9fcc-8517-469c-80fb-a88600594bf9",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "text_color": "0xFFFFFF",
+                      "text_font": "cn14"
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "text": "中文渲染正常，没有豆腐块",
+              "textType": "literal",
+              "longMode": "WRAP",
+              "recolor": false,
+              "useStaticText": true
+            },
+            {
+              "objID": "f1dcbc4b-adb3-4a0c-9d29-72fb4db2ffc6",
+              "type": "LVGLLabelWidget",
+              "left": 40,
+              "top": 122,
+              "width": 400,
+              "height": 24,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "f0e7cbf2-e36e-4402-9472-d07c9c71b5c2",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE",
+              "hiddenFlagType": "literal",
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "833aa5d5-844c-4627-9fc3-5f43c199dfb3",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "text_color": "0xFFFFFF",
+                      "text_font": "cn14"
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "text": "0123456789 ABCDEFG abcdefg",
+              "textType": "literal",
+              "longMode": "WRAP",
+              "recolor": false,
+              "useStaticText": true
+            },
+            {
+              "objID": "1ae7a49a-766a-4902-bb05-8ddca8064e3b",
+              "type": "LVGLLabelWidget",
+              "left": 40,
+              "top": 156,
+              "width": 400,
+              "height": 24,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "23d0a07f-fb23-470d-8ae0-db5ac967f121",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE",
+              "hiddenFlagType": "literal",
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "a909a04f-112f-4832-b588-161cbf340e9e",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "text_color": "0xFFFFFF",
+                      "text_font": "cn14"
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "text": "标点符号：，。！？（）",
+              "textType": "literal",
+              "longMode": "WRAP",
+              "recolor": false,
+              "useStaticText": true
+            },
+            {
+              "objID": "a7f602a7-3bfa-4c16-9efe-3461b1c51eff",
+              "type": "LVGLLabelWidget",
+              "left": 40,
+              "top": 190,
+              "width": 400,
+              "height": 24,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "a119a450-7235-4f74-8760-e54e22f50d64",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE",
+              "hiddenFlagType": "literal",
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "a92531c0-31ee-48b8-a62b-7d2814cce27c",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "text_color": "0xFFFFFF",
+                      "text_font": "cn14"
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "text": "同一文件，两个字号",
+              "textType": "literal",
+              "longMode": "WRAP",
+              "recolor": false,
+              "useStaticText": true
+            },
+            {
+              "objID": "5bc96939-30ca-49d3-adbf-922b1fdf8688",
+              "type": "LVGLLabelWidget",
+              "left": 40,
+              "top": 224,
+              "width": 400,
+              "height": 24,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "0dae5b70-8e03-4784-b463-580dc6e91bce",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE",
+              "hiddenFlagType": "literal",
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "1245acef-2dd5-4a14-964f-00001186406b",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "text_color": "0xFFFFFF",
+                      "text_font": "cn14"
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "text": "码位在 lvglRanges 数字表中",
+              "textType": "literal",
+              "longMode": "WRAP",
+              "recolor": false,
+              "useStaticText": true
+            },
+            {
+              "objID": "73979ecf-ccf2-4551-81c3-10b66767c002",
+              "type": "LVGLLabelWidget",
+              "left": 40,
+              "top": 258,
+              "width": 400,
+              "height": 24,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "0f3429d4-b195-4c06-ac91-7e6a2dd22623",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE",
+              "hiddenFlagType": "literal",
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "2fbfa2a7-b0b9-4f57-a9f1-9af7d12fff50",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "text_color": "0xFFFFFF",
+                      "text_font": "cn14"
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "text": "glyphs 为空，encodings 为数字表",
+              "textType": "literal",
+              "longMode": "WRAP",
+              "recolor": false,
+              "useStaticText": true
+            }
+          ],
+          "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
+          "hiddenFlagType": "literal",
+          "clickableFlagType": "literal",
+          "flagScrollbarMode": "OFF",
+          "checkedStateType": "literal",
+          "disabledStateType": "literal",
+          "states": "",
+          "localStyles": {
+            "objID": "cac5e559-fe06-4906-b760-d1ba7d1d82ad",
+            "definition": {}
+          },
+          "groupIndex": 0
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "componentGroups": [],
+      "userProperties": [],
+      "name": "Main",
+      "left": 0,
+      "top": 0,
+      "width": 480,
+      "height": 320,
+      "isUsedAsUserWidget": false,
+      "createAtStart": true,
+      "deleteOnScreenUnload": false
+    }
+  ],
+  "userWidgets": [],
+  "lvglStyles": {
+    "objID": "7dfd6c16-a37c-462c-a4fc-83489ec4efe2",
+    "styles": [],
+    "defaultStyles": {}
+  },
+  "lvglGroups": {
+    "objID": "d5b581ae-ff44-4cb3-a362-9ca8721d06c4",
+    "groups": []
+  },
+  "fonts": [
+    {
+      "objID": "00b47e4b-455c-441c-88d5-fa787b4f3ff8",
+      "name": "cn20",
+      "description": "黑体子集 20px（159 字形，演示标题）",
+      "renderingEngine": "LVGL",
+      "source": {
+        "objID": "4df43820-4e9b-4419-8ce5-e7a4b32c53b6",
+        "filePath": "fonts/simhei-subset.ttf",
+        "size": 20
+      },
+      "bpp": 4,
+      "threshold": 128,
+      "glyphs": [],
+      "screenOrientation": "all",
+      "alwaysBuild": false,
+      "lvglRanges": "32-126,12290,19968,19990,20004,20010,20013,20026,20214,20301,20307,20320,20363,21462,21495,21516,22260,22359,22909,23383,24120,24211,24341,24418,24577,25552,25806,25991,26159,26377,26465,26579,26631,27491,27785,27809,28040,28096,28210,28781,28857,30028,30333,30340,30446,30721,30830,31034,31354,31526,31616,32463,33104,33539,35910,36825,38598,39564,40657,65281,65288-65289,65292,65306,65311",
+      "lvglSymbols": "",
+      "lvglAdditionalSources": [],
+      "lvglGlyphs": {
+        "encodings": [
+          {
+            "from": 32,
+            "to": 126
+          },
+          {
+            "from": 12290,
+            "to": 12290
+          },
+          {
+            "from": 19968,
+            "to": 19968
+          },
+          {
+            "from": 19990,
+            "to": 19990
+          },
+          {
+            "from": 20004,
+            "to": 20004
+          },
+          {
+            "from": 20010,
+            "to": 20010
+          },
+          {
+            "from": 20013,
+            "to": 20013
+          },
+          {
+            "from": 20026,
+            "to": 20026
+          },
+          {
+            "from": 20214,
+            "to": 20214
+          },
+          {
+            "from": 20301,
+            "to": 20301
+          },
+          {
+            "from": 20307,
+            "to": 20307
+          },
+          {
+            "from": 20320,
+            "to": 20320
+          },
+          {
+            "from": 20363,
+            "to": 20363
+          },
+          {
+            "from": 21462,
+            "to": 21462
+          },
+          {
+            "from": 21495,
+            "to": 21495
+          },
+          {
+            "from": 21516,
+            "to": 21516
+          },
+          {
+            "from": 22260,
+            "to": 22260
+          },
+          {
+            "from": 22359,
+            "to": 22359
+          },
+          {
+            "from": 22909,
+            "to": 22909
+          },
+          {
+            "from": 23383,
+            "to": 23383
+          },
+          {
+            "from": 24120,
+            "to": 24120
+          },
+          {
+            "from": 24211,
+            "to": 24211
+          },
+          {
+            "from": 24341,
+            "to": 24341
+          },
+          {
+            "from": 24418,
+            "to": 24418
+          },
+          {
+            "from": 24577,
+            "to": 24577
+          },
+          {
+            "from": 25552,
+            "to": 25552
+          },
+          {
+            "from": 25806,
+            "to": 25806
+          },
+          {
+            "from": 25991,
+            "to": 25991
+          },
+          {
+            "from": 26159,
+            "to": 26159
+          },
+          {
+            "from": 26377,
+            "to": 26377
+          },
+          {
+            "from": 26465,
+            "to": 26465
+          },
+          {
+            "from": 26579,
+            "to": 26579
+          },
+          {
+            "from": 26631,
+            "to": 26631
+          },
+          {
+            "from": 27491,
+            "to": 27491
+          },
+          {
+            "from": 27785,
+            "to": 27785
+          },
+          {
+            "from": 27809,
+            "to": 27809
+          },
+          {
+            "from": 28040,
+            "to": 28040
+          },
+          {
+            "from": 28096,
+            "to": 28096
+          },
+          {
+            "from": 28210,
+            "to": 28210
+          },
+          {
+            "from": 28781,
+            "to": 28781
+          },
+          {
+            "from": 28857,
+            "to": 28857
+          },
+          {
+            "from": 30028,
+            "to": 30028
+          },
+          {
+            "from": 30333,
+            "to": 30333
+          },
+          {
+            "from": 30340,
+            "to": 30340
+          },
+          {
+            "from": 30446,
+            "to": 30446
+          },
+          {
+            "from": 30721,
+            "to": 30721
+          },
+          {
+            "from": 30830,
+            "to": 30830
+          },
+          {
+            "from": 31034,
+            "to": 31034
+          },
+          {
+            "from": 31354,
+            "to": 31354
+          },
+          {
+            "from": 31526,
+            "to": 31526
+          },
+          {
+            "from": 31616,
+            "to": 31616
+          },
+          {
+            "from": 32463,
+            "to": 32463
+          },
+          {
+            "from": 33104,
+            "to": 33104
+          },
+          {
+            "from": 33539,
+            "to": 33539
+          },
+          {
+            "from": 35910,
+            "to": 35910
+          },
+          {
+            "from": 36825,
+            "to": 36825
+          },
+          {
+            "from": 38598,
+            "to": 38598
+          },
+          {
+            "from": 39564,
+            "to": 39564
+          },
+          {
+            "from": 40657,
+            "to": 40657
+          },
+          {
+            "from": 65281,
+            "to": 65281
+          },
+          {
+            "from": 65288,
+            "to": 65289
+          },
+          {
+            "from": 65292,
+            "to": 65292
+          },
+          {
+            "from": 65306,
+            "to": 65306
+          },
+          {
+            "from": 65311,
+            "to": 65311
+          }
+        ],
+        "symbols": ""
+      }
+    },
+    {
+      "objID": "da351c9b-302c-4315-ac20-309944817822",
+      "name": "cn14",
+      "description": "黑体子集 14px（159 字形，演示正文）",
+      "renderingEngine": "LVGL",
+      "source": {
+        "objID": "b1c5c05e-a269-4f80-b6cd-eaca0ffd33e2",
+        "filePath": "fonts/simhei-subset.ttf",
+        "size": 14
+      },
+      "bpp": 4,
+      "threshold": 128,
+      "glyphs": [],
+      "screenOrientation": "all",
+      "alwaysBuild": false,
+      "lvglRanges": "32-126,12290,19968,19990,20004,20010,20013,20026,20214,20301,20307,20320,20363,21462,21495,21516,22260,22359,22909,23383,24120,24211,24341,24418,24577,25552,25806,25991,26159,26377,26465,26579,26631,27491,27785,27809,28040,28096,28210,28781,28857,30028,30333,30340,30446,30721,30830,31034,31354,31526,31616,32463,33104,33539,35910,36825,38598,39564,40657,65281,65288-65289,65292,65306,65311",
+      "lvglSymbols": "",
+      "lvglAdditionalSources": [],
+      "lvglGlyphs": {
+        "encodings": [
+          {
+            "from": 32,
+            "to": 126
+          },
+          {
+            "from": 12290,
+            "to": 12290
+          },
+          {
+            "from": 19968,
+            "to": 19968
+          },
+          {
+            "from": 19990,
+            "to": 19990
+          },
+          {
+            "from": 20004,
+            "to": 20004
+          },
+          {
+            "from": 20010,
+            "to": 20010
+          },
+          {
+            "from": 20013,
+            "to": 20013
+          },
+          {
+            "from": 20026,
+            "to": 20026
+          },
+          {
+            "from": 20214,
+            "to": 20214
+          },
+          {
+            "from": 20301,
+            "to": 20301
+          },
+          {
+            "from": 20307,
+            "to": 20307
+          },
+          {
+            "from": 20320,
+            "to": 20320
+          },
+          {
+            "from": 20363,
+            "to": 20363
+          },
+          {
+            "from": 21462,
+            "to": 21462
+          },
+          {
+            "from": 21495,
+            "to": 21495
+          },
+          {
+            "from": 21516,
+            "to": 21516
+          },
+          {
+            "from": 22260,
+            "to": 22260
+          },
+          {
+            "from": 22359,
+            "to": 22359
+          },
+          {
+            "from": 22909,
+            "to": 22909
+          },
+          {
+            "from": 23383,
+            "to": 23383
+          },
+          {
+            "from": 24120,
+            "to": 24120
+          },
+          {
+            "from": 24211,
+            "to": 24211
+          },
+          {
+            "from": 24341,
+            "to": 24341
+          },
+          {
+            "from": 24418,
+            "to": 24418
+          },
+          {
+            "from": 24577,
+            "to": 24577
+          },
+          {
+            "from": 25552,
+            "to": 25552
+          },
+          {
+            "from": 25806,
+            "to": 25806
+          },
+          {
+            "from": 25991,
+            "to": 25991
+          },
+          {
+            "from": 26159,
+            "to": 26159
+          },
+          {
+            "from": 26377,
+            "to": 26377
+          },
+          {
+            "from": 26465,
+            "to": 26465
+          },
+          {
+            "from": 26579,
+            "to": 26579
+          },
+          {
+            "from": 26631,
+            "to": 26631
+          },
+          {
+            "from": 27491,
+            "to": 27491
+          },
+          {
+            "from": 27785,
+            "to": 27785
+          },
+          {
+            "from": 27809,
+            "to": 27809
+          },
+          {
+            "from": 28040,
+            "to": 28040
+          },
+          {
+            "from": 28096,
+            "to": 28096
+          },
+          {
+            "from": 28210,
+            "to": 28210
+          },
+          {
+            "from": 28781,
+            "to": 28781
+          },
+          {
+            "from": 28857,
+            "to": 28857
+          },
+          {
+            "from": 30028,
+            "to": 30028
+          },
+          {
+            "from": 30333,
+            "to": 30333
+          },
+          {
+            "from": 30340,
+            "to": 30340
+          },
+          {
+            "from": 30446,
+            "to": 30446
+          },
+          {
+            "from": 30721,
+            "to": 30721
+          },
+          {
+            "from": 30830,
+            "to": 30830
+          },
+          {
+            "from": 31034,
+            "to": 31034
+          },
+          {
+            "from": 31354,
+            "to": 31354
+          },
+          {
+            "from": 31526,
+            "to": 31526
+          },
+          {
+            "from": 31616,
+            "to": 31616
+          },
+          {
+            "from": 32463,
+            "to": 32463
+          },
+          {
+            "from": 33104,
+            "to": 33104
+          },
+          {
+            "from": 33539,
+            "to": 33539
+          },
+          {
+            "from": 35910,
+            "to": 35910
+          },
+          {
+            "from": 36825,
+            "to": 36825
+          },
+          {
+            "from": 38598,
+            "to": 38598
+          },
+          {
+            "from": 39564,
+            "to": 39564
+          },
+          {
+            "from": 40657,
+            "to": 40657
+          },
+          {
+            "from": 65281,
+            "to": 65281
+          },
+          {
+            "from": 65288,
+            "to": 65289
+          },
+          {
+            "from": 65292,
+            "to": 65292
+          },
+          {
+            "from": 65306,
+            "to": 65306
+          },
+          {
+            "from": 65311,
+            "to": 65311
+          }
+        ],
+        "symbols": ""
+      }
+    }
+  ],
+  "bitmaps": [],
+  "colors": [],
+  "themes": [
+    {
+      "objID": "a3668563-3a1a-44df-bba2-09a0a7fe56dc",
+      "name": "Default",
+      "colors": []
+    }
+  ]
+}
