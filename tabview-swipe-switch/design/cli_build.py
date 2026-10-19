@@ -23,8 +23,9 @@ while time.time() < deadline:
     time.sleep(2)
     logf.flush()
     txt = open(logf.name, encoding='utf-8', errors='replace').read()
-    if 'Build successfully finished' in txt or \
-            'No error and no warning detected' in txt:
+    if 'Build successfully finished' in txt:
+        # 必须等这一句——"No error..."在文件列表之前，提前退出会掐死
+        # EEZ Flow engine（eez-flow.h/cpp）的发射阶段
         hit = 'ok'
         break
     if 'error' in txt.lower() and 'cache_util' not in txt and \

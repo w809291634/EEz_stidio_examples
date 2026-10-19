@@ -29,6 +29,10 @@
 
 **一个示例工程 = 一个独立子目录**，目录名即示例主题（kebab-case，见名知意）：
 
+> ★ **新建示例照 [`示例工程模板说明.md`](示例工程模板说明.md) 走**：目录骨架、
+> 逐字拷贝 vs 按例重写的文件清单、五步固定流程、固化坑速查表都在那里
+> （以 `w1-animation-image` 为蓝本）。
+
 ```
 EEZ_stidio_examples/
 ├── README.md              ← 本文件
@@ -72,15 +76,16 @@ EEZ_stidio_examples/
 | [`one-way-gesture-switch/`](one-way-gesture-switch/) | **只允许单向手势**：仅接 LEFT（左滑循环 A→B→C→A），右滑根本不画组件/不连线 | ★ 单向 = 干脆不生成另一方向的 Switch/Action（别"画了不连"否则 Checks 报 not connected）；其余安全要点与双向版一致 |
 | [`tabview-swipe-switch/`](tabview-swipe-switch/) | **Tabview 隐藏 tab 栏 + 原生跟手滑动切页**（与手势版互补：跟手可弹回 vs 离散整页翻） | ★ Tabview 里必须放 Tab 控件（手册配置 1）；`tabviewSize=0` 隐藏 bar；★ Tab（页）必须保留 `SNAPPABLE`——吸附滚动模式下页是吸附点，裁掉它=零吸附点=拖不动（eez-test 同款：都只裁 SCROLLABLE） |
 | [`w1-animation-image/`](w1-animation-image/) | **手册 W1. AnimationImage 多帧动画图**：8 帧 spinner，Duration/Repeat 语义，`lv_animimg_*` 代码链 | ★ CLI 构建不产图片 .c（P-0140 图片版）——`gen_images.py` 补烘 `lv_image_dsc_t`（ARGB8888 字节序 B,G,R,A）；帧位图=内嵌 data-URI PNG（bpp32 透明） |
+| [`app-list-scroll/`](app-list-scroll/) | **可滚动 App 列表**（watch applist 同款：竖向吸附滚动容器 + CHECKABLE 行 + PRESSED 高亮）+ List 控件 vs 容器左列对照 | ★ List (LVGL) 是 wip → 用普通 Container 自建；`flagScrollDirection:"ver"`+`scrollSnapY:"center"`；行必须保留 SNAPPABLE（P-0150）；样式枚举传名字符串（"VER"）；lv_list 动态行=ui_init 后 C 补 |
+| [`w67-w3-w2-slider-arc-bar/`](w67-w3-w2-slider-arc-bar/) | **调节与指示**（W67 Slider / W3 Bar / W2 Arc）：一个 flow 全局变量 `g_val` 同时驱动 Slider/Arc（可拖双向）/Bar（跟随）/Label（表达式拼接），零 C | ★ Slider/Arc 的 value 是 assignable（双向回写）、Bar 是 input（单向）；全局变量 `native:true` 需自实现 `set_var_xxx` 桥，纯 EEZ 用 `false`；文本拼接 `"s"+int` 直接可用 |
 
-> 验证状态（2026-10-19）：六个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
+> 验证状态（2026-10-19）：九个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
 > 产物清单对账）。手势运行时行为（gesture-page-switch / one-way-gesture-switch）按 P-0141
 > 必须在 PC_SIM/真机验收，Run 预览不产生 GESTURE 事件。
 > `font-entry-form` 的字体 .c 已落地：`src/ui/ui_font_cn14.c` / `ui_font_cn20.c`
 > （黑体子集 159 字形，lv_font_conv bpp4 生成，仿真器链接通过）。
 >
-> **七个示例均另通过了 PC_SIM 仿真器一键编译验证（编译+链接 0 错，方法见第 4 节）。**
-> 第 8 个示例 `w1-animation-image` 同样通过（2026-10-19）。
+> **全部示例均通过了 PC_SIM 仿真器一键编译验证（编译+链接 0 错，方法见第 4 节）。**
 
 ---
 

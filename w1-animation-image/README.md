@@ -1,5 +1,9 @@
 # w1-animation-image — EEZ 手册 W1. AnimationImage 多帧动画图
 
+> 本工程同时是**新示例的模板蓝本**：`build_example.py` 骨架、`design/cli_build.py`、
+> `design/sim_cmake/` 三件套都是后续示例的拷贝源——建新示例照
+> [`../示例工程模板说明.md`](../示例工程模板说明.md) 走五步流程。
+
 > **手动操作入门**：想在 EEZ Studio 软件里用鼠标手动添加 AnimationImage？
 > 看 [GUI-操作指南.md](GUI-操作指南.md)（导入帧图 → 拖控件 → Images/Duration/Repeat
 > 三件套设置 → Build，含常见问题对照表）。
