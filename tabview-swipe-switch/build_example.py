@@ -12,12 +12,14 @@
      （lv_tabview.c:190）+ LV_EVENT_SCROLL_END 自动吸附最近页（lv_tabview.c:344-373）。
      不画任何 Switch/Action 流组件，零连线 —— 与 gesture-page-switch（GESTURE 离散切屏）
      互补：要"跟手拖一半弹回"用本例，要"整页离散翻页"用手势版。
-  3. Tab 控件直接作 Tabview 子控件（配置 1，watch.eez-project 同款实测形态）；
+  3. Tab 控件直接作 Tabview 子控件（配置 1，EEZ 手册明示的第一种形态；
+     "Place Tab widgets immediately under TabView"——Tabview 里必须放 Tab 才成页）；
      Tab 自身 bg 着色区分页，tabName 用 ASCII（P-0022：tabName 不进字形收集，中文会豆腐——
      本例 tab 栏隐藏所以 tabName 不可见，但仍取 ASCII 稳妥）。
-  4. widgetFlags 与 widgetFlagsUser：tab 栏隐藏后页间滑动只由 tabview 内容区承担，
-     Tab 控件去掉内部滚动族 flag（SCROLLABLE/SCROLL_ELASTIC/SCROLL_MOMENTUM/SNAPPABLE），
-     防止页内容拖拽与页切换抢手势（watch 工程同款裁剪）。
+  4. widgetFlags = 官方默认 **只裁 SCROLLABLE**（eez-test 实测可滑形态）：
+     ★ Tab（页）必须保留 SNAPPABLE —— 内容区是 SNAP_CENTER 吸附滚动，页是"吸附点"，
+       没有该标志内核就判定无可滚距离（lv_indev_scroll.c:353-360 has_more_snap_points）。
+     ★ label 保留 SCROLL_CHAIN_*，保证拖动链任何起点都能传导到内容区。
 
 屏幕基线：480x320 · LVGL 9.4 · EEZ Studio 0.29（projectVersion=v3）。
 验证：CLI 构建 0 错 0 警 + PC_SIM 仿真器编译链接通过（滑动行为在仿真器窗口拖拽验收）。
@@ -53,11 +55,15 @@ BUILD_TEMPLATES = {
 # 各控件类型的默认 widgetFlags（LVGL 9 口径，取自 EEZ Studio 0.29 控件定义）
 DEFAULT_FLAGS = {
     "LVGLScreenWidget": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
-    "LVGLLabelWidget": "GESTURE_BUBBLE",
-    # EEZ Tabview 控件 defaultFlags（asar 挖证 101192667）
-    "LVGLTabviewWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-    # Tab 控件：去掉内部滚动族 flag，防页内容拖拽与页切换抢手势（watch 同款裁剪）
-    "LVGLTabWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+    "LVGLLabelWidget": "GESTURE_BUBBLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+    # EEZ Tabview 控件 flags = 官方默认 **只裁 SCROLLABLE**（eez-test 实测可滑形态）。
+    # ★ Tabview 本体不滚动（滚动由内部 content 承担），本体保留 SCROLLABLE 反而多余。
+    "LVGLTabviewWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+    # ★ Tab（页）flags 同上：**SNAPPABLE 绝不能裁**！内容区是 SNAP_CENTER 吸附滚动模式，
+    #   内核 lv_indev_scroll.c:353-360 在有 snap 时调 has_more_snap_points() 数"可吸附子对象"，
+    #   页没有 SNAPPABLE → 找不到吸附点 → 内容区被判定该方向不可滚 → 拖动全部作废
+    #   （症状：PRESSING 连发而 0 次 SCROLL）。旧结论"裁掉滚动族防抢手势"是错的（watch 裁法）。
+    "LVGLTabWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
 }
 
 ZERO_PAD = {

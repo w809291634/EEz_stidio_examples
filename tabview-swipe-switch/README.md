@@ -52,14 +52,28 @@ EEZ Studio 0.29（projectVersion=v3）· LVGL 9.4 · 480x320 · PC_SIM 仿真验
 
 ## 踩过的坑
 
-1. **Tab 控件的 widgetFlags 裁掉了滚动族**（`SCROLLABLE/SCROLL_ELASTIC/SCROLL_MOMENTUM/
-   SCROLL_WITH_ARROW/SNAPPABLE` 不保留）：页内容自身若可滚，会跟页切换抢手势；
-   `watch.eez-project` 同款裁剪。Tabview 本体保留完整默认 flags（含 SCROLLABLE+SNAPPABLE）。
-2. **tabName 用 ASCII**：EEZ 的 tabName 不进字形收集（KB P-0022），中文 tab 名会豆腐；
+1. **★ Tabview 里必须放 Tab 控件（EEZ 手册"配置 1"）**：控件面板里 `Tabview` 与 `Tab`
+   是两个控件——Tabview 只是骨架，**把 Tab 控件直接放进 Tabview 才会生成页**
+   （发射 `lv_tabview_add_tab`）。EEZ Studio 内置手册明示两种形态：① Tab 直接放
+   Tabview 下（本例）；② Tabview 下放两个容器（第一个当 tab Bar、第二个当 Content，
+   Tab 放 Content 里）。
+2. **★ Tab（页）必须保留 `SNAPPABLE`——"无法滑动"的真正根因**：内容区是
+   `SNAP_CENTER` 吸附滚动模式，内核拖动判定不走普通溢出，而是
+   `has_more_snap_points()`（lv_indev_scroll.c:353-360）数**带 SNAPPABLE 标志的子对象**
+   当吸附点；页被裁掉 SNAPPABLE → 零吸附点 → 内容区被判"该方向不可滚" → 拖动全程
+   只有 PRESSING、零 SCROLL（注入实测 97 次 PRESSING / 0 次 SCROLL 实锤）。
+   旧结论"裁掉滚动族防抢手势"（watch 裁法）是错的，watch 版滑不动同源。
+   **正确形态（eez-test 实测可滑同款）：Tabview 与 Tab 都只裁 `SCROLLABLE`**，
+   生成产物里只有一条 `lv_obj_remove_flag(obj, LV_OBJ_FLAG_SCROLLABLE)`。
+3. **label 保留 `SCROLL_CHAIN_HOR/VER`**：label 不可点击、拖动落点一般是 PAGE，
+   但保留链标志可让任何起点的拖动都传导到内容区（防御性，零成本）。
+4. **tabName 用 ASCII**：EEZ 的 tabName 不进字形收集（KB P-0022），中文 tab 名会豆腐；
    本例 tab 栏虽隐藏（tabName 不可见），仍取 `p1/p2` 稳妥。
-3. **tabview 背景要透明**（MAIN `bg_opa=0`），页底色在 Tab 控件上着——否则 tabview
+5. **tabview 背景要透明**（MAIN `bg_opa=0`），页底色在 Tab 控件上着——否则 tabview
    自身背景盖住页配色（KB P-0021 主题发白问题的本例变体）。
-4. **EEZ 无头 CLI 不烘字体**（KB P-0140）：本例刻意只用默认字体 + ASCII，无字体条目，
+6. **EEZ 无头 CLI 不烘字体**（KB P-0140）：本例刻意只用默认字体 + ASCII，无字体条目，
    CLI 产物即完整；若要加中文，参考 `font-entry-form` 的 lv_font_conv 离线链路。
-5. **不要在 tabview 外再套 changeScreen 翻页**：`changeScreen fadeMode` 动画与 tabview
+7. **不要在 tabview 外再套 changeScreen 翻页**：`changeScreen fadeMode` 动画与 tabview
    的 SCROLL_END 吸附有竞态（KB P-0029），本例单屏、原生吸附，从结构上绕开。
+8. **离屏页 `lv_obj_get_width` 返回 0 是假象**：LVGL 惰性布局，未滚到的页未参与布局；
+   判尺寸前先 `lv_obj_update_layout(tv)`，否则会误诊"第二页 0×0"。
