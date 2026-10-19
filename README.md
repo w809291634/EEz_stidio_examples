@@ -71,6 +71,7 @@ EEZ_stidio_examples/
 | [`gesture-page-switch/`](gesture-page-switch/) | 多独立 screen + GESTURE 离散切屏（3 页循环），不靠 CHECKED 高亮 | ★ Switch 的 `evt` 输入要 `type:'any'` 否则 Checks 空转；双线裸 `GESTURE` 防静默丢线；手势只能 PC_SIM/真机验收（P-0141） |
 | [`one-way-gesture-switch/`](one-way-gesture-switch/) | **只允许单向手势**：仅接 LEFT（左滑循环 A→B→C→A），右滑根本不画组件/不连线 | ★ 单向 = 干脆不生成另一方向的 Switch/Action（别"画了不连"否则 Checks 报 not connected）；其余安全要点与双向版一致 |
 | [`tabview-swipe-switch/`](tabview-swipe-switch/) | **Tabview 隐藏 tab 栏 + 原生跟手滑动切页**（与手势版互补：跟手可弹回 vs 离散整页翻） | ★ Tabview 里必须放 Tab 控件（手册配置 1）；`tabviewSize=0` 隐藏 bar；★ Tab（页）必须保留 `SNAPPABLE`——吸附滚动模式下页是吸附点，裁掉它=零吸附点=拖不动（eez-test 同款：都只裁 SCROLLABLE） |
+| [`w1-animation-image/`](w1-animation-image/) | **手册 W1. AnimationImage 多帧动画图**：8 帧 spinner，Duration/Repeat 语义，`lv_animimg_*` 代码链 | ★ CLI 构建不产图片 .c（P-0140 图片版）——`gen_images.py` 补烘 `lv_image_dsc_t`（ARGB8888 字节序 B,G,R,A）；帧位图=内嵌 data-URI PNG（bpp32 透明） |
 
 > 验证状态（2026-10-19）：六个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
 > 产物清单对账）。手势运行时行为（gesture-page-switch / one-way-gesture-switch）按 P-0141
@@ -79,6 +80,7 @@ EEZ_stidio_examples/
 > （黑体子集 159 字形，lv_font_conv bpp4 生成，仿真器链接通过）。
 >
 > **七个示例均另通过了 PC_SIM 仿真器一键编译验证（编译+链接 0 错，方法见第 4 节）。**
+> 第 8 个示例 `w1-animation-image` 同样通过（2026-10-19）。
 
 ---
 
