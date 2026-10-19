@@ -78,6 +78,7 @@ EEZ_stidio_examples/
 | [`w1-animation-image/`](w1-animation-image/) | **手册 W1. AnimationImage 多帧动画图**：8 帧 spinner，Duration/Repeat 语义，`lv_animimg_*` 代码链 | ★ CLI 构建不产图片 .c（P-0140 图片版）——`gen_images.py` 补烘 `lv_image_dsc_t`（ARGB8888 字节序 B,G,R,A）；帧位图=内嵌 data-URI PNG（bpp32 透明） |
 | [`app-list-scroll/`](app-list-scroll/) | **可滚动 App 列表**（watch applist 同款：竖向吸附滚动容器 + CHECKABLE 行 + PRESSED 高亮）+ List 控件 vs 容器左列对照 | ★ List (LVGL) 是 wip → 用普通 Container 自建；`flagScrollDirection:"ver"`+`scrollSnapY:"center"`；行必须保留 SNAPPABLE（P-0150）；样式枚举传名字符串（"VER"）；lv_list 动态行=ui_init 后 C 补 |
 | [`w67-w3-w2-slider-arc-bar/`](w67-w3-w2-slider-arc-bar/) | **调节与指示**（W67 Slider / W3 Bar / W2 Arc）：一个 flow 全局变量 `g_val` 同时驱动 Slider/Arc（可拖双向）/Bar（跟随）/Label（表达式拼接），零 C | ★ Slider/Arc 的 value 是 assignable（双向回写）、Bar 是 input（单向）；全局变量 `native:true` 需自实现 `set_var_xxx` 桥，纯 EEZ 用 `false`；文本拼接 `"s"+int` 直接可用 |
+| [`perf-tabview-native-vs-eez/`](perf-tabview-native-vs-eez/) | **资源消耗对照**：同构 tabview，原生 LVGL vs EEZ 实测（RAM/Flash） | ★ 实测：RAM 堆 EEZ 仅多 ~1.4KB（+9%，frag 0）；flash text 多 ~1.33MB（flow 引擎+assets）——**RAM 可忽略，flash 是 MCU 主要代价**；perf 对照明细见其 README |
 
 > 验证状态（2026-10-19）：九个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
 > 产物清单对账）。手势运行时行为（gesture-page-switch / one-way-gesture-switch）按 P-0141
