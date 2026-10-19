@@ -8,7 +8,13 @@ project(lvgl C CXX)
 # ★ 用户配置区：整个仿真器只认下面这 8 项，其余都在文件下面
 # 换工程改第 1 行；换屏幕改 SIM_H_RES / SIM_V_RES。全部普通 set，命令行 -D 压不过。
 # ============================================================================
-set(TARGET_PROJ_DIR "D:/esp32_8266_files/esp-idf-v5.5.5_ol/examples/idf_v555_my_exps/p4_touch_lcd4_3_exp/lvgl_demo_ai/eez-test") # 目标工程根，其余路径都跟它拼
+# 目标工程根：优先读环境变量 SIM_TARGET_PROJ_DIR（每个 EEZ 示例的 run_sim.bat 注入自身绝对路径），
+# 否则回退到原 eez-test，保证未注入时兼容旧用法。其余路径都跟它拼。
+if(DEFINED ENV{SIM_TARGET_PROJ_DIR} AND NOT "$ENV{SIM_TARGET_PROJ_DIR}" STREQUAL "")
+    set(TARGET_PROJ_DIR "$ENV{SIM_TARGET_PROJ_DIR}")
+else()
+    set(TARGET_PROJ_DIR "D:/esp32_8266_files/esp-idf-v5.5.5_ol/examples/idf_v555_my_exps/p4_touch_lcd4_3_exp/lvgl_demo_ai/eez-test")
+endif()
 set(APL_LVGL_DIR "D:/esp32_8266_files/esp-idf-v5.5.5_ol/examples/idf_v555_my_exps/common/APL/apl_lvgl_v9_4")                     # LVGL 内核全路径（手填，不做自动查找）
 set(SIM_H_RES 800)                                                                                                                # 仿真窗口宽 = 实际 LCD 宽
 set(SIM_V_RES 480)                                                                                                                # 仿真窗口高 = 实际 LCD 高
@@ -144,6 +150,10 @@ target_include_directories(lvgl PUBLIC ${PROJECT_SOURCE_DIR} ${SDL2_INCLUDE_DIRS
 # 本 UI 纯控件+内嵌图,不需要矢量图形,把这些源文件改成"只当头文件"跳过编译。
 # ★ 正则必须两种斜杠都吃:Windows 上 SOURCES 是反斜杠路径,写死 "libs/thorvg"
 #   会静默匹配不上、thorvg 照编照挂(P-0076)
+# 内核 lvgl target 用 file(GLOB_RECURSE src/*.cpp) 把 src/libs/thorvg/*.cpp 一并收进来了。
+# 仿真 lv_conf.h 里 LV_USE_THORVG_INTERNAL 已置 0(不需要矢量图形,且 ThorVG 要的
+# config.h 全树都没有、PC 上编不过),所以这些 .cpp 在 #if LV_USE_THORVG_INTERNAL 里
+# 被整体跳过、编出来是空 TU;这里再标 HEADER_FILE_ONLY 省掉无谓编译。详见 P-0076
 get_target_property(_lv_srcs lvgl SOURCES)
 set(_blk 0)
 foreach(_s IN LISTS _lv_srcs)
