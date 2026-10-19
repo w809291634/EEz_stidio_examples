@@ -70,3 +70,82 @@ cd native\design\sim_cmake && run_sim.bat build    && bin\main_native.exe 看 [P
 3. 本例结论只针对 **tabview+静态控件** 这类简单 UI；控件越多，EEZ 的
    assets/screens 胶水占比越低，flow 的 **动态数据绑定收益**越大
    （见 slider-arc-bar：零 C 完成三方联动）。
+
+---
+
+## ★ MCU 实测（ESP32-P4 真机工程 idf 编译，lvgl_demo_ai 含 eez-test 全量 UI）
+
+用 `idf.py build` 产物 `lvgl_demo_v9.map` 按组件/成员拆分（`parse_map.py`）：
+
+### 按组件
+
+| 组件 | flash(B) | RAM-bss(B) |
+|---|---|---|
+| ESP-IDF 系统组件 | 2,267,056 | 16,849 |
+| **★ EEZ 自身（ui 组件：生成代码 + flow 引擎 + 字体/位图资源）** | **2,020,894** | **25,705** |
+| LVGL 内核（lvgl__lvgl，-Os） | 402,120 | 912 |
+| main 应用层 | 267,025 | 1,064 |
+| native 层 | 52,629 | 3,512 |
+| **合计** | **5,010,320** | **48,042** |
+
+### EEZ ui 组件 2.02MB 内部拆解（真相：字体才是大头）
+
+| 成员 | flash(B) | 说明 |
+|---|---|---|
+| ui_font_ya_hei_consolas_hybrid_13 | **1,343,625** | ★ 13px 中文字体（GB2312 一二级全量 ~6770 字） |
+| **eez-flow.cpp（flow 引擎本体）** | **205,771** | ★ EEZ 框架底价 ≈ **206KB flash** |
+| screens.c（全部 UI 生成代码，几十个屏） | 139,080 | |
+| 其余 6 档字体（54/15/26/11/16/22/19px） | ≈ 211,790 | |
+| ui.c（装配）+ 位图等 | ≈ 120,630 | |
+| **RAM：eez-flow.cpp 的 bss** | — | **25,705 B（flow 引擎静态表，全组件 RAM 全在它）** |
+
+### MCU 结论（修正 PC 推算）
+
+1. **EEZ 框架底价 = ~206KB flash + ~25.7KB RAM-bss**——远小于 PC 推算的 1.33MB
+   （PC 差值里大头其实是**字体/资源内容**，跟框架无关）。
+2. **真正的 flash 大头是中文字体**（一档全量 = 1.34MB）——与 EEZ/原生无关，
+   任何方案都要付；预算按字库档位算。
+3. RAM：flow 引擎 bss 25.7KB + 运行时堆（PC 实测 ~1.4KB 起步），
+   对 P4（768KB SRAM + PSRAM）毫无压力；192KB RAM 的 STM32 也放得下框架，
+   但帧缓冲才是决定项。
+4. P4 实测整机 flash 5.0MB（含 xiaozhi、wifi 等全部），16MB flash 余量充足。
+
+---
+
+## ★★ 公平账单：EEZ 核心框架**独有**的空间（section 级实测）
+
+> 记账原则：**屏幕 UI 创建代码原生方案同样要写**（手写等价 `lv_xxx_create` 链），
+> 所以 `screens.c`（139KB）算中性项；字体/位图任何方案都要（中性项）。
+> 只列 **原生方案不需要、纯因 EEZ 而存在** 的部分（`lvgl_demo_v9.map` section 级实测）：
+
+| EEZ 独有项 | flash(B) | RAM(B) | 实测来源 |
+|---|---|---|---|
+| **flow 引擎代码**（解释器/控件工厂/数据绑定/tick） | **186,108** (.flash.text) | — | eez-flow.cpp.obj |
+| **flow 引擎常量表** | **18,419** (.flash.rodata) | — | eez-flow.cpp.obj |
+| **assets 二进制**（flow 定义压缩流 + 常量表，原生方案没有这个概念） | **≈52,376** (.flash.rodata 主体) | — | ui.c.obj |
+| **flow 引擎静态表**（bss） | — | **25,701** (.dram0.bss) | eez-flow.cpp.obj |
+| 绑定/装配的 .data 初值 | ≈2,456 | ≈2,456(.data) | 两文件 .dram0.data |
+| **EEZ 核心独有合计** | **≈259KB** | **≈28KB** | |
+
+### 对照结论（修正后的公平数字）
+
+| 口径 | flash | RAM |
+|---|---|---|
+| ~~PC 推算的"框架开销"~~（误把字体算进去） | ~~1.33MB~~ | — |
+| **EEZ 核心独有（本节公平账单）** | **≈259KB** | **≈28KB（bss+data）** |
+| 中性项（原生同样要付）：UI 创建代码 | 139KB（EEZ 生成；原生=手写等价） | ≈0 |
+| 中性项：字体 7 档 / 位图 | ≈1.55MB / 25KB | ≈0 |
+
+**一句话：EEZ 核心的真实代价 ≈ 259KB flash + 28KB RAM（都在 P4 上可忽略；
+1MB flash 的 MCU 要掂量，512KB 以下排除）。**
+
+### 数字可信度（三重交叉验证 + 两个附注）
+
+1. **map 分桶**（组件级→成员级→section 级三层递进，本节所有数字的直接来源）；
+2. **assets 符号实测**：map 中 `.rodata.assets  0xcc98` = **52,376B**，与账单
+   "assets ≈52,376" 完全一致（ui.c 的 rodata 几乎 100% 就是 assets 数组）；
+3. **obj 静态 vs 链接后**：`size` 直接量 `eez-flow.cpp.obj` 得 284,344B(text)——
+   比最终链接的 206KB 大，因为 IDF 链接开 `--gc-sections`，引擎里未被引用的
+   部件（未用控件工厂/表达式分支）在链接期被裁掉。**obj 是上限，map 是真相**。
+4. **优化等级**：当前 sdkconfig 是 `CONFIG_COMPILER_OPTIMIZATION_PERF`(-O2)。
+   切 `SIZE`(-Os) 后 flow 引擎还能再缩（经验值 15~30%）；要压 flash 就切它。
