@@ -82,6 +82,7 @@ EEZ_stidio_examples/
 | [`w14-w35-w62-chart-led-scale/`](w14-w35-w62-chart-led-scale/) | **数据可视化与状态指示**（W14 Chart / W35 Led / W62 Scale） | ★ Chart 在 EEZ 是空壳（零属性）→ ui_init 后 C 喂 series；★ Meter 仅 LVGL 8.x（9.4 没有）→ 用 Scale 替代；Led 的 color/brightness 都是 expression 可绑定；Scale 属性可选项多、只写要覆盖的键 |
 | [`w23-w59-w73-w16-select-switch/`](w23-w59-w73-w16-select-switch/) | **选择与开关**（W23 Dropdown / W59 Roller / W73 Switch / W16 Checkbox），可见页签 Tabview 4 页 | ★ 联动主线：Dropdown+Roller 的 selected 绑同一 g_sel（assignable 双向，零 flow 图）；★ ToggleButton(W85) 是 EEZ-GUI 件、无 LVGL codegen（lvglBuild 报错）；Switch/Checkbox 无绑定属性；排障用 per-tab bisect |
 | [`app-wifi-connect/`](app-wifi-connect/) | **WiFi 扫描/连接全流程 v2**（KB 10 号架构迷你版）：EEZ 画壳+6 状态变量，业务/列表/驱动全在 src/native（契约头+命令环+io_iface 平台分界） | ★ 动作函数体只投递；★ native_vars.h 必须包 extern "C"；★ io 层不依赖 LVGL（clock() 计时）；★ 注释里别写 `xxx_*/`（提前闭合）；hiddenFlag 键名/字体全量/textarea 单向等 v1 坑仍有效 |
+| [`app-wifi-connect2/`](app-wifi-connect2/) | **WiFi 连接应用 v2（基础模板）**：空屏幕骨架（0 控件/字体/动作/变量）+ cli_build/audit/PC 仿真管线齐备 | ★ 控件照抄 EEZ 原生形态；★ gen_font 在 cli_build 之后；★ flow 错误守卫 |
 
 > 验证状态（2026-10-19）：九个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
 > 产物清单对账）。手势运行时行为（gesture-page-switch / one-way-gesture-switch）按 P-0141
