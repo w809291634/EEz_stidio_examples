@@ -12,11 +12,10 @@
     ap_count     int   扫描到的网络数
     wifi_state   int   0=未连 1=连接中 2=已连接
     wifi_conn_ssid str 已连接的 SSID
-    g_pick       int   当前选中的行（-1=无，密码面板 hiddenExpr 用）
-    g_pick_ssid  str   选中行 SSID（面板标题用）
+    pick_ssid    str   当前选中行 SSID（'' = 无选中，面板 hiddenFlag 用）
     g_remember   bool  记住密码
-    wifi_slotN_ssid/_rssi/_lock（N=0..5）  扫描结果槽位（P-0080 同款：定长槽位
-    + 空槽隐藏，不用结构体数组——EEZ flow 表达式按槽位名直读最稳）
+        （v3：扫描结果改为 C 侧链表渲染——EEZ 只留空容器 list_box，
+    行由 src/native/wifi_ui_sync.cpp 按链表重建；槽位模式见 git 历史）
 
   页面（单屏 + 密码面板覆盖层，P-0080 同款）：
     头部：标题 + 扫描状态标签（表达式三元）+ 刷新按钮(CLICKED→action scan_start)
@@ -25,8 +24,8 @@
           锁   hiddenExpr = "!wifi_slotN_lock"
           徽标 hiddenExpr = "!(wifi_state == 2 && wifi_conn_ssid == wifi_slotN_ssid)"
     底部：连接状态标签（wifi_state 三态表达式）
-    密码面板（hiddenExpr = "g_pick < 0"）：
-      标题(g_pick_ssid) + 密码 Textarea(passwordMode+oneLineMode, 由键盘直接输入)
+    密码面板（hiddenFlag = "pick_ssid == ''"）：
+      标题(pick_ssid) + 密码 Textarea(passwordMode+oneLineMode, 由键盘直接输入)
       + Keyboard(textarea 属性直接指定 pwd_ta——EEZ 原生支持)
       + "记住密码"可点标签(CLICKED→action chk_remember 切换 g_remember)
       + 连接按钮(→action wifi_connect，C 里 lv_textarea_get_text 读密码) + 取消
@@ -44,7 +43,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_FILE = os.path.join(HERE, "app-wifi-connect.eez-project")
 
 SCREEN_W, SCREEN_H = 480, 320
-N_SLOTS = 6
 ROW_Y0, ROW_H = 46, 36
 
 FONT_FILE = "fonts/simhei.ttf"   # 全量黑体（相对工程目录 P-0035）；
@@ -200,42 +198,13 @@ def build_project():
     ch.append(button(380, 4, 84, 30, "刷新", "scan_start",
                      identifier="btn_refresh"))
 
-    # ---------------- 6 行扫描结果 ----------------
-    for i in range(N_SLOTS):
-        y = ROW_Y0 + i * ROW_H
-        s = str(i)
-        ch.append(label(24, y, 190, 20, None, identifier="lbl_ssid_" + s,
-                        expr="wifi_slot" + s + "_ssid"))
-        ch.append(label(220, y, 22, 20, None, color="0xFFD38F",
-                        identifier="lbl_lock_" + s,
-                        expr='"锁"'))  # 锁定标志（字符已入字体字符集）
-        # 锁标志可见性：hiddenExpr true=隐藏
-        ch[-1]["hiddenFlagType"] = "expression"
-        ch[-1]["hiddenFlag"] = "!wifi_slot" + s + "_lock"
-        ch.append(label(250, y, 90, 20, None, color="0x8A94A6",
-                        identifier="lbl_rssi_" + s,
-                        expr="wifi_slot" + s + "_rssi + \" dBm\""))
-        badge = label(390, y, 74, 20, None, color="0x6CE69C",
-                      identifier="lbl_conn_" + s, expr='"已连接"',
-                        font=FONT_NAME, center=True)
-        badge["hiddenFlagType"] = "expression"
-        badge["hiddenFlag"] = ("!(wifi_state == 2 && "
-                               "wifi_conn_ssid == wifi_slot" + s + "_ssid)")
-        ch.append(badge)
-        # 点击热区（P-0080：空 SSID 隐藏；CLICKED → 对应 pick 动作）
-        hit = widget(
-            "LVGLContainerWidget", 8, y - 4, 464, 32,
-            identifier="hit_" + s,
-            flags="CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|"
-                  "SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
-            local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_opa=0)}},
-            eventHandlers=[{"objID": oid(), "eventName": "CLICKED",
-                            "handlerType": "action",
-                            "action": "wifi_pick_" + s, "userData": 0}],
-        )
-        hit["hiddenFlagType"] = "expression"
-        hit["hiddenFlag"] = "wifi_slot" + s + "_ssid == ''"
-        ch.append(hit)
+    # ---------------- 扫描结果列表（空容器，行由 C 侧链表渲染）----------------
+    ch.append(widget("LVGLContainerWidget", 16, 40, 448, 216,
+                     identifier="list_box",
+                     flags="CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|"
+                           "SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|"
+                           "SCROLL_ELASTIC|SCROLL_MOMENTUM|SNAPPABLE",
+                     local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_opa=0)}}))
 
     # ---------------- 底部连接状态 ----------------
     ch.append(label(16, 268, 448, 30, None, color="0x6CE69C",
@@ -246,7 +215,7 @@ def build_project():
     # ---------------- 密码面板（覆盖层）----------------
     panel_children = [
         label(20, 12, 360, 24, None, color="0xFFFFFF",
-              identifier="lbl_panel_title", expr="g_pick_ssid",
+              identifier="lbl_panel_title", expr="pick_ssid",
               font=FONT_NAME, center=True),
         widget("LVGLTextareaWidget", 20, 44, 360, 42,
                identifier="pwd_ta",
@@ -263,8 +232,9 @@ def build_project():
                mode="TEXT_LOWER"),
         # 记住密码（可点标签，点击切 g_remember）
         widget("LVGLLabelWidget", 20, 222, 200, 24,
-               objID=oid(), identifier="lbl_remember", font=FONT_NAME,
-               local={"MAIN": {"DEFAULT": dict(ZERO_PAD, text_color="0xFFD38F")}},
+               objID=oid(), identifier="lbl_remember",
+               local={"MAIN": {"DEFAULT": dict(ZERO_PAD, text_color="0xFFD38F",
+                                               text_font=FONT_NAME)}},
                text='"记住密码: " + (g_remember ? "是" : "否")',
                textType="expression", longMode="WRAP", recolor=False,
                useStaticText=True,
@@ -286,7 +256,7 @@ def build_project():
         children=panel_children,
     )
     panel["hiddenFlagType"] = "expression"
-    panel["hiddenFlag"] = "g_pick < 0"
+    panel["hiddenFlag"] = "pick_ssid == ''"
     ch.append(panel)
 
     screen = widget(
@@ -308,16 +278,14 @@ def build_project():
 
     # ---------------- 变量（全部 native:true）----------------
     gvs = [
-        ("scan_state", "integer", "0"), ("ap_count", "integer", "0"),
-        ("wifi_state", "integer", "0"), ("wifi_conn_ssid", "string", "''"),
-        ("g_pick", "integer", "-1"), ("g_pick_ssid", "string", "''"),
-        ("g_remember", "boolean", "false"), ("saved_ssid", "string", "''"),
+        # 契约变量（v2：全部 native，get_var_* 从 app_model 状态读——10 号架构 C 通道）
+        ("scan_state", "integer", "0"),      # 0 未扫 1 扫描中 2 完成
+        ("wifi_state", "integer", "0"),      # 0 未连 1 连接中 2 已连接
+        ("ap_count", "integer", "0"),
+        ("conn_ssid", "string", "''"),       # 已连接 SSID
+        ("pick_ssid", "string", "''"),       # 当前选中（'' = 无，面板 hiddenFlag 用）
+        ("g_remember", "boolean", "false"),  # 记住密码
     ]
-    for i in range(N_SLOTS):
-        gvs += [("wifi_slot%d_ssid" % i, "string", "''"),
-                ("wifi_slot%d_rssi" % i, "integer", "0"),
-                ("wifi_slot%d_lock" % i, "boolean", "false")]
-
     return {
         "themesVersion": 1, "objID": oid(),
         "settings": {
@@ -359,9 +327,8 @@ def build_project():
         "actions": [
             {"objID": oid(), "name": a, "description": "wifi: " + a,
              "implementationType": "native", "userProperties": []}
-            for a in (["scan_start", "wifi_connect", "chk_remember",
-                       "panel_cancel"] +
-                      ["wifi_pick_%d" % i for i in range(N_SLOTS)])
+            for a in ["scan_start", "wifi_connect", "panel_cancel",
+                      "chk_remember"]
         ],
         "userPages": [page], "userWidgets": [],
         "lvglStyles": {"objID": oid(), "styles": [], "defaultStyles": {}},
