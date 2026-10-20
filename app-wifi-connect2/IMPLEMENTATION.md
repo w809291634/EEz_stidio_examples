@@ -139,3 +139,76 @@ UI 与 `app_model` 一行不改。
 
 > 每步跑：`python build_example.py` → `python design\cli_build.py` → `run_sim.bat`
 > → 截图 + `measure_ui.py`（居中/对齐），绿了再进下一步。
+
+---
+
+## 7. 结构体 / 数组：两条路线
+
+> **路线 A（Flow）**：结构体 + 数组变量，绑定写 `aps[i].ssid`，变量数 37→3，
+> 但要换运行时（`EEZ_FOR_LVGL` + eez-flow + assets）。落地清单见 **`FLOW_STRUCT_ROUTE.md`**。
+>
+> **路线 B（本工程当前）**：EEZ 只有扁平标量，结构体留在 C 侧再投影。见下文 §7.4。
+>
+> 下面 §7.1 / §7.2 是「为什么默认走 B」的证据与代价，仍然有效。
+
+### 7.1 事实核查（2026-10-20，EEZ Studio 0.29 + 本工程）
+
+| 证据 | 结论 |
+|---|---|
+| 工程 JSON：`variables.structures` 字段存在（当前为空） | EEZ **有**结构体/数组类型 |
+| `settings.general.flowSupport = true` | 本工程**已开启** Flow 支持 |
+| 生成模板 `structs.h`：`#if defined(EEZ_FOR_LVGL)` + `#include <eez/flow/flow.h>` + `${FLOW_STRUCTS}` / `${FLOW_STRUCT_VALUES}` | 结构体声明**只生成在 `EEZ_FOR_LVGL` 分支** |
+| 实测 `src/ui/ui.c`：`ui_init()` 直接 `eez_flow_init(assets,…)`，`ui_tick()` 调 `eez_flow_tick()` | 本工程**已在 Flow 运行时**（非待迁移） |
+| 本工程 PC 仿真走 `tick_screen(g_currentScreen)`（`!EEZ_FOR_LVGL`） | 我们**不在** Flow 运行时里 |
+| `reference/02_styles_fonts_vars.md` §P8.2.2 / §P8.2.5 | 「结构体/数组只能用于**启用了 EEZ Flow** 的项目」 |
+
+**结论**：在「生成 C 代码 + `get_var_*`/`set_var_*` 桥接」这条路上，EEZ 只有
+`int / bool / string` 三种 native 标量，**没有结构体和数组**。要用 `aps[i].ssid`
+这种写法，必须切到 **Flow 运行时**（`EEZ_FOR_LVGL`：assets 二进制 + `eez/flow` 库 +
+`eez_flow_init/eez_flow_tick`）。
+
+### 7.2 切 Flow 要付的代价
+
+| 代价 | 说明 |
+|---|---|
+| 换执行模型 | ~~`create_screens()` → `eez_flow_init`~~ **已就位**；本次改动只是往 assets 里加结构体/变量，不改执行模型 |
+| 换变量桥 | C 侧不能再用 `set_var_*`，要走 Flow 全局变量 API；`io_*` 全部要改 |
+| 多一份运行时依赖 | 链接 `eez/flow`；PC_SIM 的 CMake 要额外集成（当前只链 lvgl + 源码） |
+| 工具链打回原形 | `cli_build` 的 flow 守卫、`audit_chars`、`measure_ui`、check_project 全部围绕「生成 C 代码」建立 |
+| 每帧求值成本 | Flow 表达式求值 + 数组成员访问，比标量绑定重（需实测帧率） |
+| **仍然不是"任意长度列表"** | 结构体是静态类型、数组长度固定；运行时不能扩容 —— 等价于 N 槽，只是写法好看 |
+
+### 7.3 "列表为空" 这件事也要一个变量
+
+EEZ 表达式**没有 null / 空数组判断**，无论走哪条路都得有一个显式长度量：
+
+- 扁平方案：`ap_count == 0`（或每行 `ssid_N == ""`）
+- 结构体方案：`ap_len == 0`（数组本身不带 length 语义）
+
+### 7.4 采用的方案：结构体留在 C 侧，EEZ 只收「投影」
+
+```c
+/* 契约层（C 侧，任意长度、可排序/去重/平滑） */
+typedef struct { char ssid[33]; int auth; int rssi; bool lock, saved, conn; } ap_t;
+static ap_t  s_aps[16];
+static int   s_ap_cnt;
+
+/* 投影：C 结构体 → EEZ 的 5 个扁平槽位（唯一跨界的地方） */
+static void publish_to_vars(void)
+{
+    int shown = s_ap_cnt > 5 ? 5 : s_ap_cnt;
+    for (int i = 0; i < 5; i++) {
+        bool on = i < shown;
+        app_set_input_s(kSsidId[i], on ? s_aps[i].ssid : "");
+        app_set_input_i(kRssiId[i], on ? s_aps[i].rssi : -100);
+        app_set_input_b(kLockId[i],  on && s_aps[i].lock);
+        /* …auth/band/saved/conn 同理，全部走 §6 的显式表 */
+    }
+    app_set_input_i(APP_IN_AP_COUNT, shown);   /* 0 → UI 显示空态 */
+    app_set_input_i(APP_IN_SCAN_STATE, 2);
+}
+```
+
+**好处**：C 侧拿到完整能力（16 个 AP、排序、平滑、去重），EEZ 侧仍是纯标量绑定，
+零 Flow 依赖、零工具链改动；超出 5 个时 `ap_count` 仍报真实数量（标题可写"共 N 个"）。
+

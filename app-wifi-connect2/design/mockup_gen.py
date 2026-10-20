@@ -292,33 +292,6 @@ def sc_empty(s):
     s.text(W / 2, 278, "重新扫描", 12, "#FFFFFF", anchor="middle")
 
 
-def sc_password(s):
-    back_bar(s)
-    s.text(PAD, 64, "1号楼6层WiFi", 18, T1)
-    s.text(PAD, 84, "WPA3 · 5 GHz · -63 dBm", 11, T2)
-    s.text(PAD, 110, "密码", 11, T3)
-    s.rect(PAD, 118, ROW_W, 42, FIELD_BG, rx=10, stroke=PRI, sw=1)
-    s.text(PAD + 16, 145, "请输入密码", 13, T3)
-    eye(s, W - PAD - 18, 139)
-    s.text(PAD, 188, "记住密码", 13, T1)
-    s.text(PAD, 204, "保存后下次自动连接", 10, T3)
-    toggle(s, W - PAD - 48, 178, on=False)
-    s.rect(PAD, 218, ROW_W, 42, PRI, rx=10)
-    s.text(W / 2, 245, "连 接", 14, "#FFFFFF", anchor="middle", weight="600")
-    s.text(W / 2, 280, "忘记此网络", 11.5, FAIL, anchor="middle")
-    s.text(W / 2, 304, "点按密码框弹出键盘", 10, T3, anchor="middle")
-
-
-def sc_password_kb(s):
-    back_bar(s, 26)
-    s.text(PAD, 56, "1号楼6层WiFi", 15, T1)
-    s.text(PAD, 73, "WPA3 · 5 GHz · -63 dBm", 10.5, T2)
-    s.rect(PAD, 82, ROW_W, 36, FIELD_BG, rx=9, stroke=PRI, sw=1)
-    s.text(PAD + 16, 106, "••••••••", 15, T1, ls="1.5")
-    eye(s, W - PAD - 18, 100)
-    keyboard(s, 126)
-
-
 def sc_connecting(s):
     header(s, "正在连接 1号楼6层WiFi…")
     group_label(s, GRP1_LABEL_Y, "已连接 · 已保存")
@@ -420,316 +393,275 @@ def sc_embedded(s):
     s.text(40, 274, "组件根 = LVGL 容器：整页用铺满，内嵌时行宽随容器变化", 8.5, T3)
 
 
-def sc_layers(s):
-    """页面层级关系：密码页 = 独立整页，覆盖在列表（扫描结果）之上。"""
-    s.text(PAD, 28, "页面结构：两页覆盖", 13, T1, weight="500")
-    s.text(PAD, 44, "密码页是独立页面，整页盖在列表（扫描结果）之上；返回即回到列表",
-           9.5, T2)
-
-    # 后层：列表页（被覆盖，实例保留）
-    s.rect(16, 56, 264, 192, "#0D1420", rx=10, stroke=LINE, sw=0.6)
-    s.text(30, 74, "页面 1 · 列表（扫描结果）", 9.5, T3)
-    rows = [("yjt_dev_2.4G", "WPA2", 4, SUC), ("1号楼6层WiFi", "WPA3", 4, PRI),
-            ("YJT-1号楼办公", "WPA2", 3, PRI), ("Office-2G", "开放", 2, PRI)]
-    y = 82
-    for ssid, auth, nb, col in rows:
-        s.rect(28, y, 240, 24, ROW_BG, rx=6, stroke=LINE, sw=0.4)
-        for b in range(4):
-            h = [3, 5, 7, 9][b]
-            on = b < nb
-            s.rect(36 + b * 4.5, y + 20 - h, 2.6, h, col if on else DIM)
-        s.text(60, y + 15, ssid, 9, T1)
-        s.text(232, y + 15, auth, 7.5, T3, anchor="end")
-        y += 28
-    s.text(30, 226, "实例保留：扫描结果 / 分组 / 滚动位置", 8, T3)
-    s.text(30, 240, "切页不重新扫描、不丢数据", 8, T3)
-
-    # 前层：密码页（整页覆盖）
-    s.rect(196, 88, 268, 204, "#101A28", rx=10, stroke=PRI, sw=1)
-    s.text(210, 106, "页面 2 · 密码", 9.5, PRI_TXT)
-    s.text(452, 106, "整页 480×320", 8, T3, anchor="end")
-    s.text(210, 130, "1号楼6层WiFi", 11.5, T1)
-    s.text(210, 144, "WPA3 · 5 GHz · -63 dBm", 8, T2)
-    s.rect(208, 152, 244, 24, FIELD_BG, rx=6, stroke=PRI, sw=0.8)
-    s.text(216, 168, "••••••••", 10, T1, ls="1.2")
-    s.text(210, 190, "记住密码", 9, T1)
-    s.rect(428, 181, 24, 14, "#16203A", rx=7, stroke=LINE, sw=0.4)
-    s.circle(435, 188, 5, T2)
-    s.rect(208, 200, 244, 26, PRI, rx=7)
-    s.text(330, 217, "连 接", 10, "#FFFFFF", anchor="middle", weight="600")
-    s.text(330, 240, "忘记此网络", 8.5, FAIL, anchor="middle")
-    s.rect(208, 250, 244, 34, "#141A2E", rx=7, stroke=LINE, sw=0.4, dash="2 2")
-    s.text(330, 264, "键盘（点密码框才弹出）", 8, T3, anchor="middle")
-    s.text(330, 276, "完成 / 返回 → 收起并回列表", 8, T3, anchor="middle")
-
-    # 编号徽标
-    s.circle(16, 56, 7, PRI)
-    s.text(16, 59, "1", 8.5, "#FFFFFF", anchor="middle", weight="600")
-    s.circle(196, 88, 7, PRI)
-    s.text(196, 91, "2", 8.5, "#FFFFFF", anchor="middle", weight="600")
-
-    s.text(PAD, 310, "① 点网络行 → ② 覆盖；② 返回 / 完成 → 回 ①，① 的状态与滚动位置不变",
-           8.5, T3)
-
-
-def sc_explain(s):
-    """解释图（独立画布 680x528）：场景 → 键盘宽度对比 → 结论。"""
-    s.text(28, 40, "键盘为什么要整页", 20, T1, weight="500")
-    s.text(28, 66, "列表可以放进任意子容器；点密码输入时整页覆盖 → 键盘始终按屏幕宽度排版",
+def sc_sheet(s):
+    """方案 C 效果图：列表在子容器 → 点行 → 遮罩 + 半页（键盘式）上滑。"""
+    s.text(28, 36, "列表在子容器 · 连接用半页（键盘式）", 20, T1, weight="500")
+    s.text(28, 62, "点行后 scrim 淡入、sheet 从底部上滑；半页里只有密码框 + 连接 + 全宽键盘",
            12.5, T2)
 
-    # ---------- ① 场景 ----------
-    s.text(28, 100, "① 场景：列表在子容器里，输入密码时升格为整页", 10.5, T3)
+    S = 0.62
+    PW, PH = 480 * S, 320 * S          # 297.6 x 198.4
 
-    # 左：设置页 + 卡片 + 子容器 + 3 行
-    s.rect(28, 110, 202, 134, "#0D1420", rx=8, stroke=LINE, sw=0.6)
-    s.text(40, 124, "设置", 8, T3)
-    s.rect(38, 130, 182, 104, "#0E1420", rx=6, stroke=LINE, sw=0.5)
-    s.text(46, 144, "WiFi", 7, T3)
-    s.rect(44, 150, 170, 76, "none", rx=5, stroke="#3A4867", sw=0.5, dash="2 2")
-    for i in range(3):
-        y = 156 + i * 24
-        s.rect(50, y, 158, 20, ROW_BG, rx=4, stroke=LINE, sw=0.3)
-        for b in range(4):
-            hh = [2.5, 4, 5.5, 7][b]
-            s.rect(56 + b * 3.6, y + 15 - hh, 2.2, hh,
-                   (PRI if b < 3 else DIM))
-        s.rect(72, y + 4, 58, 5, "#1B2438", rx=2)
-        s.rect(72, y + 12, 78, 4, "#18202F", rx=2)
-        s.rect(176, y + 6, 26, 9, "#16203A", rx=4.5, stroke=LINE, sw=0.3)
-    s.text(28, 258, "设置页：WiFi 列表被放进卡片里的子容器（尺寸可任意）", 9, T3)
+    def draw_page(x0, y0, open_sheet):
+        def X(v):
+            return round(x0 + v * S, 1)
+
+        def Y(v):
+            return round(y0 + v * S, 1)
+
+        def W(v):
+            return round(v * S, 1)
+
+        s.rect(X(0), Y(0), W(480), W(320), "#0B0F1A", rx=8, stroke=LINE, sw=0.6)
+        s.rect(X(20), Y(22), W(90), W(9), "#1B2438", rx=2)
+        s.rect(X(20), Y(38), W(56), W(5), "#18202F", rx=2)
+        s.rect(X(20), Y(56), W(440), W(238), "#0D1420", rx=10, stroke=LINE, sw=0.5)
+        s.rect(X(36), Y(74), W(40), W(6), "#1B2438", rx=2)
+        s.rect(X(28), Y(86), W(424), W(192), "none", rx=8, stroke="#3A4867",
+               sw=0.5, dash="3 3")
+        for i in range(4):
+            y = 94 + i * 50
+            if y >= 278:              # 完全出界
+                continue
+            hrow = min(44, 278 - y)   # 第 4 行只露一截 = 容器裁剪（示意可滚动）
+            s.rect(X(40), Y(y), W(400), W(hrow), ROW_BG, rx=8, stroke=LINE, sw=0.4)
+            for b in range(4):
+                hh = [5, 8, 11, 14][b]
+                s.rect(X(50 + b * 5), Y(y + 34 - hh), W(3), W(hh),
+                       SUC if i == 0 else PRI)
+            s.rect(X(66), Y(y + 11), W(118), W(7), "#1B2438", rx=2)
+            s.rect(X(66), Y(y + 26), W(150), W(5), "#18202F", rx=2)
+            s.rect(X(382), Y(y + 15), W(44), W(13), "#16203A", rx=6,
+                   stroke=LINE, sw=0.3)
+        # 滚动条
+        s.rect(X(444), Y(94), W(4), W(70), "#2C3852", rx=1.5)
+
+        if not open_sheet:
+            return
+        # 遮罩
+        s.rect(X(0), Y(0), W(480), W(320), "#05070D", rx=8, opacity="0.55")
+        # 半页 224
+        s.rect(X(0), Y(96), W(480), W(224), "#101A28", rx=8, stroke=SUC, sw=0.9)
+        s.rect(X(224), Y(102), W(32), W(3), "#2C3852", rx=1.5)
+        s.rect(X(16), Y(112), W(150), W(8), "#1B2438", rx=2)
+        s.path("M%s %s l%s %s" % (X(450), Y(110), W(8), W(8)), stroke=T2, sw=1)
+        s.path("M%s %s l%s %s" % (X(458), Y(110), W(-8), W(8)), stroke=T2, sw=1)
+        s.rect(X(16), Y(126), W(364), W(36), FIELD_BG, rx=8, stroke=PRI, sw=0.7)
+        s.rect(X(24), Y(140), W(60), W(7), "#1B2438", rx=2)
+        s.rect(X(388), Y(126), W(76), W(36), PRI, rx=8)
+        # 键盘 4 行
+        kw = (464 - 9 * 4) / 10.0
+        for ri in range(4):
+            ky = 172 + ri * 34
+            for ci in range(10):
+                s.rect(X(8 + ci * (kw + 4)), Y(ky), W(kw), W(30), KEY_BG, rx=4,
+                       stroke="#212B42", sw=0.3)
+
+    draw_page(28, 96, False)
+    draw_page(350, 96, True)
+
+    s.text(28, 312, "① 宿主页：列表在子容器里（424×192）", 10, T1)
+    s.text(28, 328, "行 400×44 · 可见约 3.5 行 · 容器内滚动（scroll_dir=VER）", 9, T3)
+    s.text(350, 312, "② 点行 → 遮罩 + 半页 224 上滑", 10, T1)
+    s.text(350, 328, "半页只放：密码框 + 连接 + 全宽键盘（键 42.8）", 9, T3)
+
+    # 下方两块
+    s.rect(20, 348, 310, 152, "#0D1420", rx=8, stroke=LINE, sw=0.6)
+    s.text(36, 368, "半页 224 的高度预算", 10.5, T3)
+    for i, ln in enumerate([
+            "把手 6 · 标题行 20（SSID + ×）",
+            "输入行 36（密码框 364 + 连接 76）",
+            "键盘 132（4 行 × 30 · 键宽 42.8）",
+            "间距 30 → 合计 224（< 210 会挤）"]):
+        s.text(36, 392 + i * 22, ln, 9, T2)
+
+    s.rect(342, 348, 310, 152, "#0D1420", rx=8, stroke=LINE, sw=0.6)
+    s.text(358, 368, "三条 z 序规则（别改）", 10.5, T3)
+    for i, ln in enumerate([
+            "① overlay 挂 screen 根，不进子容器",
+            "② 遮罩 45% + sheet 都置最上层",
+            "③ 关闭只改 pwd_open，不动 wifi_state"]):
+        s.text(358, 392 + i * 22, ln, 9, T2)
+    s.text(358, 480, "（放进容器会被裁剪 + 坐标二次偏移，P-0007）", 8.5, T3)
+
+
+def sc_flow_arch(s):
+    """Flow 路线架构图：EEZ 为主（~90%）、native 极薄（~10%）。"""
+    s.text(28, 38, "Flow 路线架构：代码在哪、边界在哪", 20, T1, weight="500")
+    s.text(28, 64, "界面 / 数据模型 / 逻辑全部在 EEZ 工程内（≈90%）；native 只做硬件适配（≈10%）",
+           12.5, T2)
+    s.path("M28 78 H652", stroke=LINE, sw=0.6)
+
+    def band(y, h, no, title, note=""):
+        s.rect(24, y, 632, h, "#0D1420", rx=10, stroke=LINE, sw=0.6)
+        s.text(36, y + 20, no, 9, T3)
+        s.text(58, y + 20, title, 10.5, T1, weight="500")
+        if note:
+            s.text(644, y + 20, note, 8.5, T3, anchor="end")
+
+    def card(x, y, w, h, title, lines, edge=LINE, tcol=T1):
+        s.rect(x, y, w, h, "#101A28", rx=8, stroke=edge, sw=0.6)
+        s.text(x + 10, y + 18, title, 9.5, tcol, weight="500")
+        for i, ln in enumerate(lines):
+            s.text(x + 10, y + 36 + i * 15, ln, 8.5, T2)
+
+    # ---------- ① EEZ 工程 ----------
+    band(88, 130, "①", "EEZ 工程 .eez-project（唯一真源）", "≈90% 的实现量")
+    cw, gap = 146, 12
+    cards = [
+        ("页面 / 组件", ["scr_host 宿主页", "wifi_panel 组件", "scr_pwd 连接页"], PRI),
+        ("数据模型（Flow）", ["Struct ap_info", "aps[] 数组", "ap_len 长度"], PRI),
+        ("逻辑（表达式）", ["aps[i].ssid 绑定", "行显隐 / 三态", "点击·长按→动作"], PRI),
+        ("样式 / 字体", ["主题令牌", "cn14 · GB2312", "状态胶囊"], LINE),
+    ]
+    for i, (t, ls, e) in enumerate(cards):
+        card(36 + i * (cw + gap), 112, cw, 88, t, ls, e)
+    s.text(36, 210, "改布局、改文案、改判据 → GUI 里直接改；不写一行 C", 8.5, T3)
 
     # 箭头
-    s.path("M240 176 h50", stroke=PRI_TXT, sw=1.4)
-    s.path("M286 172 l6 4 -6 4", stroke=PRI_TXT, sw=1.4)
-    s.text(265, 166, "点网络", 8.5, PRI_TXT, anchor="middle")
+    s.path("M340 218 V230", stroke=PRI_TXT, sw=1.3)
+    s.path("M335.5 225 l4.5 7 4.5 -7", stroke=PRI_TXT, sw=1.3)
+    s.text(354, 230, "cli_build", 8.5, PRI_TXT)
 
-    # 右：密码整页
-    s.rect(306, 110, 202, 134, "#101A28", rx=8, stroke=PRI, sw=0.8)
-    s.text(318, 124, "\u2039 返回", 7.5, T3)
-    s.text(318, 138, "1号楼6层WiFi", 8, T1)
-    s.rect(316, 144, 182, 18, FIELD_BG, rx=4, stroke=PRI, sw=0.6)
-    s.text(322, 157, "\u2022\u2022\u2022\u2022\u2022\u2022", 7.5, T1, ls="1")
-    s.rect(316, 168, 182, 16, PRI, rx=4)
-    s.text(407, 180, "连 接", 7, "#FFFFFF", anchor="middle")
-    kwid = (182 - 9 * 2) / 10.0
-    for ri in range(3):
-        y = 190 + ri * 16
-        cx = 316
-        for _ in range(10):
-            s.rect(cx, y, kwid, 13, KEY_BG, rx=2.5, stroke="#212B42", sw=0.3)
-            cx += kwid + 2
-    s.text(306, 258, "密码页：整页 480×320（键盘按屏宽排版）", 9, T2)
-
-    # ---------- ② 宽度对比 ----------
-    s.text(28, 282, "② 键盘宽度：同一套键盘，容器越窄键越窄", 10.5, T3)
-    rows = [
-        (320, "① 塞进 320 容器", FAIL, "#2A1620", FAIL_EDGE, "#5A2A34",
-         "可用 320 · 键宽 28.4"),
-        (408, "② 塞进 408 卡片（本设计）", T2, "#16203A", LINE, "#243456",
-         "可用 408 · 键宽 34.8"),
-        (464, "③ 密码页整页（推荐）", PRI_TXT, "#5B8CFF", "#7FA3FF", "#4A6EE0",
-         "可用 464 · 键宽 42.8"),
+    # ---------- ② 生成源码 ----------
+    band(236, 112, "②", "生成源码 src/ui/（EEZ 产出，勿手改）", "占生成量 ~65%")
+    chips = [
+        ("screens.c", ["控件树", "绑定表达式内联"]),
+        ("structs.h", ["Struct / 数组", "仅 EEZ_FOR_LVGL"]),
+        ("vars.h", ["全局变量", "get / set 访问器"]),
+        ("actions.c", ["事件入口", "→ Flow 动作"]),
+        ("assets", ["资源包", "eez_flow_init"]),
     ]
-    k = 300 / 464.0   # 条形长度：保证右侧数值不溢出画布
-    for i, (avail, label, tcol, fill, edge, tick, val) in enumerate(rows):
-        y = 292 + i * 38
-        s.text(28, y + 17, label, 9.5, tcol)
-        w = avail * k
-        s.rect(186, y, w, 26, fill, rx=6, stroke=edge, sw=0.6)
-        for j in range(1, 10):
-            x = 186 + w * j / 10.0
-            s.rect(x - 0.6, y + 4, 1.2, 18, tick)
-        s.text(186 + w + 10, y + 17, val, 10, tcol)
-    s.text(28, 404, "键宽 =（可用宽 \u2212 9 × 4）\u00f7 10；建议 \u2265 40（手指可辨），320 容器只有 28.4",
-           9, T3)
+    chw = (608 - 4 * 8) / 5.0
+    for i, (n, ls) in enumerate(chips):
+        x = 36 + i * (chw + 8)
+        s.rect(x, 266, chw, 62, "#101A28", rx=7, stroke="#2A3550", sw=0.6)
+        s.text(x + 9, 283, n, 9.5, PRI_TXT, weight="500")
+        s.text(x + 9, 301, ls[0], 8.2, T2)
+        s.text(x + 9, 315, ls[1], 8.2, T3)
+    s.text(36, 342, "★ 红线：src/ui/ 由 EEZ 覆盖生成；所有改动手工只发生在 native/ 与 build_example.py",
+           8.5, T3)
 
-    # ---------- ③ 结论 ----------
-    s.rect(28, 420, 624, 34, "#16203A", rx=8, stroke=PRI, sw=0.6)
-    s.text(44, 442, "结论：把「输入密码」升格为整页 \u2014\u2014 键盘宽度由屏幕决定，永不因子容器变窄",
-           11.5, PRI_TXT)
-    s.text(28, 476, "① 键宽 42.8：比 320 容器 +51%、比 408 卡片 +23%，误触显著减少", 9.5, T2)
-    s.text(28, 494, "② 组件可放进任意容器（设置卡片 / 侧栏 / 弹窗），输入时统一升格为整页", 9.5, T2)
-    s.text(28, 512, "③ 容器的紧凑阈值、裁剪、滚动都不会影响键盘排版", 9.5, T2)
-
-
-def sc_popup_forms(s):
-    """解释图：列表在子容器 → 点连接 → 弹层（半页 / 整页）两种形态 + 对比。"""
-    s.text(28, 40, "连接页弹出：半页 or 整页", 20, T1, weight="500")
-    s.text(28, 66, "WiFi 扫描结果放在宿主页的子容器里；点连接后弹出「连接 WiFi 页」，高度可以半页也可以整页",
-           12.5, T2)
-
-    SC = 0.42          # 480x320 → 202x134
-    PW, PH = 202, 134
-    XS = [28, 240, 452]
-
-    def host(x, y, rows=3, dim=False):
-        s.rect(x, y, PW, PH, "#0D1420", rx=6, stroke=LINE, sw=0.6)
-        s.rect(x + 8, y + 6, 54, 6, "#1B2438", rx=2)
-        s.rect(x + 8, y + 16, PW - 16, PH - 26, "#0E1420", rx=4, stroke=LINE, sw=0.4)
-        s.rect(x + 14, y + 26, PW - 28, PH - 42, "none", rx=4, stroke="#3A4867",
-               sw=0.5, dash="2 2")
-        for i in range(rows):
-            ry = y + 30 + i * 26
-            s.rect(x + 18, ry, PW - 36, 22, ROW_BG, rx=3, stroke=LINE, sw=0.3)
-            for b in range(4):
-                hh = [2.5, 4, 5.5, 7][b]
-                s.rect(x + 23 + b * 3.4, ry + 17 - hh, 2, hh, PRI if b < 3 else DIM)
-            s.rect(x + 38, ry + 4, 52, 5, "#1B2438", rx=2)
-            s.rect(x + 38, ry + 12, 66, 4, "#18202F", rx=2)
-            s.rect(x + 150, ry + 6, 24, 8, "#16203A", rx=4, stroke=LINE, sw=0.3)
-        if dim:
-            s.rect(x, y, PW, PH, "#05070D", rx=6, opacity="0.55")
-
-    def kb_rows(x, y, w, n=3, kh=10, gap=2):
-        kw = (w - 9 * gap) / 10.0
-        for ri in range(n):
-            cy = y + ri * (kh + gap)
-            cx = x
-            for _ in range(10):
-                s.rect(cx, cy, kw, kh, KEY_BG, rx=2, stroke="#212B42", sw=0.25)
-                cx += kw + gap
-
-    # ① 宿主页 + 子容器（扫描结果）
-    host(XS[0], 96)
-    s.text(XS[0], 246, "① 扫描结果在子容器里", 10, T1)
-    s.text(XS[0], 262, "组件 408 宽，宿主页怎么变都跟着变", 9, T3)
-
-    # ② 半页弹出
-    x = XS[1]
-    host(x, 96, rows=3, dim=True)
-    sy = 96 + PH - 84                       # 高 200 → 84
-    s.rect(x, sy, PW, 84, "#101A28", rx=8, stroke=SUC, sw=0.8)
-    s.rect(x + 91, sy + 5, 20, 3, "#2C3852", rx=1.5)
-    s.rect(x + 12, sy + 12, 66, 5, "#1B2438", rx=2)
-    s.rect(x + 12, sy + 21, PW - 24, 15, FIELD_BG, rx=3, stroke=PRI, sw=0.6)
-    s.rect(x + 12, sy + 40, PW - 24, 13, PRI, rx=3)
-    kb_rows(x + 12, sy + 57, PW - 24, n=2, kh=10, gap=2.5)
-    s.text(x, 246, "② 半页弹出（高 200 · 62%）", 10, T1)
-    s.text(x, 262, "上半仍见列表；全宽键盘，只放密码 + 连接", 9, T3)
-
-    # ③ 整页弹出
-    x = XS[2]
-    s.rect(x, 96, PW, PH, "#101A28", rx=6, stroke=PRI, sw=0.9)
-    s.path("M%d %d l-4 4 4 4" % (x + 12, 111), stroke=T2, sw=1)
-    s.rect(x + 20, 105, 44, 5, "#1B2438", rx=2)
-    s.rect(x + 12, 118, 80, 6, "#1B2438", rx=2)
-    s.rect(x + 12, 129, PW - 24, 16, FIELD_BG, rx=3, stroke=PRI, sw=0.6)
-    s.rect(x + 12, 150, 40, 5, "#1B2438", rx=2)
-    s.rect(x + 168, 147, 22, 11, "#16203A", rx=5.5, stroke=LINE, sw=0.3)
-    s.rect(x + 12, 162, PW - 24, 15, PRI, rx=3)
-    s.rect(x + 78, 184, 44, 5, "#5A2A34", rx=2)
-    kb_rows(x + 12, 194, PW - 24, n=3, kh=9, gap=2)
-    s.text(x, 246, "③ 整页弹出（320 · 全覆盖）", 10, T1)
-    s.text(x, 262, "内容 + 键盘都宽松；记住 / 忘记 / 错误提示放得下", 9, T3)
-
-    # 对比表
-    s.rect(20, 282, 640, 190, "#0D1420", rx=8, stroke=LINE, sw=0.6)
-    s.text(36, 304, "同一个「连接 WiFi 页」，两种高度", 10.5, T3)
-    s.text(300, 304, "半页 200", 9.5, SUC)
-    s.text(470, 304, "整页 320", 9.5, PRI_TXT)
-    rows = [
-        ("覆盖屏高", "62%（上半仍可见列表）", "100%（完全覆盖，返回还原）"),
-        ("键盘", "全宽 464 · 2~3 行紧凑（键高 30）", "全宽 464 · 4 行（键高 36）"),
-        ("能放的内容", "密码框 + 连接（最多再加一行提示）", "密码 + 记住密码 + 忘记 + 错误提示"),
-        ("交互负担", "需管把手、遮罩、下滑关闭、焦点避让", "切页即可：无遮罩、无 z-order"),
-        ("适合", "宿主页要保留上下文 / 快捷重连", "主流程：输密码、忘记、重试"),
+    # ---------- ③ Flow 运行时 ----------
+    band(360, 140, "③", "Flow 运行时（eez-flow · C++ 值语义容器）", "链接 eez/flow")
+    bw = (608 - 20) / 3.0
+    boxes = [
+        ("Value / ArrayValue", ["std::vector<Value>", "可变长 · 堆分配"], SUC),
+        ("StructValue", ["字段值数组 + StructType", "aps[i].ssid 按名解析"], SUC),
+        ("eez_flow_init / tick", ["assets 驱动 UI", "每帧求值表达式"], SUC),
     ]
-    y = 322
-    for i, (a, b, c) in enumerate(rows):
-        s.text(36, y + 15, a, 9.5, T3)
-        s.text(300, y + 15, b, 9.5, T1 if i < 3 else T2)
-        s.text(470, y + 15, c, 9.5, T1 if i < 3 else T2)
+    for i, (t, ls, e) in enumerate(boxes):
+        card(36 + i * (bw + 10), 392, bw, 62, t, ls, e, SUC)
+    s.text(36, 472, "设备侧确实是 C++ 容器；但 C 代码只拿到 Value 句柄，不能当 ap_t[] 直接 memcpy",
+           8.5, T3)
+    s.text(36, 489, "→ 数据只存在一份：Flow 数组是唯一真值源，UI 与 native 都读它", 8.5, PRI_TXT)
+
+    # ---------- ④ native ----------
+    band(512, 152, "④", "native 极薄层（唯一碰硬件）", "≈10% · 3 个文件")
+    nw = (608 - 20) / 3.0
+    nb = [
+        ("io_iface.h", ["契约面：ap_t[] + 命令", "纯头文件，零实现"], LINE),
+        ("bridge.cpp", ["C 结构体 → Flow 数组", "★ 唯一跨界点"], FAIL),
+        ("io_esp / io_win / io_pc", ["扫描·连接·忘记·存密码", "同签名，换文件即换后端"], LINE),
+    ]
+    for i, (t, ls, e) in enumerate(nb):
+        card(36 + i * (nw + 10), 544, nw, 62, t, ls, e,
+             T1 if e is not FAIL else "#F0B4B4")
+    s.rect(36, 614, 608, 26, "#16203A", rx=6, stroke=LINE, sw=0.5)
+    s.text(48, 631, "硬件：esp_wifi + NVS（真机） · Windows WLAN API（PC 真机） · 假数据（仿真）",
+           8.8, T2)
+    s.text(36, 656, "native 只做「取值 → 装箱 → 回写状态」，不含任何布局、文案、判据", 8.5, T3)
+
+    # ---------- ⑤ 三条目标 ----------
+    band(678, 152, "⑤", "三条设计目标怎么保证")
+    gb = [
+        ("信息全面性", ["ap_info 7 字段全量上报", "信号/加密/频段/锁/保存/连接", "空列表判据 = ap_len == 0"], PRI_TXT),
+        ("功能稳定性", ["单一真值源（数据在 Flow）", "三后端只换一个文件", "先填数组再置状态，无半成品"], SUC),
+        ("封装高级性", ["绑定写 aps[i].ssid", "变量 37 → 3，槽位模板化", "原生控件 + 表达式，零自创"], "#F0D48F"),
+    ]
+    gw = (608 - 20) / 3.0
+    for i, (t, ls, c) in enumerate(gb):
+        x = 36 + i * (gw + 10)
+        s.rect(x, 708, gw, 110, "#101A28", rx=8, stroke=LINE, sw=0.6)
+        s.text(x + 10, 728, t, 9.5, c, weight="500")
+        for j, ln in enumerate(ls):
+            s.text(x + 10, 750 + j * 17, ln, 8.5, T2)
+
+    # ---------- 占比条 ----------
+    s.text(28, 850, "实现量分布", 8.5, T3)
+    s.rect(28, 858, 546, 16, PRI, rx=4)
+    s.rect(574, 858, 78, 16, FAIL, rx=4)
+    s.text(301, 870, "EEZ 工程 + 生成源码 90%", 8.8, "#0B0F1A", anchor="middle", weight="500")
+    s.text(613, 870, "native 10%", 8.2, "#0B0F1A", anchor="middle", weight="500")
+
+
+def sc_scan_to_ui(s):
+    """点击刷新后，硬件数据如何回流到 UI：9 步 + 归属标签。"""
+    s.text(28, 38, "点「刷新」之后：硬件数据怎么回到 UI", 20, T1, weight="500")
+    s.text(28, 64, "9 步单向回流；颜色 = 这段代码归谁（EEZ 生成 / native / 硬件）", 12.5, T2)
+    s.path("M28 78 H652", stroke=LINE, sw=0.6)
+
+    # 图例
+    lx = 28
+    for name, col, w in (("EEZ 生成（src/ui）", PRI, 132),
+                         ("native（你写）", SUC, 96),
+                         ("硬件 / 驱动", "#E8A25C", 88)):
+        s.rect(lx, 90, 9, 9, col, rx=2)
+        s.text(lx + 14, 99, name, 8.5, T2)
+        lx += w
+
+    rows = [
+        ("1", "点「刷 新」→ LV_EVENT_CLICKED",
+         "EEZ 生成 screens.c：lv_obj_add_event_cb(btn_refresh, ...)", "EEZ 生成", PRI, 72),
+        ("2", "actions[] 表按 id 分发 → 你的 C 函数",
+         "actions.h 声明 + ui.c 里 ActionExecFunc actions[]", "EEZ + 你", PRI, 66),
+        ("3", "C 函数写命令：cmd_scan = 1",
+         "native var 的 set 指针（INTEGER）或 setGlobalVariable()", "native", SUC, 56),
+        ("4", "主循环每拍排空命令：ui_tick() → app_model_poll()",
+         "main.c 调 ui_tick()；poll 读到 cmd_scan 才调 io_scan()", "native", SUC, 56),
+        ("5", "发起扫描：esp_wifi_scan_start(WIFI_SCAN_ACTIVE)",
+         "io_esp.cpp：异步，立即返回，不阻塞 UI", "native", SUC, 56),
+        ("6", "WIFI_EVENT_SCAN_DONE（driver task）→ s_aps[16]",
+         "esp_wifi_scan_get_ap_records()；此处【禁止】碰 LVGL / Flow", "硬件", "#E8A25C", 52),
+        ("7", "发布：把结果投影进「变量」（唯一跨界点）",
+         "A 逐槽 native vars（5×7）  B makeArrayRef + setGlobalVariable(APS)", "native", SUC, 56),
+        ("8", "eez_flow_tick() → 绑定表达式重算",
+         "aps[i].ssid / rssi 阈值 / hiddenFlag，全在 Flow 里求值", "EEZ 运行时", PRI, 80),
+        ("9", "LVGL 控件更新 → 屏幕",
+         "screens.c 的 tick：lv_label_set_text / lv_obj_add_flag(HIDDEN)", "EEZ 生成", PRI, 72),
+    ]
+
+    y = 116
+    for i, (no, title, sub, tag, col, tw) in enumerate(rows):
+        s.rect(28, y, 624, 62, "#101A28", rx=8, stroke=col, sw=0.55)
+        s.rect(40, y + 9, 18, 18, col, rx=9, opacity="0.16")
+        s.text(49, y + 22, no, 9, col, anchor="middle", weight="500")
+        s.text(68, y + 26, title, 10.2, T1, weight="500")
+        s.text(68, y + 45, sub, 8.2, T2)
+        # 归属标签（右下角）
+        s.rect(640 - tw, y + 36, tw, 15, "#0B1220", rx=7, stroke=col, sw=0.5)
+        s.text(640 - tw / 2, y + 46.5, tag, 7.8, col, anchor="middle")
+        # 行间箭头
         if i < len(rows) - 1:
-            s.rect(32, y + 26, 616, 0.6, LINE)
-        y += 30
+            s.path("M49 %d V%d" % (y + 58, y + 68), stroke="#33405E", sw=1)
+            s.path("M46 %d l3 4 3 -4" % (y + 64), stroke="#33405E", sw=1)
+        y += 70
 
-    s.text(28, 496, "建议：主流程用整页（简单、键盘最大化）；若 WiFi 只是设置页里的一个小卡片，可给「半页」快捷形态",
-           9.5, PRI_TXT)
-
-
-def sc_arch(s):
-    """架构数据流图：EEZ → 变量表 → app_model → io 后端 → 硬件，含状态回写。"""
-    s.text(28, 40, "EEZ 里建什么 · 怎么和硬件交互", 20, T1, weight="500")
-    s.text(28, 66, "四层单向数据流：UI 只读写变量，硬件只在 io 层；命令向下、状态向上",
-           12.5, T2)
-
-    def band(y, h, title):
-        s.rect(24, y, 616, h, "#0D1420", rx=10, stroke=LINE, sw=0.6)
-        s.text(36, y + 20, title, 10.5, T3)
-
-    def card(x, y, w, h, lines, tcol=T1, edge=LINE):
-        s.rect(x, y, w, h, "#101A28", rx=8, stroke=edge, sw=0.6)
-        s.text(x + 10, y + 17, lines[0], 9, tcol, weight="500")
-        for i, ln in enumerate(lines[1:]):
-            s.text(x + 10, y + 33 + i * 14, ln, 8.5, T2)
-
-    # ① EEZ 层
-    band(84, 116, "① EEZ 里创建：页面 / 组件 / 控件 / 事件绑定")
-    cw, gap, cx = 138, 12, 36
-    items = [
-        ("scr_list 列表页", "5 个固定行槽", "刷新 + 点行 + 长按"),
-        ("wifi_panel 组件", "同一套控件", "整页或进子容器"),
-        ("scr_pwd 连接页", "整页 320", "或半页 200"),
-        ("Keyboard 键盘", "默认隐藏", "点密码框才弹出"),
+    # 关键提示
+    base = 116 + 9 * 70 - 8
+    s.rect(28, base + 10, 624, 78, "#0D1420", rx=8, stroke=LINE, sw=0.6)
+    s.text(40, base + 30, "三条铁律（这一段最容易出事）", 9.5, T3)
+    notes = [
+        "① 线程：第 6 步在 WiFi driver task，绝不能直接调 LVGL/Flow —— 投递到 UI 任务（队列/信号量）",
+        "② 顺序：先写全部槽位 → 再 ap_count → 最后 scan_state=2；UI 只在 =2 时读，避免半成品",
+        "③ 单一真值源：数据只存在变量里；换后端只换 io_*.cpp，EEZ 侧一行不改",
     ]
-    for i, it in enumerate(items):
-        card(cx + i * (cw + gap), 112, cw, 76, it)
+    for i, ln in enumerate(notes):
+        s.text(40, base + 48 + i * 15, ln, 8.2, T2)
 
-    # 箭头 1
-    s.path("M340 200 V222", stroke=PRI_TXT, sw=1.3)
-    s.path("M336 216 l4 7 4 -7", stroke=PRI_TXT, sw=1.3)
-    s.text(352, 216, "事件 → action → app_set_output", 8.5, PRI_TXT)
-
-    # ② 变量表
-    band(224, 118, "② 变量表（EEZ 生成 vars.h，两层唯一接口）")
-    s.rect(36, 252, 290, 78, "#101A28", rx=8, stroke=SUC, sw=0.6)
-    s.text(46, 269, "inputs（io 写 → UI 读）", 9, SUC, weight="500")
-    s.text(46, 285, "scan_state · wifi_state · ap_count", 8.5, T2)
-    s.text(46, 299, "ssid_N · auth_N · rssi_N · band_N", 8.5, T2)
-    s.text(46, 313, "lock_N · saved_N · conn_N（N=1..5）", 8.5, T2)
-    s.rect(340, 252, 284, 78, "#101A28", rx=8, stroke=PRI, sw=0.6)
-    s.text(350, 269, "outputs（UI 写 → io 读）", 9, PRI_TXT, weight="500")
-    s.text(350, 285, "cmd_scan · cmd_pick · cmd_connect", 8.5, T2)
-    s.text(350, 299, "cmd_forget · cmd_back", 8.5, T2)
-    s.text(350, 313, "pwd · remember · pwd_open", 8.5, T2)
-
-    # 箭头 2
-    s.path("M340 342 V364", stroke=PRI_TXT, sw=1.3)
-    s.path("M336 358 l4 7 4 -7", stroke=PRI_TXT, sw=1.3)
-    s.text(352, 358, "命令环：command", 8.5, PRI_TXT)
-
-    # ③ app_model
-    band(366, 106, "③ app_model：每拍跑一次（lv_tick_get 驱动，PC / 真机同一来源）")
-    steps = [("排空命令环", "每拍读 outputs"),
-             ("调 io_*() 执行", "扫描 / 连接 / 忘记"),
-             ("回写 inputs", "app_set_input_*"),
-             ("计时", "lv_tick_get()")]
-    for i, it in enumerate(steps):
-        card(36 + i * 150, 394, 138, 62, it, T1, "#2A3550")
-
-    # 箭头 3
-    s.path("M340 472 V494", stroke=PRI_TXT, sw=1.3)
-    s.path("M336 488 l4 7 4 -7", stroke=PRI_TXT, sw=1.3)
-    s.text(352, 488, "io_*() 实现（同一组签名）", 8.5, PRI_TXT)
-
-    # ④ io 后端
-    band(496, 120, "④ io 后端：硬件唯一出口（UI 层零 WiFi 代码）")
-    ios = [("io_pc.cpp", "假数据（PC 仿真）", "无需硬件跑通流程"),
-           ("io_win.cpp", "Windows WLAN API", "PC 真 WiFi（已验证）"),
-           ("io_esp.cpp", "esp_wifi + NVS", "真机（骨架待接）")]
-    for i, it in enumerate(ios):
-        card(36 + i * 204, 524, 196, 76, it, T1, "#2A3550")
-
-    # 状态回写（右侧上升箭头）
-    s.path("M660 556 V108", stroke=SUC, sw=1.3)
-    s.path("M656 116 l4 -8 4 8", stroke=SUC, sw=1.3)
-    s.o.append('    <g transform="rotate(-90 674 332)"><text x="674" y="332" '
-               'fill="#3DDC97" font-size="9" text-anchor="middle">'
-               '状态回写：app_set_input_* → 变量变化 → 控件自动刷新</text></g>')
-
-    s.text(28, 640, "三后端同一组 io_* 签名：换硬件只换一个文件，UI 与 app_model 一行不改",
-           9.5, PRI_TXT)
+    s.text(28, base + 108, "EEZ 里真正的代码：screens.c（控件树+事件）· actions.h（动作声明）"
+                           "· vars.h（变量枚举）· structs.h（Struct/数组）· ui.c（assets+init）",
+           8.5, PRI_TXT)
 
 
 SCREENS = [
@@ -742,28 +674,18 @@ SCREENS = [
     ("mockup_03_empty.svg", "03 · 无网络（空态）",
      "WiFi 图标 + 文案 + 重新扫描主按钮",
      "03 空态：WiFi 图标 + 「未发现网络」+ 引导文案 + 重新扫描按钮", sc_empty),
-    ("mockup_04_password.svg", "04 · 密码页（未聚焦）",
-     "返回 + SSID + 密码框 + 记住密码开关 + 连接 + 忘记此网络",
-     "04 密码页（键盘未弹出）：密码框聚焦描边、记住密码开关（默认关）、整宽连接按钮", sc_password),
-    ("mockup_05_password_keyboard.svg", "05 · 密码页（键盘弹出）",
-     "点密码框后键盘自底部弹出，内容区上压，完成键收起",
-     "05 键盘弹出态：点按密码框弹出，四行键盘 + 右下「完成」收起", sc_password_kb),
     ("mockup_06_connecting.svg", "06 · 连接中",
-     "目标行蓝色强调 + 连接中胶囊 + 底部进度提示",
+     "目标行蓝描边 + 「连接中」胶囊；半页按钮同步变「连接中…」",
      "06 连接中：目标行蓝描边、状态位「连接中」、底部转圈提示", sc_connecting),
     ("mockup_07_failed.svg", "07 · 连接失败",
-     "目标行红描边 + 失败胶囊 + 底部红色错误条",
-     "07 连接失败：目标行红描边、状态位「连接失败」、底部「密码错误」错误条", sc_failed),
+     "目标行红描边 + 失败胶囊；半页标题行红字「密码错误」",
+     "07 连接失败：目标行红描边 + 状态胶囊；错误就地显示在半页标题行（不额外占高度）", sc_failed),
     ("mockup_08_forget_confirm.svg", "08 · 忘记网络确认",
      "长按行触发：遮罩 + 确认卡（取消 / 忘记）",
      "08 忘记确认：长按已保存网络 → 遮罩 + 确认弹层，忘记为危险色按钮", sc_forget),
     ("mockup_09_embedded.svg", "09 · 组件内嵌容器",
      "同一组件放进设置页卡片，尺寸随容器自适应",
      "09 组件内嵌：同一组件放进设置页卡片，行宽/字号随容器自适应（容器 408×176）", sc_embedded),
-    ("mockup_10_page_layers.svg", "10 · 页面层级（密码页覆盖列表）",
-     "密码页 = 独立整页，覆盖在列表之上；返回即回列表且状态保留",
-     "10 页面层级：① 列表（实例保留）→ 点行 → ② 密码整页覆盖；返回/完成 → 回 ①，扫描结果与滚动位置不变",
-     sc_layers),
 ]
 
 
@@ -822,19 +744,19 @@ if __name__ == "__main__":
         p = build(name, title, desc, cap, fn)
         total += os.path.getsize(p)
         print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
-    p = build_wide("mockup_12_explain_keyboard.svg", "解释图 · 键盘为什么要整页",
-                   "场景（列表在子容器）→ 键盘宽度对比（28.4/34.8/42.8）→ 结论",
-                   528, sc_explain)
+    p = build_wide("mockup_18_scan_to_ui.svg", "框图 · 扫描数据如何回流到 UI",
+                   "9 步：点击 → action → 命令 → native 泵 → 扫描 → driver task 回调 → 投影 → Flow 求值 → LVGL",
+                   900, sc_scan_to_ui)
     total += os.path.getsize(p)
     print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
-    p = build_wide("mockup_14_arch_flow.svg", "架构图 · EEZ 与硬件的数据流",
-                   "EEZ 层 → 变量表 → app_model → io 后端；命令向下、状态向上",
-                   660, sc_arch)
+    p = build_wide("mockup_17_flow_arch.svg", "架构图 · Flow 路线（EEZ 为主 + native 极薄）",
+                   "五层：EEZ 工程 → 生成源码 → Flow 运行时 → native 薄层 → 硬件；含占比与三条目标保障",
+                   884, sc_flow_arch)
     total += os.path.getsize(p)
     print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
-    p = build_wide("mockup_13_popup_forms.svg", "解释图 · 连接页两种弹出形态",
-                   "列表在子容器 → 点连接 → 半页（200）或整页（320）弹出 + 对比表",
-                   524, sc_popup_forms)
+    p = build_wide("mockup_15_subcontainer_sheet.svg", "方案图 · 子容器列表 + 半页连接",
+                   "宿主页子容器内列表 → 点行 → 遮罩 + 半页上滑（含全宽键盘）",
+                   512, sc_sheet)
     total += os.path.getsize(p)
     print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
     print("total:", total, "bytes")

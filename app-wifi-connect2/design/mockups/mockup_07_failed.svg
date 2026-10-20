@@ -1,6 +1,6 @@
 <svg viewBox="0 0 680 500" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
   <title>07 · 连接失败</title>
-  <desc>目标行红描边 + 失败胶囊 + 底部红色错误条</desc>
+  <desc>目标行红描边 + 失败胶囊；半页标题行红字「密码错误」</desc>
   <g transform="translate(40,40) scale(1.25)">
     <rect x="0" y="0" width="480" height="320" rx="14" fill="#0B0F1A" stroke="#26314A" stroke-width="1"/>
     <text x="16" y="26" fill="#F0F4FC" font-size="17" font-weight="500">WiFi</text>
@@ -53,5 +53,5 @@
     <rect x="16" y="292" width="448" height="20" fill="#2A1620" rx="6" stroke="#7A3B46" stroke-width="0.5"/>
     <text x="26" y="306" fill="#E06A6A" font-size="10.5">密码错误，点按该网络重新输入</text>
   </g>
-  <text x="40" y="472" fill="#7C8AA5" font-size="12">07 连接失败：目标行红描边、状态位「连接失败」、底部「密码错误」错误条</text>
+  <text x="40" y="472" fill="#7C8AA5" font-size="12">07 连接失败：目标行红描边 + 状态胶囊；错误就地显示在半页标题行（不额外占高度）</text>
 </svg>
