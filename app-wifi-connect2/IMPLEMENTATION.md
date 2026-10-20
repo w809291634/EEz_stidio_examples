@@ -16,7 +16,7 @@
 | `scr_host`（可选） | 宿主设置页，演示"嵌在子容器里" | 480×320 | 卡片内放 User Widget |
 
 > 组件化：把列表页的控件组做成 **User Widget**（`wifi_panel`），既能铺满当页面，
-> 也能放进任意子容器（如设置页卡片 408×176）。
+> 也能放进任意子容器（如设置页卡片 424×192，紧凑场景 408×176）。
 
 ### 1.2 控件（按页，全部静态、不动态创建）
 
@@ -58,7 +58,9 @@
 | `pick_ssid` / `pick_meta` / `pick_saved` | string/string/int | 当前选中网络 |
 | `conn_ssid` | string | 已连接 SSID |
 | `ssid_N` `auth_N` `rssi_N` `band_N` `lock_N` `saved_N` `conn_N` | string/int/bool… | 每槽 7 个，N=1..5（共 35 个） |
-| `status_N` / `row_visible_N` / `grp1_visible` | string/bool | UI 派生值（io 里算好直接给） |
+| `pwd_open` | int | 1 = 半页/连接页展示中（UI 写，io 只读） |
+
+> ★ **派生量不建变量**（`status_N` / `row_visible_N` 已删除）：状态文字、是否显示、信号点亮格数，全部在 EEZ 里用**表达式**从 `conn_N / saved_N / lock_N / rssi_N` 现算——两个真值源必然不一致（`reference/10_hw_ui_separation` §4.3）。
 
 **outputs（UI 写 → io 读，命令通道）**
 
