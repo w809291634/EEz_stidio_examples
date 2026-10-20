@@ -1,3 +1,7 @@
+> **★ 修订 v2（2026-10-20 21:25）**：列表改为 **可滚动容器 + C 侧按 `ap_cnt` 建行**；
+> §4「数组 16 条 / UI 固定 5 行」、§6 槽位对比表、§9 第 3 条（16→5 容量）**作废**。
+> 变量收敛为 3 个标量（`scan_state` / `ap_count` / `scan_status`），数组只活在 C 侧 `s_aps[]`。
+
 # WiFi 模板架构（Flow 路线）：EEZ 为主，native 极薄
 
 > 配套图：`design/mockups/mockup_17_flow_arch.svg`
