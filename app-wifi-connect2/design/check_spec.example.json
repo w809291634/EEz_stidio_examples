@@ -1,0 +1,11 @@
+{
+  "screen": [480, 320],
+  "说明": "rect 用屏幕坐标系（与 mockup_gen.py 同一套常量）；probe: text=近白文字, bright=亮度阈值, none=只画参考线",
+  "items": [
+    { "name": "列表第 1 行", "rect": [16, 68, 448, 46], "probe": "none" },
+    { "name": "列表第 2 行", "rect": [16, 120, 448, 46], "probe": "none" },
+    { "name": "状态胶囊(第1行)", "rect": [398, 83, 52, 17], "probe": "bright", "threshold": 120, "tol": 4 },
+    { "name": "半页输入框", "rect": [16, 132, 364, 36], "probe": "none" },
+    { "name": "连接按钮", "rect": [388, 132, 76, 36], "probe": "text", "tol": 4 }
+  ]
+}

@@ -47,7 +47,20 @@ def walk2(o):
         for v in o: walk2(v)
 walk2(proj["userPages"])
 
-covered = set(be.FONT_CHARS) | {chr(c) for c in range(0x20, 0x7F)}
+FONT_CHARS = getattr(be, "FONT_CHARS", None)
+non_ascii = [c for c in ui_chars if ord(c) > 0x7E]
+if FONT_CHARS is None:
+    # 模板工程（还没有字体）：无文案就放行；一旦有中文却说不出字符集，必须报错，
+    # 不能"跳过=通过"（P-0012）。
+    if non_ascii:
+        print("FAIL: 工程有 %d 个非 ASCII 文案，但 build_example 未定义 FONT_CHARS"
+              % len(non_ascii))
+        print("      先定义 FONT_CHARS（字体字符集），再跑本审计")
+        sys.exit(1)
+    print("OK: 模板工程无文案（未定义 FONT_CHARS，未做字符比对）")
+    sys.exit(0)
+
+covered = set(FONT_CHARS) | {chr(c) for c in range(0x20, 0x7F)}
 missing = sorted(c for c in ui_chars if ord(c) > 0x7E and c not in covered)
 priv = sorted(c for c in ui_chars if 0xE000 <= ord(c) <= 0xF8FF)
 print("UI 非 ASCII 字符数:", len([c for c in ui_chars if ord(c) > 0x7E]))

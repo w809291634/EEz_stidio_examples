@@ -21,10 +21,18 @@ app-wifi-connect2/
 ## 构建（顺序敏感）
 
 ```bat
+rem 一键预检：生成 → CLI 构建 → 产物校验 → 字符审计 → 静态自检 → 字库 → 仿真编译
+python design\preflight.py --with-sim
+
+rem 或分步：
 python build_example.py           && rem 设计源 → 工程
 python design\cli_build.py        && rem EEZ CLI 构建（0 flow 错误才继续）
 双击 design\sim_cmake\run_sim.bat   && rem 编译 + 启动 PC 仿真
 ```
+
+**完整流程 / 语法防火墙 / 15 坑 / 截图对照 / 一次完成 Gate 表**：见 `EEZ_WORKFLOW.md`。
+**截图与设计图对照**：`python design\ui_check.py --design design\mockups\mockup_01_list.svg`
+（产出 `design/check/report.html`：设计图 ｜ 截图 ｜ 叠加图 三栏 + 偏差表）。
 
 ## 当前状态（2026-10-20 19:15 验证）
 
