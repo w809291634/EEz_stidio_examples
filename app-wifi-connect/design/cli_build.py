@@ -34,6 +34,16 @@ try:
 except Exception:
     subprocess.call(['taskkill', '/F', '/IM', 'EEZ Studio.exe'], shell=False)
 
+# ★ flow 检查错误是非致命的（构建仍会"成功"），必须显式拦截：
+#   "identifier ... is neither input or local or global variable" 等
+import re
+m = re.search(r'(\d+) errors? and no warning', txt)
+if m and int(m.group(1)) > 0:
+    hit = 'FLOW_ERRORS(%s)' % m.group(1)
+    for line in txt.splitlines():
+        if 'neither input' in line or 'identifier' in line:
+            print('  FLOW-ERR:', line.strip())
+
 print('==== BUILD RESULT:', hit or 'TIMEOUT/FAIL', '====')
 print('---- last log lines ----')
 print('\n'.join(l for l in txt.splitlines()

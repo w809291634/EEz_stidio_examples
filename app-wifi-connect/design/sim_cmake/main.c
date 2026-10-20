@@ -67,7 +67,20 @@ static void demo_timer(lv_timer_t *t)
     tick++;
     if (getenv("WIFI_REAL")) {
         /* ★ 真模式：全自动关闭，扫描/连接/取消全部由用户手动操作
-         * （点"刷新"发起扫描）。这里只周期打印契约状态供观察。 */
+         * （点"刷新"发起扫描）。这里只周期打印契约状态供观察。
+         * 测试辅助：WIFI_AUTOSCAN=1 自动发起一次扫描（仅开发验证用，
+         * 不影响"零自动化"的正常使用）。 */
+        if (getenv("WIFI_AUTOSCAN") && !demo_scan_fired && tick >= 4) {
+            extern void action_scan_start(lv_event_t * e);
+            action_scan_start(NULL);
+            demo_scan_fired = true;
+        }
+        if (getenv("WIFI_AUTOEXIT") && demo_scan_fired &&
+                get_var_scan_state() == 2) {
+            take_shot("shot_real.bmp");
+            printf("[DEMO] real scan captured\n");
+            exit(0);
+        }
         if (tick % 4 == 0) {
             printf("[STATE] scan=%d aps=%d wifi=%d pick='%s' conn='%s' rem=%d\n",
                    (int)get_var_scan_state(), (int)get_var_ap_count(),
@@ -76,6 +89,12 @@ static void demo_timer(lv_timer_t *t)
         }
         return;
     }
+    if (!demo_scan_fired && tick >= 2) {
+        /* 假模式自动演示第一步：扫描（= 点"刷新"按钮的等价路径） */
+        extern void action_scan_start(lv_event_t * e);
+        action_scan_start(NULL);
+        demo_scan_fired = true;
+    }
     if (demo_scan_fired && !demo_pick_fired &&
             get_var_scan_state() == 2) {
         demo_tap(240, 46 + 1 * 36 + 12);   /* 点第 2 行（开放网络 Guest） */
@@ -83,8 +102,10 @@ static void demo_timer(lv_timer_t *t)
     }
     if (demo_pick_fired && !demo_connect_fired &&
             get_var_pick_ssid()[0] != '\0') {
-        if (++wait >= 4) {                 /* 面板弹出后稍候点"连接" */
-            demo_tap(40 + 60 + 75, 20 + 250 + 13);
+        if (++wait >= 4) {                 /* 面板弹出后稍候发起连接
+         * （= 点"连接"按钮的等价路径：动作只投递，密码取 textarea——演示为空） */
+            extern void action_wifi_connect(lv_event_t * e);
+            action_wifi_connect(NULL);
             demo_connect_fired = true;
         }
     }

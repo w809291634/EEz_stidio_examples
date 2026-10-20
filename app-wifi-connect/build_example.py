@@ -11,7 +11,7 @@
     scan_state   int   0=未扫 1=扫描中 2=完成
     ap_count     int   扫描到的网络数
     wifi_state   int   0=未连 1=连接中 2=已连接
-    wifi_conn_ssid str 已连接的 SSID
+    conn_ssid str 已连接的 SSID
     pick_ssid    str   当前选中行 SSID（'' = 无选中，面板 hiddenFlag 用）
     g_remember   bool  记住密码
         （v3：扫描结果改为 C 侧链表渲染——EEZ 只留空容器 list_box，
@@ -22,7 +22,7 @@
     列表：6 行 ×（SSID 标签 + 锁标志 + 信号强度 + "已连接"徽标 + 点击热区）
           热区 hiddenFlag = "wifi_slotN_ssid == ''"  ★ true=隐藏（JSON 键名是 hiddenFlag，DSL 里才叫 hiddenExpr）（P-0080 语义）
           锁   hiddenExpr = "!wifi_slotN_lock"
-          徽标 hiddenExpr = "!(wifi_state == 2 && wifi_conn_ssid == wifi_slotN_ssid)"
+          徽标 hiddenExpr = "!(wifi_state == 2 && conn_ssid == wifi_slotN_ssid)"
     底部：连接状态标签（wifi_state 三态表达式）
     密码面板（hiddenFlag = "pick_ssid == ''"）：
       标题(pick_ssid) + 密码 Textarea(passwordMode+oneLineMode, 由键盘直接输入)
@@ -50,10 +50,47 @@ FONT_FILE = "fonts/simhei.ttf"   # 全量黑体（相对工程目录 P-0035）�
                                  # "doesn't have any characters in range"
 # UI 用到的全部字符（运行期表达式产出的静态文案并集；SSID 属运行期数据，
 # 演示字体只覆盖静态文案，真机按产品字库预算扩，见 README）
-FONT_CHARS = (
-    "扫描中已发现个网络未点击刷新连接中记住密码是否取消输锁"
-    "WiFi0123456789.-:dBm入 "
-)
+def gb2312_charset():
+    """标准汉字库子集：GB2312 符号区(0xA1A1-0xA9FE) + 一二级汉字(0xB0A1-0xF7FE)，
+    经 Python 'gb2312' 编解码器映射到 Unicode（共 ~7445 字形）。
+    真机字库预算：14px bpp4 ≈ 750KB（KB 09 号作业卡：一二级全量 +700~900KB）。"""
+    chars = set()
+    for hi in range(0xA1, 0xF8):
+        for lo in range(0xA1, 0xFF):
+            try:
+                chars.add(bytes([hi, lo]).decode("gb2312"))
+            except Exception:
+                pass
+    return "".join(sorted(chars))
+
+_RAW_CHARS = (gb2312_charset()
+              + "".join(chr(c) for c in range(0x20, 0x7F)))
+    # ★ ASCII 0x20-0x7E 必须并入（P-0125 实测条目 lvglRanges[0]=32-126）：
+    #   GB2312 解码只出中文，漏 ASCII → GUI 画布所有拉丁/数字豆腐 ↑ ★ ASCII 0x20-0x7E 必须并入（P-0125 实测条目 lvglRanges[0]=32-126）：
+    #   GB2312 解码只出中文，漏 ASCII → GUI 画布所有拉丁/数字豆腐
+
+def _filter_by_font_cmap(chars, ttf_path):
+    """★ 按 TTF 的 cmap 过滤字符集：EEZ 提取字形时，lvglRanges 里任何
+    "字体中没有的字" 的区间都会报 extraction failed（如 GB2312 符号区
+    U+30FB 间隔号 simhei 没有）。fontTools 缺失时跳过过滤并大声警告。"""
+    try:
+        from fontTools.ttLib import TTFont
+    except ImportError:
+        print("WARN: fontTools 不可用，字符集未按字体过滤——"
+              "EEZ GUI 字体提取可能报 extraction failed")
+        return chars
+    f = TTFont(ttf_path, lazy=True)
+    cmap = set(f.getBestCmap().keys())
+    f.close()
+    kept = [c for c in chars if ord(c) in cmap]
+    dropped = [c for c in chars if ord(c) not in cmap]
+    if dropped:
+        print("font coverage: dropped %d chars not in TTF: %s"
+              % (len(dropped), "".join(dropped[:40])))
+    return "".join(kept)
+
+FONT_CHARS = _filter_by_font_cmap(_RAW_CHARS, FONT_FILE)
+
 FONT_NAME = "cn14"
 
 
@@ -209,7 +246,7 @@ def build_project():
     # ---------------- 底部连接状态 ----------------
     ch.append(label(16, 268, 448, 30, None, color="0x6CE69C",
                     identifier="lbl_state", font=FONT_NAME, center=True,
-                    expr='wifi_state == 2 ? "已连接: " + wifi_conn_ssid : '
+                    expr='wifi_state == 2 ? "已连接: " + conn_ssid : '
                          '(wifi_state == 1 ? "连接中..." : "未连接")'))
 
     # ---------------- 密码面板（覆盖层）----------------
@@ -334,7 +371,7 @@ def build_project():
         "lvglStyles": {"objID": oid(), "styles": [], "defaultStyles": {}},
         "lvglGroups": {"objID": oid(), "groups": []},
         "fonts": [font_entry(FONT_NAME, 14,
-                              "黑体子集 14px（WiFi 演示静态文案）")],
+                              "GB2312 符号区+一二级汉字 7445 字形 14px（标准字库子集）")],
         "bitmaps": [], "colors": [],
         "themes": [{"objID": oid(), "name": "Default", "colors": []}],
     }

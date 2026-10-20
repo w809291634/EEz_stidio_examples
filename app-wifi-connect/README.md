@@ -57,6 +57,7 @@ app-wifi-connect/
 ├── design/audit_chars.py       ← 逐字审计（文案 vs 字体字符集）
 ├── design/gen_font.py          ← 烘 cn14 中文字体（CLI 构建后跑）
 ├── fonts/simhei.ttf            ← 全量黑体（EEZ 提取字形用，别用子集 TTF）
+│                                  ★ 字符集 = GB2312 符号区+一二级汉字 7445 字形
 ├── src/native/                 ← ★ 业务层（人写，PC/真机共用）
 │   ├── app_model.h/.cpp        ← 契约头 + 状态 + 命令环 + lifecycle
 │   ├── native_vars.h/.cpp      ← 变量桥 6 个（extern "C" ★必加）
@@ -101,6 +102,12 @@ python design/audit_chars.py     && python design/gen_font.py
    假 indev 自动演示——见 git 历史版 README 与 KB P-0163。
 7. **自动演示点的是开放网络 Guest**（空密码直连）；带密码网络在真机由
    键盘输入（textarea 已就位），演示跳过打字。
+
+## ★ 真模式操作（零自动化）
+
+`run_sim_realwifi.bat` 启动后**一切手动**：点"刷新"扫描 → 点行 → 密码面板 →
+键盘输入 → 连接。测试辅助开关（不影响正常使用）：`WIFI_AUTOSCAN=1` 自动发起
+一次扫描、`WIFI_AUTOEXIT=1` 扫描完成自动截图退出（无头验证用）。
 
 ## ★ PC 真 WiFi 模式（io_win.cpp，Windows WLAN API）
 
