@@ -202,13 +202,19 @@ def label(x, y, w, h, text=None, color="0xFFFFFF", identifier=None, expr=None,
 
 
 def button(x, y, w, h, text, action, identifier=None, bg="0x5B7CFA"):
-    lbl = widget("LVGLLabelWidget", 0, 0, w, h,
-                 local={"MAIN": {"DEFAULT": dict(ZERO_PAD,
-                                                 text_color="0xFFFFFF",
-                                                 text_align="CENTER",
-                                                 text_font=FONT_NAME)}},
-                 text=text, textType="literal", longMode="WRAP",
-                 recolor=False, useStaticText=True)
+    # EEZ 原生新建按钮的子 label 形态（官方 defaultValue 逐字段一致）：
+    # width/height 用 content 单位（自适应文字）+ localStyles align:CENTER
+    # ——默认就是居中的，画布/真机同源渲染
+    lbl = {"objID": oid(), "type": "LVGLLabelWidget",
+           "left": 0, "top": 0, "width": 80, "height": 32,
+           "widthUnit": "content", "heightUnit": "content",
+           "text": text, "textType": "literal", "longMode": "WRAP",
+           "recolor": False, "useStaticText": True,
+           "localStyles": {"objID": oid(),
+                           "definition": {"MAIN": {"DEFAULT": {
+                               "text_color": "0xFFFFFF",
+                               "align": "CENTER",
+                               "text_font": FONT_NAME}}}}}
     return widget(
         "LVGLButtonWidget", x, y, w, h,
         identifier=identifier,
