@@ -80,6 +80,7 @@ EEZ_stidio_examples/
 | [`w67-w3-w2-slider-arc-bar/`](w67-w3-w2-slider-arc-bar/) | **调节与指示**（W67 Slider / W3 Bar / W2 Arc）：一个 flow 全局变量 `g_val` 同时驱动 Slider/Arc（可拖双向）/Bar（跟随）/Label（表达式拼接），零 C | ★ Slider/Arc 的 value 是 assignable（双向回写）、Bar 是 input（单向）；全局变量 `native:true` 需自实现 `set_var_xxx` 桥，纯 EEZ 用 `false`；文本拼接 `"s"+int` 直接可用 |
 | [`perf-tabview-native-vs-eez/`](perf-tabview-native-vs-eez/) | **资源消耗对照**：同构 tabview，原生 LVGL vs EEZ 实测（RAM/Flash） | ★ 实测：RAM 堆 EEZ 仅多 ~1.4KB（+9%，frag 0）；flash text 多 ~1.33MB（flow 引擎+assets）——**RAM 可忽略，flash 是 MCU 主要代价**；perf 对照明细见其 README |
 | [`w14-w35-w62-chart-led-scale/`](w14-w35-w62-chart-led-scale/) | **数据可视化与状态指示**（W14 Chart / W35 Led / W62 Scale） | ★ Chart 在 EEZ 是空壳（零属性）→ ui_init 后 C 喂 series；★ Meter 仅 LVGL 8.x（9.4 没有）→ 用 Scale 替代；Led 的 color/brightness 都是 expression 可绑定；Scale 属性可选项多、只写要覆盖的键 |
+| [`w23-w59-w73-w16-select-switch/`](w23-w59-w73-w16-select-switch/) | **选择与开关**（W23 Dropdown / W59 Roller / W73 Switch / W16 Checkbox），可见页签 Tabview 4 页 | ★ 联动主线：Dropdown+Roller 的 selected 绑同一 g_sel（assignable 双向，零 flow 图）；★ ToggleButton(W85) 是 EEZ-GUI 件、无 LVGL codegen（lvglBuild 报错）；Switch/Checkbox 无绑定属性；排障用 per-tab bisect |
 
 > 验证状态（2026-10-19）：九个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
 > 产物清单对账）。手势运行时行为（gesture-page-switch / one-way-gesture-switch）按 P-0141
