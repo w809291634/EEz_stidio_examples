@@ -664,6 +664,80 @@ def sc_scan_to_ui(s):
            8.5, PRI_TXT)
 
 
+def sc_password_flow(s):
+    """密码怎么到硬件、结果怎么回 UI：下行 5 步 + 上行 5 步 + reason 表。"""
+    s.text(28, 38, "密码怎么下去、结果怎么上来", 20, T1, weight="500")
+    s.text(28, 64, "密码只在「输入框 → 一次调用」之间存在；结果只通过变量回来", 12.5, T2)
+    s.path("M28 78 H652", stroke=LINE, sw=0.6)
+
+    BW, GAP, X0 = 116, 10, 30
+
+    def arrow(x, y):
+        s.path("M%d %d h6" % (x, y), stroke="#33405E", sw=1.1)
+        s.path("M%d %d l4 3.2 l-4 3.2" % (x + 6, y - 3.2), stroke="#33405E", sw=1.1)
+
+    def box(i, y, no, title, l1, l2, col):
+        x = X0 + i * (BW + GAP)
+        s.rect(x, y, BW, 74, "#101A28", rx=8, stroke=col, sw=0.55)
+        s.rect(x + 9, y + 9, 15, 15, col, rx=7.5, opacity="0.16")
+        s.text(x + 16.5, y + 20, no, 8, col, anchor="middle", weight="500")
+        s.text(x + 9, y + 40, title, 8.8, T1, weight="500")
+        s.text(x + 9, y + 56, l1, 7.8, T2)
+        s.text(x + 9, y + 68, l2, 7.8, T3)
+
+    s.text(30, 100, "① 下行：密码 → WiFi 驱动（同一拍内完成，不阻塞 UI）", 9.5, T3)
+    a_boxes = [
+        ("ta_pwd 输入", "密码模式 · 最多 63", "点框才弹键盘", PRI),
+        ("点「连接」", "action_connect()", "生成事件→你的函数", PRI),
+        ("命令槽单份拷贝", "≤64B，只存一份", "排空后立即清零", SUC),
+        ("本地校验", "长度 8–63", "不合规→reason=5", SUC),
+        ("io_wifi_join()", "set_config + connect", "异步，立即返回", SUC),
+    ]
+    for i, (t, l1, l2, col) in enumerate(a_boxes):
+        box(i, 112, str(i + 1), t, l1, l2, col)
+        if i < 4:
+            arrow(X0 + i * (BW + GAP) + BW + 1, 149)
+    s.text(30, 204, "★ 密码不写进 Flow 变量、不进日志、不落 NVS；只在命令槽里存在到同拍 drain 完成（≤1 帧）",
+           8.5, PRI_TXT)
+
+    s.text(30, 232, "② 上行：结果 → UI（全部在 UI 任务里发布，驱动任务只写标志）", 9.5, T3)
+    b_boxes = [
+        ("CONNECTED", "DISCONNECTED(reason)", "驱动任务只写标志", "#E8A25C"),
+        ("结果结构 g_res", "{state, reason, ip}", "单写者，不加锁", "#E8A25C"),
+        ("pump 读结果", "UI 任务发布变量", "成功才清空输入", SUC),
+        ("eez_flow_tick", "按钮「连接中…」", "收起 / 标题红字", PRI),
+        ("LVGL 呈现", "失败保留半页+键盘", "可直接重试", PRI),
+    ]
+    for i, (t, l1, l2, col) in enumerate(b_boxes):
+        box(i, 244, str(i + 1), t, l1, l2, col)
+        if i < 4:
+            arrow(X0 + i * (BW + GAP) + BW + 1, 281)
+    s.text(30, 336, "★ 成功 → 半页自动收起、该行变「已连接」；失败 → 半页不关、按钮恢复可点，密码框保留供重试",
+           8.5, PRI_TXT)
+
+    s.rect(28, 352, 624, 136, "#0D1420", rx=8, stroke=LINE, sw=0.6)
+    s.text(40, 372, "③ 结果不是一个「失败」，而是可解释的 reason（否则用户只会看到「没用」）", 9.5, T3)
+    for x, t in ((40, "reason"), (120, "含义"), (300, "UI 文案"), (470, "动作")):
+        s.text(x, 394, t, 8, T3)
+    rows = [
+        ("15", "四次握手超时（密码不对）", "密码错误，请重新输入", "保留半页，输入框聚焦"),
+        ("201", "扫描不到该 AP", "网络已消失，请重新扫描", "回列表并触发扫描"),
+        ("205 / 2 / 3", "连接失败 / 认证过期", "连接超时，可重试", "按钮恢复，允许重试"),
+        ("本地 5", "长度不在 8–63", "密码需 8–63 位", "不发命令，就地提示"),
+    ]
+    for i, (a1, b1, c1, d1) in enumerate(rows):
+        y = 414 + i * 17
+        s.text(40, y, a1, 8.2, FAIL)
+        s.text(120, y, b1, 8.2, T1)
+        s.text(300, y, c1, 8.2, T2)
+        s.text(470, y, d1, 8.2, T2)
+
+    s.text(28, 512, "四条纪律：① 密码只在 ta_pwd 与一次调用的栈上 ② 日志只打长度 ③ 失败路径也要清零临时缓冲 ④ 只有 remember=1 才落盘",
+           8.5, T2)
+    s.text(28, 532, "平台差异：PC（Windows）temporary profile 不稳，remember=0 也需先建 profile；真机（esp_wifi）可直接不落 NVS",
+           8.5, T3)
+
+
 SCREENS = [
     ("mockup_01_list.svg", "01 · 列表主态（分组）",
      "已连接/已保存置顶分组 + 可用网络；行内含信号图示、名称、类型·强度·频段、锁、状态位",
@@ -744,6 +818,11 @@ if __name__ == "__main__":
         p = build(name, title, desc, cap, fn)
         total += os.path.getsize(p)
         print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
+    p = build_wide("mockup_19_password_flow.svg", "框图 · 密码下行 / 结果上行",
+                   "下行 5 步（输入→action→直传→校验→join）+ 上行 5 步（事件→结果→pump→Flow→UI）+ reason 映射",
+                   556, sc_password_flow)
+    total += os.path.getsize(p)
+    print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
     p = build_wide("mockup_18_scan_to_ui.svg", "框图 · 扫描数据如何回流到 UI",
                    "9 步：点击 → action → 命令 → native 泵 → 扫描 → driver task 回调 → 投影 → Flow 求值 → LVGL",
                    900, sc_scan_to_ui)

@@ -29,6 +29,7 @@
 |---|---|
 | `mockup_17_flow_arch.svg` | 五层：EEZ 工程 → 生成源码 `src/ui` → Flow 运行时 → native 薄层 → 硬件；含 90/10 代码占比与三条目标保障 |
 | `mockup_18_scan_to_ui.svg` | 扫描回流 9 步：点击 → actions → 命令 → native 泵 → 扫描 → SCAN_DONE → 投影 → `eez_flow_tick` → LVGL |
+| `mockup_19_password_flow.svg` | 密码下行 5 步（输入→action→命令槽→校验→join） + 上行 5 步（事件→结果结构→pump→Flow→UI）+ reason→文案映射 |
 
 ## 已删除（避免再次生成或引用）
 

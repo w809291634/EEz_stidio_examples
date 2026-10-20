@@ -212,3 +212,75 @@ static void publish_to_vars(void)
 **好处**：C 侧拿到完整能力（16 个 AP、排序、平滑、去重），EEZ 侧仍是纯标量绑定，
 零 Flow 依赖、零工具链改动；超出 5 个时 `ap_count` 仍报真实数量（标题可写"共 N 个"）。
 
+---
+
+## 8. 密码链路：怎么下去、怎么上来（配 `mockup_19_password_flow`）
+
+### 8.1 下行（UI → 硬件）
+
+| 步 | 动作 | 代码归属 |
+|---|---|---|
+| 1 | 键盘输入进 `ta_pwd`（`password_mode`、`maxlength=63`） | EEZ 控件 |
+| 2 | 点「连接」→ 生成事件 → `action_connect()` | `screens.c` 生成，函数你写 |
+| 3 | **命令槽单份拷贝**（≤64B）+ `cmd_connect=1` | native |
+| 4 | 同拍 drain：校验 8–63；不合规 → `fail_reason=5`，**不调硬件** | native |
+| 5 | `io_wifi_join(slot.pwd, remember)` → `esp_wifi_set_config` + `esp_wifi_connect`（异步） | native → 驱动 |
+| 6 | 返回后立即 `memset(slot, 0, …)` | native |
+
+```c
+/* 命令槽：单槽单写者，只活一帧 */
+static struct { int cmd; char pwd[64]; bool remember; } s_slot;
+
+void action_connect(lv_event_t *e) {          /* UI 任务 */
+    const char *p = lv_textarea_get_text(objects.ta_pwd);
+    size_t n = strlen(p);
+    s_slot.cmd = CMD_CONNECT; s_slot.remember = app_get_input_b(APP_IN_REMEMBER);
+    memcpy(s_slot.pwd, p, n < 63 ? n : 63); s_slot.pwd[63] = 0;
+    if (n < 8) io_publish_fail(5);            /* 本地拦，不碰硬件 */
+}
+
+void app_model_poll(void) {                   /* 同一 UI 任务，每拍 */
+    if (s_slot.cmd == CMD_CONNECT) {
+        s_slot.cmd = 0;
+        io_wifi_join(s_slot.pwd, s_slot.remember);
+        memset(s_slot.pwd, 0, sizeof(s_slot.pwd));   /* 成功/失败都清 */
+    }
+}
+```
+
+### 8.2 上行（驱动 → UI）
+
+```c
+/* 驱动任务（esp_wifi 事件回调）：只写结果，绝不碰 LVGL/Flow */
+static volatile struct { int state; int reason; } g_res;
+case WIFI_EVENT_STA_DISCONNECTED: g_res.state = 3; g_res.reason = info->reason; break;
+case WIFI_EVENT_STA_CONNECTED:    g_res.state = 2; g_res.reason = 0;         break;
+
+/* UI 任务：pump 读走并发布变量 */
+app_set_input_i(IN_WIFI_STATE, g_res.state);
+app_set_input_i(IN_FAIL_REASON, g_res.reason);
+```
+
+- 成功（`state=2`）：`pwd_open=0` 收起半页、`conn_index=N` 行变「已连接」、清空 `ta_pwd`；
+- 失败（`state=3`）：半页不关、按钮恢复可点、`ta_pwd` **保留**供重试（只有连接成功才清）；
+- 进行中（`state=1`）：按钮禁用并显示「连接中…」，防重复投递。
+
+### 8.3 reason → 文案（UI 侧，不在 C 里写中文）
+
+| reason | 含义 | 文案 |
+|---|---|---|
+| 15 | 四次握手超时（密码错） | 密码错误，请重新输入 |
+| 201 | 扫描不到 AP | 网络已消失，请重新扫描 |
+| 205 / 2 / 3 | 连接失败 / 认证过期 | 连接超时，可重试 |
+| 5（本地） | 长度不在 8–63 | 密码需 8–63 位 |
+
+> 文案留在 EEZ（`lbl_sheet_err` 的表达式按 `fail_reason` 分支），native 只给数字——
+> 这样换语言不用改 C。若表达式分支太深，退化为 C 发布 `fail_text` 字符串也行，但只选一种。
+
+### 8.4 四条纪律
+
+1. 密码**不进 Flow 变量**（会长期驻留堆、可能进快照）；
+2. 日志**只打长度**，任何路径都不打明文；
+3. **失败路径也要清零**临时缓冲（`memset` 放 `io_wifi_join` 返回后，不放在成功分支里）；
+4. 只有 `remember=1` 才落盘（ESP 写 NVS；PC 写 WLAN profile）。
+   平台差异：Windows 的 temporary profile 不稳，`remember=0` 也需要先建 profile 再删。
