@@ -1,11 +1,37 @@
 # -*- coding: utf-8 -*-
-"""app-wifi-connect2 —— 最小可构建的 EEZ Studio LVGL 示例工程（生成器）
+"""app-wifi-connect2 —— WiFi 扫描列表（v1：列表 + 假数据 + 滚动）
 
-本文件是示例的唯一设计源：app-wifi-connect2.eez-project 由它生成，请勿手改产物。
+本文件是工程唯一设计源：由它生成 .eez-project，请勿手改产物。
 
-    python build_example.py      # 重新生成 app-wifi-connect2.eez-project
+    python build_example.py        → app-wifi-connect2.eez-project
+    python design/cli_build.py     → src/ui/（EEZ CLI 生成，勿手改）
+    python design/gen_font.py      → src/ui/fonts/ui_font_cn14.c
 
-屏幕基线：480x320 · LVGL 9.4 · EEZ Studio 0.29（工程模型 projectVersion=v3）。
+结构（单屏，480×320，深色）：
+  main screen
+    lbl_title   (16,14,200,24)   "Wi-Fi"                 #f0f4fc
+    lbl_status  (16,40,372,16)   ""（C 侧写：已发现 N 个网络）  #8a99b3
+    btn_refresh (400,14,64,26)   "刷 新"  CLICKED→action_scan_start
+    list_box    (16,64,448,242)  滚动容器（bg 透明，scrollbar AUTO）
+      row_1..row_10  (0, i*50, 448,44)  初始 HIDDEN，C 侧填值/显隐
+        bar_N_1..4   信号条 3×5/8/11/14 @ x=14/20/26/32（底对齐 34）
+        lbl_ssid_N   (44,6,230,16)   SSID        #f0f4fc
+        lbl_meta_N   (44,24,250,16)  类型·dBm·频段 #8a99b3
+        lbl_state_N  (310,14,120,16) 状态        #8a99b3
+
+  变量（native，C 侧 get_var_/set_var_ 桥）：
+    scan_state  int  0=未扫 1=扫描中 2=完成
+    ap_count    int  扫描到的网络数（真实总数，可 >10）
+    scan_status str  C 侧直接写 lbl_status 的文案
+
+  动作（native，C 侧 action_scan_start(lv_event_t*)）：
+    scan_start  刷新按钮 → io_scan_start()
+
+  字体：cn14 = simhei.ttf 14px，GB2312 符号区+一二级汉字 + ASCII，
+        经 TTF cmap 过滤（P-0125：缺字形会让 EEZ 提取报 extraction failed）
+
+数据流：行内容全部由 src/native/wifi_ui_sync.cpp 直接写控件
+        （不建 Flow 绑定、不投影变量）——EEZ 只提供外壳与 10 个行对象。
 """
 import json
 import os
@@ -15,45 +41,79 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_FILE = os.path.join(HERE, "app-wifi-connect2.eez-project")
 
 SCREEN_W, SCREEN_H = 480, 320
+ROW_PITCH, ROW_H, ROW_COUNT = 50, 44, 10
+LIST_X, LIST_Y, LIST_W, LIST_H = 16, 64, 448, 242
 
-# ---------------------------------------------------------------------------
-# 构建模板：与 EEZ Studio 0.29 新建 LVGL 工程的 settings.build.files 逐字一致。
-# 生成代码（screens.c / ui.c / ...）的骨架 = 模板 + ${eez-studio ...} 占位符展开。
-# ---------------------------------------------------------------------------
-BUILD_TEMPLATES = {
-    'screens.h': '#ifndef EEZ_LVGL_UI_SCREENS_H\r\n#define EEZ_LVGL_UI_SCREENS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_SCREENS_DECL}\r\n//${eez-studio LVGL_SCREENS_DECL_EXT}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_SCREENS_H*/',
-    'screens.c': '#include <string.h>\n\n#include "screens.h"\n#include "images.h"\n#include "fonts.h"\n#include "actions.h"\n#include "vars.h"\n#include "styles.h"\n#include "ui.h"\n\n//${eez-studio LVGL_SCREENS_DEF}\n//${eez-studio LVGL_SCREENS_DEF_EXT}',
-    'actions.h': '#ifndef EEZ_LVGL_UI_EVENTS_H\r\n#define EEZ_LVGL_UI_EVENTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_ACTIONS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_EVENTS_H*/',
-    'vars.h': '#ifndef EEZ_LVGL_UI_VARS_H\r\n#define EEZ_LVGL_UI_VARS_H\r\n\r\n#include <stdint.h>\r\n#include <stdbool.h>\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n// enum declarations\r\n\r\n//${eez-studio FLOW_ENUMS}\r\n\r\n// Flow global variables\r\n\r\n//${eez-studio FLOW_GLOBAL_VARIABLES_ENUM}\r\n\r\n// Native global variables\r\n\r\n//${eez-studio LVGL_VARS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_VARS_H*/',
-    'structs.h': '#ifndef EEZ_LVGL_UI_STRUCTS_H\n#define EEZ_LVGL_UI_STRUCTS_H\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n\n#include <eez/flow/flow.h>\n#include <stdint.h>\n#include <stdbool.h>\n\n#include "vars.h"\n\nusing namespace eez;\n\n//${eez-studio FLOW_STRUCTS}\n\n//${eez-studio FLOW_STRUCT_VALUES}\n\n#endif\n\n#endif /*EEZ_LVGL_UI_STRUCTS_H*/\n',
-    'images.h': '#ifndef EEZ_LVGL_UI_IMAGES_H\r\n#define EEZ_LVGL_UI_IMAGES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_IMAGES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_IMAGES_H*/',
-    'images.c': '#include "images.h"\n\n//${eez-studio LVGL_IMAGES_DEF}',
-    'fonts.h': '#ifndef EEZ_LVGL_UI_FONTS_H\r\n#define EEZ_LVGL_UI_FONTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_FONTS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_FONTS_H*/',
-    'styles.h': '#ifndef EEZ_LVGL_UI_STYLES_H\r\n#define EEZ_LVGL_UI_STYLES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_STYLES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_STYLES_H*/',
-    'styles.c': '#include "styles.h"\n#include "images.h"\n#include "fonts.h"\n\n//${eez-studio LVGL_STYLES_DEF}\n',
-    'ui.h': '#ifndef EEZ_LVGL_UI_GUI_H\n#define EEZ_LVGL_UI_GUI_H\n\n//${eez-studio LVGL_INCLUDE}\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n#include <eez/flow/lvgl_api.h>\n#endif\n\n#if !defined(EEZ_FOR_LVGL)\n#include "screens.h"\n#endif\n\n#ifdef __cplusplus\nextern "C" {\n#endif\n\n//${eez-studio GUI_ASSETS_DECL}\n\nvoid ui_init();\nvoid ui_tick();\n\n#if !defined(EEZ_FOR_LVGL)\nvoid loadScreen(enum ScreensEnum screenId);\n#endif\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // EEZ_LVGL_UI_GUI_H',
-    'ui.c': '#if defined(EEZ_FOR_LVGL)\n#include <eez/core/vars.h>\n#endif\n\n#include "ui.h"\n#include "screens.h"\n#include "images.h"\n#include "actions.h"\n#include "vars.h"\n\n//${eez-studio GUI_ASSETS_DEF}\n\n//${eez-studio LVGL_NATIVE_VARS_TABLE_DEF}\n\n//${eez-studio LVGL_ACTIONS_ARRAY_DEF}\n\n#if defined(EEZ_FOR_LVGL)\n\nvoid ui_init() {\n    eez_flow_init(assets, sizeof(assets), (lv_obj_t **)&objects, sizeof(objects), images, sizeof(images), actions);\n}\n\nvoid ui_tick() {\n    eez_flow_tick();\n    tick_screen(g_currentScreen);\n}\n\n#else\n\nstatic int16_t currentScreen = -1;\n\nstatic lv_obj_t *getLvglObjectFromIndex(int32_t index) {\n    if (index == -1) {\n        return 0;\n    }\n    return ((lv_obj_t **)&objects)[index];\n}\n\nvoid loadScreen(enum ScreensEnum screenId) {\n    currentScreen = screenId - 1;\n    lv_obj_t *screen = getLvglObjectFromIndex(currentScreen);\n    lv_scr_load_anim(screen, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);\n}\n\nvoid ui_init() {\n    create_screens();\n//${eez-studio LVGL_LOAD_FIRST_SCREEN}\n}\n\nvoid ui_tick() {\n    tick_screen(currentScreen);\n}\n\n#endif\n',
-}
+# ---- 设计令牌（与 design/mockups/ 的图同一套值，改这里重出图）----
+BG        = "0x0b0f1a"   # 屏幕底
+ROW_BG    = "0x101a28"   # 行底
+ROW_EDGE  = "0x26314a"   # 行描边
+BAR_DIM   = "0x2a3550"   # 信号条（未点亮）
+ELEVATED  = "0x1c2440"   # 按钮底
+TEXT1     = "0xf0f4fc"   # 主文字
+TEXT2     = "0x8a99b3"   # 次文字
 
-# 各控件类型的默认 widgetFlags（LVGL 9 口径，取自 EEZ Studio 0.29 控件定义）
-DEFAULT_FLAGS = {
-    "LVGLScreenWidget": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
-    "LVGLLabelWidget": "GESTURE_BUBBLE",
-    "LVGLContainerWidget": "GESTURE_BUBBLE",
-    "LVGLButtonWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLSwitchWidget": "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLSliderWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLBarWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLSpinnerWidget": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLCheckboxWidget": "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLPanelWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-}
+FONT_FILE = "fonts/simhei.ttf"   # 全量黑体（相对工程目录，P-0035）
+FONT_NAME = "cn14"
 
-# 显式清零默认主题的 padding/border（PLAYBOOK 红线 6：声明坐标 == 渲染坐标）
+
+def gb2312_charset():
+    """GB2312 符号区 + 一二级汉字（~7445 字形），经 'gb2312' 编解码器
+    映射到 Unicode。真机预算：14px bpp4 ≈ 750KB（KB 09 号作业卡）。"""
+    chars = set()
+    for hi in range(0xA1, 0xF8):
+        for lo in range(0xA1, 0xFF):
+            try:
+                chars.add(bytes([hi, lo]).decode("gb2312"))
+            except UnicodeDecodeError:
+                pass
+    return "".join(sorted(chars))
+
+
+_RAW_CHARS = (gb2312_charset()
+              + "".join(chr(c) for c in range(0x20, 0x7F)))
+# ★ ASCII 0x20-0x7E 必须并入（P-0125：lvglRanges[0]=32-126），
+#   漏 ASCII → 画布所有拉丁/数字豆腐
+
+
+def _filter_by_font_cmap(chars, ttf_path):
+    """按 TTF cmap 过滤：lvglRanges 里任何"字体没有的字"都会让 EEZ
+    提取报 extraction failed（如 U+30FB 间隔号 simhei 没有）。"""
+    try:
+        from fontTools.ttLib import TTFont
+    except ImportError:
+        print("WARN: fontTools 不可用，字符集未按字体过滤——"
+              "EEZ GUI 字体提取可能报 extraction failed")
+        return chars
+    f = TTFont(ttf_path, lazy=True)
+    cmap = set(f.getBestCmap().keys())
+    f.close()
+    kept = [c for c in chars if ord(c) in cmap]
+    dropped = [c for c in chars if ord(c) not in cmap]
+    if dropped:
+        print("font coverage: dropped %d chars not in TTF: %s"
+              % (len(dropped), "".join(dropped[:40])))
+    return "".join(kept)
+
+
+FONT_CHARS = _filter_by_font_cmap(_RAW_CHARS, os.path.join(HERE, FONT_FILE))
+
 ZERO_PAD = {
     "pad_top": 0, "pad_bottom": 0, "pad_left": 0, "pad_right": 0,
     "pad_row": 0, "pad_column": 0, "border_width": 0, "outline_width": 0,
 }
+
+DEFAULT_FLAGS = {
+    "LVGLScreenWidget": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
+    "LVGLLabelWidget": "GESTURE_BUBBLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+    "LVGLButtonWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+    "LVGLContainerWidget": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SNAPPABLE",
+    "LVGLTextareaWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+    "LVGLKeyboardWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+}
+
+# 容器类默认不可滚动；需要滚动的显式传 flags
+SCROLL_FLAGS = "SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM"
 
 
 def oid():
@@ -61,36 +121,23 @@ def oid():
 
 
 def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None,
-           children=None, **extra):
-    """通用控件构造：字段形态与 EEZ Studio 0.29 序列化结果一致。"""
+           children=None, eventHandlers=None, **extra):
     wd = {
         "objID": oid(),
         "type": wtype,
-        "left": x,
-        "top": y,
-        "width": w,
-        "height": h,
-        "customInputs": [],
-        "customOutputs": [],
-        "style": {
-            "objID": oid(),
-            "useStyle": "default",
-            "conditionalStyles": [],
-            "childStyles": [],
-        },
+        "left": x, "top": y, "width": w, "height": h,
+        "customInputs": [], "customOutputs": [],
+        "style": {"objID": oid(), "useStyle": "default",
+                  "conditionalStyles": [], "childStyles": []},
         "timeline": [],
-        "eventHandlers": [],
-        "leftUnit": "px",
-        "topUnit": "px",
-        "widthUnit": "px",
-        "heightUnit": "px",
+        "eventHandlers": eventHandlers or [],
+        "leftUnit": "px", "topUnit": "px", "widthUnit": "px", "heightUnit": "px",
         "children": children if children is not None else [],
         "widgetFlags": flags if flags is not None else DEFAULT_FLAGS[wtype],
-        "hiddenFlagType": "literal",
+        "hiddenFlagType": "literal", "hiddenFlag": False,
         "clickableFlagType": "literal",
-        "flagScrollbarMode": "OFF",
-        "checkedStateType": "literal",
-        "disabledStateType": "literal",
+        "flagScrollbarMode": "AUTO" if flags == SCROLL_FLAGS else "OFF",
+        "checkedStateType": "literal", "disabledStateType": "literal",
         "states": "",
         "localStyles": {"objID": oid(), "definition": local or {}},
         "groupIndex": 0,
@@ -101,15 +148,13 @@ def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None,
     return wd
 
 
-def label(x, y, w, h, text, color="0xFFFFFF", identifier=None, font=None):
+def label(x, y, w, h, text, color=TEXT1, identifier=None, font=FONT_NAME):
     """Label：显式清零 padding/border，文字色/字体按需覆盖。"""
-    props = dict(ZERO_PAD, text_color=color)
-    if font:
-        props["text_font"] = font
     return widget(
         "LVGLLabelWidget", x, y, w, h,
         identifier=identifier,
-        local={"MAIN": {"DEFAULT": props}},
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, text_color=color,
+                                        text_font=font)}},
         text=text,
         textType="literal",
         longMode="WRAP",
@@ -118,9 +163,72 @@ def label(x, y, w, h, text, color="0xFFFFFF", identifier=None, font=None):
     )
 
 
+def bar(x, y, w, h, identifier):
+    """信号条：3px 宽纯色小方块（EEZ 容器控件，零文字）。"""
+    return widget(
+        "LVGLContainerWidget", x, y, w, h,
+        identifier=identifier,
+        flags="",
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=BAR_DIM,
+                                        bg_opa=255, radius=2)}},
+    )
+
+
+def button(x, y, w, h, text, action, identifier):
+    """按钮：子 label 用 EEZ 原生新建按钮形态（content 尺寸 + align
+    CENTER，官方 defaultValue 逐字段一致——P-0164 坑 20 定论）。"""
+    lbl = {
+        "objID": oid(), "type": "LVGLLabelWidget",
+        "left": 0, "top": 0, "width": 80, "height": 32,
+        "widthUnit": "content", "heightUnit": "content",
+        "text": text, "textType": "literal", "longMode": "WRAP",
+        "recolor": False, "useStaticText": True,
+        "localStyles": {"objID": oid(),
+                        "definition": {"MAIN": {"DEFAULT": {
+                            "align": "CENTER",
+                            "text_color": "0xFFFFFF",
+                            "text_font": FONT_NAME}}}},
+    }
+    return widget(
+        "LVGLButtonWidget", x, y, w, h,
+        identifier=identifier,
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=ELEVATED,
+                                        bg_opa=255, radius=8)}},
+        children=[lbl],
+        eventHandlers=[{"objID": oid(), "eventName": "CLICKED",
+                        "handlerType": "action", "action": action,
+                        "userData": 0}],
+    )
+
+
+def row_slot(i):
+    """第 i 行（i 从 0 起）：容器 + 4 信号条 + 3 个 label，初始 HIDDEN。
+    行内容由 C 侧 wifi_ui_sync.cpp 填（不在 EEZ 里绑变量）。"""
+    y = i * ROW_PITCH
+    kids = []
+    for b, (bx, bh) in enumerate([(14, 5), (20, 8), (26, 11), (32, 14)]):
+        kids.append(bar(bx, 34 - bh, 3, bh, "bar_%d_%d" % (i + 1, b + 1)))
+    kids.append(label(44, 6, 230, 16, "", TEXT1, "lbl_ssid_%d" % (i + 1)))
+    kids.append(label(44, 24, 250, 16, "", TEXT2, "lbl_meta_%d" % (i + 1)))
+    kids.append(label(310, 14, 120, 16, "", TEXT2, "lbl_state_%d" % (i + 1)))
+    return widget(
+        "LVGLContainerWidget", 0, y, LIST_W, ROW_H,
+        identifier="row_%d" % (i + 1),
+        flags="",                      # 行不滚动、不点击（纯展示）
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=ROW_BG,
+                                        bg_opa=255, radius=10,
+                                        border_width=1,
+                                        border_color=ROW_EDGE)}},
+        children=kids,
+        **{"hiddenFlag": True, "hiddenFlagType": "literal"},
+    )
+
+
 def page(name, screen_children, create_at_start=True):
     """一页 = 一个铺满屏幕的 LVGLScreenWidget + 其下挂的控件树。"""
     screen = widget("LVGLScreenWidget", 0, 0, SCREEN_W, SCREEN_H,
+                    local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=BG,
+                                                    bg_opa=255, radius=0)}},
                     children=screen_children)
     return {
         "objID": oid(),
@@ -130,27 +238,71 @@ def page(name, screen_children, create_at_start=True):
         "componentGroups": [],
         "userProperties": [],
         "name": name,
-        "left": 0,
-        "top": 0,
-        "width": SCREEN_W,
-        "height": SCREEN_H,
+        "left": 0, "top": 0,
+        "width": SCREEN_W, "height": SCREEN_H,
         "isUsedAsUserWidget": False,
         "createAtStart": create_at_start,
         "deleteOnScreenUnload": False,
     }
 
 
+def font_entry(name, size, description):
+    """EEZ LVGL 字体条目——P-0125 A/B/C 对照定论：renderingEngine=LVGL +
+    lvglRanges 数字区间串 + lvglGlyphs.encodings + glyphs 留空，缺一不可。"""
+    cps = sorted({ord(c) for c in FONT_CHARS})
+    encodings, ranges = [], []
+    start = prev = cps[0]
+    for cp in cps[1:]:
+        if cp == prev + 1:
+            prev = cp
+            continue
+        encodings.append({"from": start, "to": prev})
+        ranges.append(str(start) if start == prev else "%d-%d" % (start, prev))
+        start = prev = cp
+    encodings.append({"from": start, "to": prev})
+    ranges.append(str(start) if start == prev else "%d-%d" % (start, prev))
+    return {
+        "objID": oid(), "name": name, "description": description,
+        "renderingEngine": "LVGL",
+        "source": {"objID": oid(), "filePath": FONT_FILE, "size": size},
+        "bpp": 4, "threshold": 128, "glyphs": [],
+        "screenOrientation": "all", "alwaysBuild": False,
+        "lvglRanges": ",".join(ranges),
+        "lvglSymbols": "",
+        "lvglAdditionalSources": [],
+        "lvglGlyphs": {"objID": oid(), "encodings": encodings},
+    }
+
+
 def build_project():
-    # ---- 页面内容：一屏两行文字，证明"工程能构建、能出图" ----
-    screen_children = [
-        label(40, 130, 400, 48, "Hello, EEZ!"),
-        label(40, 190, 400, 24, "EEZ Studio 0.29 - LVGL 9.4 - 480x320",
-              color="0xAAAAAA"),
+    # ---------------- 头部 ----------------
+    head = [
+        label(16, 14, 200, 24, "Wi-Fi", TEXT1, "lbl_title"),
+        label(16, 40, 372, 16, "", TEXT2, "lbl_status"),
+        button(400, 14, 64, 26, "刷 新", "scan_start", "btn_refresh"),
+    ]
+
+    # ---------------- 列表（10 个固定槽 + 滚动容器）----------------
+    rows = [row_slot(i) for i in range(ROW_COUNT)]
+    list_box = widget(
+        "LVGLContainerWidget", LIST_X, LIST_Y, LIST_W, LIST_H,
+        identifier="list_box",
+        flags=SCROLL_FLAGS,             # 可滚动（行 pitch 50 × 10 = 500 > 242）
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=BG,
+                                        bg_opa=0, radius=0)}},
+        children=rows,
+    )
+
+    screen_children = head + [list_box]
+
+    gvs = [
+        ("scan_state", "integer", "0"),      # 0 未扫 1 扫描中 2 完成
+        ("ap_count", "integer", "0"),        # 扫描到的网络数（可 >10）
+        ("scan_status", "string", "''"),     # C 侧写 lbl_status 的文案
     ]
 
     return {
-        "themesVersion": 1,
-        "objID": oid(),
+        "themesVersion": 1, "objID": oid(),
         "settings": {
             "objID": oid(),
             "general": {
@@ -198,20 +350,44 @@ def build_project():
         },
         "variables": {
             "objID": oid(),
-            "globalVariables": [],
-            "structures": [],
-            "enums": [],
+            "globalVariables": [
+                {"objID": oid(), "name": n, "type": t, "defaultValue": d,
+                 "persistent": False, "native": True}
+                for (n, t, d) in gvs
+            ],
+            "structures": [], "enums": [],
         },
-        "actions": [],
+        "actions": [
+            {"objID": oid(), "name": "scan_start",
+             "description": "wifi: scan_start",
+             "implementationType": "native", "userProperties": []}
+        ],
         "userPages": [page("Main", screen_children)],
         "userWidgets": [],
         "lvglStyles": {"objID": oid(), "styles": [], "defaultStyles": {}},
         "lvglGroups": {"objID": oid(), "groups": []},
-        "fonts": [],
-        "bitmaps": [],
-        "colors": [],
+        "fonts": [font_entry(FONT_NAME, 14,
+                             "GB2312 符号区+一二级汉字 7445 字形 14px"
+                             "（标准字库子集）")],
+        "bitmaps": [], "colors": [],
         "themes": [{"objID": oid(), "name": "Default", "colors": []}],
     }
+
+
+BUILD_TEMPLATES = {
+    'screens.h': '#ifndef EEZ_LVGL_UI_SCREENS_H\r\n#define EEZ_LVGL_UI_SCREENS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_SCREENS_DECL}\r\n//${eez-studio LVGL_SCREENS_DECL_EXT}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_SCREENS_H*/',
+    'screens.c': '#include <string.h>\n\n#include "screens.h"\n#include "images.h"\n#include "fonts.h"\n#include "actions.h"\n#include "vars.h"\n#include "styles.h"\n#include "ui.h"\n\n//${eez-studio LVGL_SCREENS_DEF}\n//${eez-studio LVGL_SCREENS_DEF_EXT}',
+    'actions.h': '#ifndef EEZ_LVGL_UI_EVENTS_H\r\n#define EEZ_LVGL_UI_EVENTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_ACTIONS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_EVENTS_H*/',
+    'vars.h': '#ifndef EEZ_LVGL_UI_VARS_H\r\n#define EEZ_LVGL_UI_VARS_H\r\n\r\n#include <stdint.h>\r\n#include <stdbool.h>\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n// enum declarations\r\n\r\n//${eez-studio FLOW_ENUMS}\r\n\r\n// Flow global variables\r\n\r\n//${eez-studio FLOW_GLOBAL_VARIABLES_ENUM}\r\n\r\n// Native global variables\r\n\r\n//${eez-studio LVGL_VARS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_VARS_H*/',
+    'structs.h': '#ifndef EEZ_LVGL_UI_STRUCTS_H\n#define EEZ_LVGL_UI_STRUCTS_H\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n\n#include <eez/flow/flow.h>\n#include <stdint.h>\n#include <stdbool.h>\n\n#include "vars.h"\n\nusing namespace eez;\n\n//${eez-studio FLOW_STRUCTS}\n\n//${eez-studio FLOW_STRUCT_VALUES}\n\n#endif\n\n#endif /*EEZ_LVGL_UI_STRUCTS_H*/\n',
+    'images.h': '#ifndef EEZ_LVGL_UI_IMAGES_H\r\n#define EEZ_LVGL_UI_IMAGES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_IMAGES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_IMAGES_H*/',
+    'images.c': '#include "images.h"\n\n//${eez-studio LVGL_IMAGES_DEF}',
+    'fonts.h': '#ifndef EEZ_LVGL_UI_FONTS_H\r\n#define EEZ_LVGL_UI_FONTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_FONTS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_FONTS_H*/',
+    'styles.h': '#ifndef EEZ_LVGL_UI_STYLES_H\r\n#define EEZ_LVGL_UI_STYLES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern "C" {\r\n#endif\r\n\r\n//${eez-studio LVGL_STYLES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_STYLES_H*/',
+    'styles.c': '#include "styles.h"\n#include "images.h"\n#include "fonts.h"\n\n//${eez-studio LVGL_STYLES_DEF}\n',
+    'ui.h': '#ifndef EEZ_LVGL_UI_GUI_H\n#define EEZ_LVGL_UI_GUI_H\n\n//${eez-studio LVGL_INCLUDE}\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n#include <eez/flow/lvgl_api.h>\n#endif\n\n#if !defined(EEZ_FOR_LVGL)\n#include "screens.h"\n#endif\n\n#ifdef __cplusplus\nextern "C" {\n#endif\n\n//${eez-studio GUI_ASSETS_DECL}\n\nvoid ui_init();\nvoid ui_tick();\n\n#if !defined(EEZ_FOR_LVGL)\nvoid loadScreen(enum ScreensEnum screenId);\n#endif\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // EEZ_LVGL_UI_GUI_H',
+    'ui.c': '#if defined(EEZ_FOR_LVGL)\n#include <eez/core/vars.h>\n#endif\n\n#include "ui.h"\n#include "screens.h"\n#include "images.h"\n#include "actions.h"\n#include "vars.h"\n\n//${eez-studio GUI_ASSETS_DEF}\n\n//${eez-studio LVGL_NATIVE_VARS_TABLE_DEF}\n\n//${eez-studio LVGL_ACTIONS_ARRAY_DEF}\n\n#if defined(EEZ_FOR_LVGL)\n\nvoid ui_init() {\n    eez_flow_init(assets, sizeof(assets), (lv_obj_t **)&objects, sizeof(objects), images, sizeof(images), actions);\n}\n\nvoid ui_tick() {\n    eez_flow_tick();\n    tick_screen(g_currentScreen);\n}\n\n#else\n\nstatic int16_t currentScreen = -1;\n\nstatic lv_obj_t *getLvglObjectFromIndex(int32_t index) {\n    if (index == -1) {\n        return 0;\n    }\n    return ((lv_obj_t **)&objects)[index];\n}\n\nvoid loadScreen(enum ScreensEnum screenId) {\n    currentScreen = screenId - 1;\n    lv_obj_t *screen = getLvglObjectFromIndex(currentScreen);\n    lv_scr_load_anim(screen, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);\n}\n\nvoid ui_init() {\n    create_screens();\n//${eez-studio LVGL_LOAD_FIRST_SCREEN}\n}\n\nvoid ui_tick() {\n    tick_screen(currentScreen);\n}\n\n#endif\n',
+}
 
 
 def main():

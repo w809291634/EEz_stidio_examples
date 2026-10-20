@@ -1,8 +1,0 @@
-# 构建产物（可再生产物，重新构建即再生）
-src/
-.eez-project-build
-# EEZ Studio 编辑器界面状态 / 字体缓存（非工程内容）
-*.eez-project-ui-state*
-*.eez-project-fonts-cache*
-# 生成器备份
-*.bak*

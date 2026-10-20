@@ -30,6 +30,60 @@
 
 extern void ui_init(void);
 extern void ui_tick(void);
+extern void user_io_init(void);   /* native：扫描状态机 + 契约状态初始化 */
+extern void user_io_tick(void);   /* native：每拍排空命令 + 推进扫描 + 同步列表 */
+
+extern int32_t get_var_scan_state(void);   /* native 变量桥（vars.h 声明） */
+extern int32_t get_var_ap_count(void);
+
+/* 自证渲染：lv_snapshot 从 LVGL 内部抓整屏（系统截图抓不到内容） */
+#include "src/others/snapshot/lv_snapshot.h"
+
+static void take_shot(const char *path)
+{
+    lv_draw_buf_t *buf = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_XRGB8888);
+    if (!buf) { printf("[SHOT] snapshot failed\n"); return; }
+    int w = (int)buf->header.w, h = (int)buf->header.h;
+    int stride = (int)buf->header.stride;
+    unsigned char *src = (unsigned char *)buf->data;
+    FILE *fp = fopen(path, "wb");
+    if (fp) {
+        int row = w * 4, data = row * h;
+        unsigned char hd[54] = { 'B','M' };
+        *(int *)(hd + 2) = 54 + data;
+        *(int *)(hd + 10) = 54;
+        *(int *)(hd + 14) = 40;
+        *(int *)(hd + 18) = w;
+        *(int *)(hd + 22) = -h;
+        *(short *)(hd + 26) = 1;
+        *(short *)(hd + 28) = 32;
+        fwrite(hd, 1, 54, fp);          /* ← 文件头（少了这行 PIL 打不开） */
+        for (int y = 0; y < h; y++)
+            fwrite(src + y * stride, 1, row, fp);
+        fclose(fp);
+        printf("[SHOT] saved %s\n", path);
+    }
+    lv_draw_buf_destroy(buf);
+}
+
+/* 无头验证钩子：WIFI_AUTOSCAN=1 自动扫一次；WIFI_SHOT=1 在完成后截图 */
+static void headless_hooks(void)
+{
+    static int scanned = 0, shot = 0, ticks = 0;
+    ticks++;
+    if (getenv("WIFI_AUTOSCAN") && !scanned && ticks > 40) {
+        extern void action_scan_start(lv_event_t * e);
+        action_scan_start(NULL);
+        scanned = 1;
+        printf("[HOOK] autoscan fired\n");
+    }
+    if (getenv("WIFI_SHOT") && scanned && !shot &&
+            get_var_scan_state() == 2) {
+        take_shot("shot_fake.bmp");
+        shot = 1;
+        if (getenv("WIFI_AUTOEXIT")) exit(0);
+    }
+}
 
 #define SIM_W 480
 #define SIM_H 320
@@ -70,11 +124,14 @@ int main(int argc, char **argv)
     hal_init(SIM_W, SIM_H);
 
     ui_init();
+    user_io_init();      /* 扫描状态机 / 契约状态（必须在 ui_init 之后：要拿 objects） */
 
     while (1) {
         lv_tick_inc(2);
         lv_timer_handler();
         ui_tick();
+        user_io_tick();   /* 排空命令 + 推进扫描 + 同步 10 个槽 */
+        headless_hooks();
         usleep(4000);
     }
 
