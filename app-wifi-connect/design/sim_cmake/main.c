@@ -17,6 +17,7 @@
 #include "SDL2/SDL.h"
 #include "lv_sdl_window.h"
 #include "ui.h"
+#include "platform/io_iface.h"   /* wifi_ap_t / wifi_ap_first（行查找用） */
 #include "app_model.h"
 #include "screens.h"     /* objects（kb_main/list_box 句柄） */
 #include "vars.h"      /* EEZ 生成的 native 变量桥声明（get_var_*/...） */
@@ -40,6 +41,33 @@ static void tap_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
     data->state = (tap_phase < 2) ? LV_INDEV_STATE_PRESSED
                                   : LV_INDEV_STATE_RELEASED;
     tap_phase++;
+}
+
+/* 环境变量 → UTF-8（Windows getenv 返回 ANSI/GBK，SSID 列表是 UTF-8） */
+static const char *env_utf8(const char *name)
+{
+    static char buf[256];
+    const char *v = getenv(name);
+    wchar_t w[128];
+    if (!v) return NULL;
+    MultiByteToWideChar(CP_ACP, 0, v, -1, w, 128);
+    WideCharToMultiByte(CP_UTF8, 0, w, -1, buf, sizeof(buf), NULL, NULL);
+    return buf;
+}
+
+/* 在 list_box 中按 SSID 找行对象（行由 C 渲染，第一个子 label 是 SSID） */
+static lv_obj_t *find_row_by_ssid(const char *ssid)
+{
+    uint32_t n = lv_obj_get_child_count(objects.list_box);
+    for (uint32_t i = 0; i < n; i++) {
+        lv_obj_t *row = lv_obj_get_child(objects.list_box, i);
+        if (!row) continue;
+        lv_obj_t *lab = lv_obj_get_child(row, 0);
+        if (lab && lv_obj_check_type(lab, &lv_label_class) &&
+                strcmp(lv_label_get_text(lab), ssid) == 0)
+            return row;
+    }
+    return NULL;
 }
 
 static void demo_tap(int32_t x, int32_t y)
@@ -75,6 +103,41 @@ static void demo_timer(lv_timer_t *t)
             extern void action_scan_start(lv_event_t * e);
             action_scan_start(NULL);
             demo_scan_fired = true;
+        }
+        /* 自动联网测试钩子（env 注入，密码不落盘不打印）：
+         * WIFI_TEST_SSID 扫完自动选中该网络；WIFI_TEST_PWD 填入密码框；
+         * 然后自动点"连 接"。 */
+        {
+            const char *tssid = env_utf8("WIFI_TEST_SSID");
+            if (tssid && demo_scan_fired && get_var_scan_state() == 2 &&
+                    !demo_pick_fired) {
+                lv_obj_t *row = find_row_by_ssid(tssid);
+                if (row) {
+                    lv_obj_scroll_to_view(row, LV_ANIM_OFF);
+                    lv_area_t a;
+                    lv_obj_get_coords(row, &a);
+                    printf("[TEST] row found for '%s', tap (%d,%d)\n", tssid,
+                           (int)((a.x1 + a.x2) / 2), (int)((a.y1 + a.y2) / 2));
+                    demo_tap((a.x1 + a.x2) / 2, (a.y1 + a.y2) / 2);
+                    demo_pick_fired = true;
+                } else {
+                    printf("[TEST] SSID '%s' not in scan list\n", tssid);
+                }
+            }
+            if (tssid && demo_pick_fired && !demo_connect_fired &&
+                    strcmp(get_var_pick_ssid(), tssid) == 0) {
+                static int w3 = 0;
+                if (++w3 == 2) {
+                    const char *pw = env_utf8("WIFI_TEST_PWD");
+                    lv_textarea_set_text(objects.pwd_ta, pw ? pw : "");
+                    printf("[TEST] password injected (len=%d), tap connect\n",
+                           (int)strlen(pw ? pw : ""));
+                }
+                if (w3 >= 4) {
+                    demo_tap(40 + 30 + 85, 20 + 252 + 12);   /* 连接按钮 */
+                    demo_connect_fired = true;
+                }
+            }
         }
         if (getenv("WIFI_AUTOEXIT") && demo_scan_fired &&
                 get_var_scan_state() == 2) {

@@ -19,6 +19,7 @@ typedef struct wifi_ap {
     int  rssi;
     bool lock;        /* true = 需要密码 */
     bool connected;   /* 当前已连接此网络 */
+    int  auth;        /* DOT11 认证算法（io_win 用：1=open 7=WPA2PSK 8=WPA3SAE）*/
     struct wifi_ap *next;
 } wifi_ap_t;
 
