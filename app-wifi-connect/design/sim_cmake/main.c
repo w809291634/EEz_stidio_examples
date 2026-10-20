@@ -18,6 +18,7 @@
 #include "lv_sdl_window.h"
 #include "ui.h"
 #include "app_model.h"
+#include "screens.h"     /* objects（kb_main/list_box 句柄） */
 #include "vars.h"      /* EEZ 生成的 native 变量桥声明（get_var_*/...） */
 
 #define SIM_W 480
@@ -109,6 +110,14 @@ static void demo_timer(lv_timer_t *t)
             demo_connect_fired = true;
         }
     }
+    if (tick == 10 || tick == 60) {
+        printf("[DBG] kb: x=%d y=%d w=%d align=%d (tick %d)\n",
+               (int)lv_obj_get_x(objects.kb_main),
+               (int)lv_obj_get_y(objects.kb_main),
+               (int)lv_obj_get_width(objects.kb_main),
+               (int)lv_obj_get_style_align(objects.kb_main, LV_PART_MAIN),
+               tick);
+    }
     if (tick % 4 == 0) {
         printf("[STATE] scan=%d aps=%d wifi=%d pick='%s' conn='%s' rem=%d\n",
                (int)get_var_scan_state(), (int)get_var_ap_count(),
@@ -167,6 +176,12 @@ int main(int argc, char **argv)
     hal_init(SIM_W, SIM_H);
     ui_init();
     user_io_init();
+    /* ★ LVGL 键盘构造函数自带 lv_obj_align(BOTTOM_MID)，EEZ 的 set_pos 不会
+     *   清除它 → 键盘实际贴在父容器底部。此处显式复位到 EEZ 设计位置
+     *   （面板内 20,96 → 屏幕 60,116）。真机同修。 */
+    lv_obj_align(objects.kb_main, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_set_pos(objects.kb_main, 30, 100);   /* ★ set_pos 是【父容器相对】坐标：面板内设计位 (30,100)
+     * （lv_obj_get_x 返回的也是父相对值，别当屏幕坐标用） */
     lv_timer_create(demo_timer, 500, NULL);
 
     while (1) {

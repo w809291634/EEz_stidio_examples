@@ -109,8 +109,8 @@ void create_screen_main() {
             // lbl_scan
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.lbl_scan = obj;
-            lv_obj_set_pos(obj, 140, 8);
-            lv_obj_set_size(obj, 220, 24);
+            lv_obj_set_pos(obj, 100, 8);
+            lv_obj_set_size(obj, 280, 24);
             lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
             lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
             lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -255,8 +255,8 @@ void create_screen_main() {
                     // pwd_ta
                     lv_obj_t *obj = lv_textarea_create(parent_obj);
                     objects.pwd_ta = obj;
-                    lv_obj_set_pos(obj, 20, 44);
-                    lv_obj_set_size(obj, 360, 42);
+                    lv_obj_set_pos(obj, 30, 50);
+                    lv_obj_set_size(obj, 340, 40);
                     lv_textarea_set_max_length(obj, 64);
                     lv_textarea_set_placeholder_text(obj, "输入密码");
                     lv_textarea_set_one_line(obj, true);
@@ -282,8 +282,8 @@ void create_screen_main() {
                     // kb_main
                     lv_obj_t *obj = lv_keyboard_create(parent_obj);
                     objects.kb_main = obj;
-                    lv_obj_set_pos(obj, 20, 96);
-                    lv_obj_set_size(obj, 360, 118);
+                    lv_obj_set_pos(obj, 30, 100);
+                    lv_obj_set_size(obj, 340, 120);
                     lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE);
                     lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
                 }
@@ -291,8 +291,8 @@ void create_screen_main() {
                     // lbl_remember
                     lv_obj_t *obj = lv_label_create(parent_obj);
                     objects.lbl_remember = obj;
-                    lv_obj_set_pos(obj, 20, 222);
-                    lv_obj_set_size(obj, 200, 24);
+                    lv_obj_set_pos(obj, 0, 228);
+                    lv_obj_set_size(obj, 400, 22);
                     lv_obj_add_event_cb(obj, event_handler_cb_main_lbl_remember, LV_EVENT_ALL, flowState);
                     lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
                     lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
@@ -306,14 +306,15 @@ void create_screen_main() {
                     lv_obj_set_style_outline_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_color(obj, lv_color_hex(0xffd38f), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_font(obj, &ui_font_cn14, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_label_set_text(obj, "");
                 }
                 {
                     // btn_connect
                     lv_obj_t *obj = lv_button_create(parent_obj);
                     objects.btn_connect = obj;
-                    lv_obj_set_pos(obj, 60, 250);
-                    lv_obj_set_size(obj, 140, 26);
+                    lv_obj_set_pos(obj, 30, 252);
+                    lv_obj_set_size(obj, 170, 24);
                     lv_obj_add_event_cb(obj, event_handler_cb_main_btn_connect, LV_EVENT_ALL, flowState);
                     lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
                     lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -333,7 +334,7 @@ void create_screen_main() {
                             lv_obj_t *obj = lv_label_create(parent_obj);
                             objects.obj1 = obj;
                             lv_obj_set_pos(obj, 0, 0);
-                            lv_obj_set_size(obj, 140, 26);
+                            lv_obj_set_size(obj, 170, 24);
                             lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
                             lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
                             lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -355,8 +356,8 @@ void create_screen_main() {
                     // btn_cancel
                     lv_obj_t *obj = lv_button_create(parent_obj);
                     objects.btn_cancel = obj;
-                    lv_obj_set_pos(obj, 230, 250);
-                    lv_obj_set_size(obj, 140, 26);
+                    lv_obj_set_pos(obj, 200, 252);
+                    lv_obj_set_size(obj, 170, 24);
                     lv_obj_add_event_cb(obj, event_handler_cb_main_btn_cancel, LV_EVENT_ALL, flowState);
                     lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
                     lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -376,7 +377,7 @@ void create_screen_main() {
                             lv_obj_t *obj = lv_label_create(parent_obj);
                             objects.obj2 = obj;
                             lv_obj_set_pos(obj, 0, 0);
-                            lv_obj_set_size(obj, 140, 26);
+                            lv_obj_set_size(obj, 170, 24);
                             lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
                             lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
                             lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

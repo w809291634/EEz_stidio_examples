@@ -137,6 +137,7 @@ void io_sample_inputs(void)
                 if (len > 32) len = 32;
                 memcpy(ssid, attr->wlanAssociationAttributes.dot11Ssid.ucSSID, len);
                 app_set_input_s(APP_IN_CONN_SSID, ssid);
+                app_set_input_s(APP_IN_PICK_SSID, "");   /* 关面板回列表 */
                 printf("[IO:WIN] connected to %s\n", ssid);
             } else {
                 s_wifi_state = 0;

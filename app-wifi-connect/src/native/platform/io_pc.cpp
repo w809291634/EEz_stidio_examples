@@ -118,6 +118,10 @@ void io_wifi_join(int v)
 {
     (void)v;
     if (s_wifi_state == 1) return;
+    if (strlen(app_get_input_s(APP_IN_PICK_SSID)) == 0) {
+        printf("[IO] join ignored: no network picked\n");
+        return;
+    }
     strncpy(s_join_ssid, app_get_input_s(APP_IN_PICK_SSID), 32);
     printf("[IO] join '%s' pwd='%s'\n", s_join_ssid,
            app_get_input_s(APP_IN_PWD));

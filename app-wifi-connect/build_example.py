@@ -227,7 +227,7 @@ def build_project():
     # ---------------- 头部 ----------------
     ch.append(label(16, 8, 100, 24, "WiFi", color="0xFFFFFF",
                     identifier="lbl_title", font=FONT_NAME))
-    ch.append(label(140, 8, 220, 24, None, color="0x8FD3FF",
+    ch.append(label(100, 8, 280, 24, None, color="0x8FD3FF",
                     identifier="lbl_scan", font=FONT_NAME, center=True,
                     expr='scan_state == 1 ? "扫描中..." : '
                          '(scan_state == 2 ? "已发现 " + ap_count + " 个网络" : '
@@ -253,8 +253,8 @@ def build_project():
     panel_children = [
         label(20, 12, 360, 24, None, color="0xFFFFFF",
               identifier="lbl_panel_title", expr="pick_ssid",
-              font=FONT_NAME, center=True),
-        widget("LVGLTextareaWidget", 20, 44, 360, 42,
+              font=FONT_NAME, center=True),   # 设计：整行居中
+        widget("LVGLTextareaWidget", 30, 50, 340, 40,
                identifier="pwd_ta",
                local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color="0x0C1220",
                                                bg_opa=255, radius=6,
@@ -263,24 +263,25 @@ def build_project():
                text="", textType="literal", placeholder="输入密码",
                oneLineMode=True, passwordMode=True,
                acceptedCharacters="", maxTextLength=64),
-        widget("LVGLKeyboardWidget", 20, 96, 360, 118,
+        widget("LVGLKeyboardWidget", 30, 100, 340, 120,
                identifier="kb_main",
                textarea="pwd_ta",
                mode="TEXT_LOWER"),
         # 记住密码（可点标签，点击切 g_remember）
-        widget("LVGLLabelWidget", 20, 222, 200, 24,
+        widget("LVGLLabelWidget", 0, 228, 400, 22,
                objID=oid(), identifier="lbl_remember",
                local={"MAIN": {"DEFAULT": dict(ZERO_PAD, text_color="0xFFD38F",
-                                               text_font=FONT_NAME)}},
+                                               text_font=FONT_NAME,
+                                               text_align="CENTER")}},
                text='"记住密码: " + (g_remember ? "是" : "否")',
                textType="expression", longMode="WRAP", recolor=False,
                useStaticText=True,
                eventHandlers=[{"objID": oid(), "eventName": "CLICKED",
                                "handlerType": "action",
                                "action": "chk_remember", "userData": 0}]),
-        button(60, 250, 140, 26, "连  接", "wifi_connect",
+        button(30, 252, 170, 24, "连  接", "wifi_connect",
                identifier="btn_connect"),
-        button(230, 250, 140, 26, "取  消", "panel_cancel",
+        button(200, 252, 170, 24, "取  消", "panel_cancel",
                identifier="btn_cancel", bg="0x3A4356"),
     ]
     panel = widget(
