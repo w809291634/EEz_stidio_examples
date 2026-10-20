@@ -53,8 +53,8 @@ FONT_FILE = "fonts/simhei.ttf"   # 全量黑体（相对工程目录 P-0035）�
 # UI 用到的全部字符（运行期表达式产出的静态文案并集；SSID 属运行期数据，
 # 演示字体只覆盖静态文案，真机按产品字库预算扩，见 README）
 FONT_CHARS = (
-    "扫描中已发现个网络未点击刷新连接中记住密码是否取消输"
-    "WiFi0123456789.-:dBm "
+    "扫描中已发现个网络未点击刷新连接中记住密码是否取消输锁"
+    "WiFi0123456789.-:dBm入 "
 )
 FONT_NAME = "cn14"
 
@@ -208,7 +208,7 @@ def build_project():
                         expr="wifi_slot" + s + "_ssid"))
         ch.append(label(220, y, 22, 20, None, color="0xFFD38F",
                         identifier="lbl_lock_" + s,
-                        expr='"\\xEF\x80\xA3"'))  # 占位锁形符（默认字体无此字形则显示方块，仅示意）
+                        expr='"锁"'))  # 锁定标志（字符已入字体字符集）
         # 锁标志可见性：hiddenExpr true=隐藏
         ch[-1]["hiddenFlagType"] = "expression"
         ch[-1]["hiddenFlag"] = "!wifi_slot" + s + "_lock"
@@ -252,7 +252,8 @@ def build_project():
                identifier="pwd_ta",
                local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color="0x0C1220",
                                                bg_opa=255, radius=6,
-                                               text_color="0xFFFFFF")}},
+                                               text_color="0xFFFFFF",
+                                               text_font=FONT_NAME)}},
                text="", textType="literal", placeholder="输入密码",
                oneLineMode=True, passwordMode=True,
                acceptedCharacters="", maxTextLength=64),

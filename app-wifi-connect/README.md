@@ -58,7 +58,8 @@
 
 ```
 python build_example.py && python design/cli_build.py
-python design/gen_font.py        ← ★ 烘中文字体（CLI 不烘字体，P-0140）
+python design/audit_chars.py     ← ★ 逐字审计（UI 文案字符 vs 字体字符集，缺字即报）
+python design/gen_font.py        ← ★ 烘中文字体（必须在 cli_build 之后跑，见坑 8）
 双击 design\sim_cmake\run_sim.bat  ← 开机自动演示全流程
 ```
 
@@ -73,9 +74,12 @@ python design/gen_font.py        ← ★ 烘中文字体（CLI 不烘字体，P-
    写成 `hiddenExpr` 会被静默忽略 → 面板/热区永远可见/隐藏（本例面板盖住全屏
    吸收点击，行点击全失效）。hiddenExpr 是 DSL 层字段名，json2eez 后变 hiddenFlag。
 2. **★ CLI 不烘字体**（P-0140）：工程里建了字体条目（P-0125 四要点格式）只会让
-   fonts.h 生成 `extern` 声明，字体 .c 用 lv_font_conv 离线烘（本工程
-   `design/gen_font.py`，simhei.ttf 14px bpp4，字符集=UI 静态文案并集），
-   产物放 `src/ui/fonts/ui_font_cn14.c`。
+   fonts.h 生成 `extern` 声明，字体 .c 用 lv_font_conv 离线烘——本工程
+   `design/gen_font.py`（simhei.ttf 14px bpp4，字符集=UI 静态文案并集），产物
+   `src/ui/fonts/ui_font_cn14.c`。**字体条目的 source 必须指向全量字体**：
+   指向子集 TTF 时 GUI 提取报 `Font "cn14" extraction failed: ... doesn't have
+   any characters included in range ...`（字符集里的字在子集里没有）——本例已改用
+   全量 `fonts/simhei.ttf`。
 3. **Textarea 的 text 是 input 型单向**：绑定变量会被 tick 用变量值覆盖打字内容；
    密码读取走"native 动作里 lv_textarea_get_text(objects.pwd_ta)"。
 4. **Keyboard 的 textarea 属性**（枚举本页 textarea 的 identifier）直接在 EEZ 里
@@ -86,6 +90,13 @@ python design/gen_font.py        ← ★ 烘中文字体（CLI 不烘字体，P-
    全缓冲会吞掉被 kill 前的日志。
 7. **假指针单击 = 假 indev + 状态机**（press 3 read → release 1 read），
    走真实管线不占真鼠标（同 perf 工程的假拖动法）。
+8. **★ gen_font 必须在 cli_build 之后跑**：CLI 重建 src/ui 时孤儿清理会把
+   已烘的字体 .c 删掉——顺序错了链接报 `undefined reference to ui_font_cn14`；
+   新建字体 .c 后还要删 sim_cmake 的 build_rel（GLOB 不自动重扫新文件）。
+9. **★ 逐字审计工具 `design/audit_chars.py`**：遍历工程全部 text/placeholder/
+   表达式字符串字面量，与 FONT_CHARS 比对列出缺字（含私有区字符检查）——
+   改文案/加标签后必跑；曾实抓 `入`（placeholder 漏字）和锁形私有区字符
+   U+F003（默认字体必豆腐，已改用文本"锁"并入字符集）。
 
 ## 依赖版本
 
