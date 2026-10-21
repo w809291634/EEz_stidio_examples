@@ -1,0 +1,71 @@
+A43 LVGL 动作的子动作注册表（装机版 EEZ Studio，权威；手册只列到 63 项）
+来源：C:\Users\yjt54\AppData\Local\Programs\eezstudio\resources\app.asar
+
+id  | name                           | group                    | 属性
+0   | changeScreen                   | Screen                   | delay fadeMode screen speed useStack
+1   | changeToPreviousScreen         | Screen                   | delay fadeMode speed
+2   | objSetX                        | Widget - Position and Size | object x
+3   | objGetX                        | Widget - Position and Size | object result
+4   | objSetY                        | Widget - Position and Size | object y
+5   | objGetY                        | Widget - Position and Size | object result
+6   | objSetWidth                    | Widget - Position and Size | object width
+7   | objGetWidth                    | Widget - Position and Size | object result
+8   | objSetHeight                   | Widget - Position and Size | height object
+9   | objGetHeight                   | Widget - Position and Size | object result
+10  | objSetStyleOpa                 | Widget - Styles          | object opacity
+11  | objGetStyleOpa                 | Widget - Styles          | object result
+12  | objAddStyle                    | Widget - Styles          | object style
+13  | objRemoveStyle                 | Widget - Styles          | object style
+14  | objSetFlagHidden               | Widget - Flags           | hidden object
+15  | objAddFlag                     | Widget - Flags           | flag object
+16  | objClearFlag                   | Widget - Flags           | flag object
+17  | objHasFlag                     | Widget - Flags           | flag object result
+18  | objSetStateChecked             | Widget - Flags           | checked object
+19  | objSetStateDisabled            | Widget - States          | disabled object
+20  | objAddState                    | Widget - States          | object state
+21  | objClearState                  | Widget - States          | object state
+22  | objHasState                    | Widget - States          | object result state
+23  | arcSetValue                    | Arc                      | object value
+24  | barSetValue                    | Bar                      | animated object value
+25  | dropdownSetSelected            | Dropdown                 | object selected
+26  | imageSetSrc                    | Image                    | object src
+27  | imageSetAngle                  | Image                    | angle object
+28  | imageSetZoom                   | Image                    | object zoom
+29  | labelSetText                   | Label                    | object text
+30  | rollerSetSelected              | Roller                   | animated object selected
+31  | sliderSetValue                 | Slider                   | animated object value
+32  | keyboardSetTextarea            | Keyboard                 | object textarea
+33  | groupFocusObj                  | Group                    | object
+34  | groupFocusNext                 | Group                    | group
+35  | groupFocusPrev                 | Group                    | group
+36  | groupGetFocused                | Group                    | group result
+37  | groupFocusFreeze               | Group                    | enabled group
+38  | groupSetWrap                   | Group                    | enabled group
+39  | groupSetEditing                | Group                    | enabled group
+40  | animX                          | Animation                | 
+41  | animY                          | Animation                | 
+42  | animWidth                      | Animation                | 
+43  | animHeight                     | Animation                | 
+44  | animOpacity                    | Animation                | 
+45  | animImageZoom                  | Animation                | 
+46  | animImageAngle                 | Animation                | 
+47  | createScreen                   | Screen                   | screen
+48  | deleteScreen                   | Screen                   | screen
+49  | isScreenCreated                | Screen                   | result screen
+50  | calendarSetTodayDate           | Calendar                 | month object year
+51  | calendarSetShowedDate          | Calendar                 | month object year
+52  | calendarSetHighlightedDate     | Calendar                 | month object year
+53  | calendarGetPressedDate         | Calendar                 | day month object year
+54  | buttonMatrixSetButtonCtrl      | ButtonMatrix             | buttonID ctrl object
+55  | buttonMatrixClearButtonCtrl    | ButtonMatrix             | buttonID ctrl object
+56  | sliderSetValueLeft             | Slider                   | animated object valueLeft
+57  | sliderSetRange                 | Slider                   | max min object
+58  | qrCodeUpdate                   | QRCode                   | object text
+59  | objStyleSetProperty            | Widget - Styles          | object part property state value
+60  | tabviewSetActiveTab            | Tabview                  | animated object tab
+61  | tabviewGetActiveTab            | Tabview                  | object result
+62  | arcRotateObjToAngle            | Arc                      | objToRotate object offset
+63  | objGetDisplayX                 | Widget - Position and Size | object result
+64  | objGetDisplayY                 | Widget - Position and Size | object result
+
+合计：65 项（手册 A43 = 63 项，差集见 notes/flow-actions-lvgl.md）

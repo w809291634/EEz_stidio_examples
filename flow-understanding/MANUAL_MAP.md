@@ -79,6 +79,28 @@ TOC 清单在 raw 行 **4482–4586**（`A1. AddToInstrumentHistory … A92. Wri
 > `File*` / `Python*` / `CSV*` / `JSON*` / `PrintToPDF` / `TabulatorAction`）属于
 > EEZ-GUI / Dashboard / EEZ BB3 运行时，**LVGL 工程用不到**——别照它们设计示例。
 
+## 第二份证据源：装机 Studio（手册只是第一份）
+
+手册对 **LVGL 工程能用哪些动作**只给了一张图（P7.3 · Fig.78，第 65 页），没有文字清单——
+所以动作可用性必须以装机包为准，用脚本抽：
+
+```bash
+python flow-understanding/tools/extract_studio_facts.py [app.asar] [手册全文txt]
+```
+
+产物三份（都在 `notes/`，可复查）：`_lvgl_palette_availability.txt`（件级可用性）、
+`_lvgl_action_registry_extract.txt`（A43 注册表 65 项）、`_manual_vs_registry_diff.txt`（手册差集）。
+
+默认路径（★ 每机不同，换机器务必传参）：
+
+| 件 | 路径 |
+|---|---|
+| Studio 包 | `C:\Users\yjt54\AppData\Local\Programs\eezstudio\resources\app.asar` |
+| 手册全文 | `C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_ui_debug_kit\reference_guide_raw.txt` |
+
+> 脚本只读，不改装机件；判读口径写在脚本 docstring 里
+> （**"面板允许"≠"生成的 C++ 里有实现"**，后者要靠示例②③实测）。
+
 ## 与经验库的分工
 
 - 手册**事实**（这一篇）：只在 `flow-understanding/` 里沉淀，带页码；

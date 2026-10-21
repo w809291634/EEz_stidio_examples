@@ -1,0 +1,47 @@
+每个 Flow 件在 **LVGL 工程**里的可用性（判据：enabledInComponentPalette 谓词）
+★注意：面板允许 ≠ CLI 生成的 C++ 里有实现；后者要实测。
+
+?                                  | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+ANIMATE_ACTION                     | 面板允许（除 eez-gui-lite）                           | (e,t)=>"eez-gui-lite"!==e
+CALL_ACTION_ACTION                 | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+CATCH_ERROR_ACTION                 | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+COMMENT_ACTION                     | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+COMPARE_ACTION                     | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+CONSTANT_ACTION                    | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+COUNTER_ACTION                     | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+DELAY_ACTION                       | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+END_ACTION                         | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+ERROR_ACTION                       | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+EVAL_EXPR_ACTION                   | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+INPUT_ACTION                       | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+IS_TRUE_ACTION                     | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+LABEL_IN_ACTION                    | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+LABEL_OUT_ACTION                   | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+LOG_ACTION                         | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+LOOP_ACTION                        | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+LVGL_ACTION_API                    | LVGL 专属                                        | e=>"lvgl"===e
+MQTT_CONNECT                       | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+MQTT_DISCONNECT                    | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+MQTT_EVENT                         | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+MQTT_INIT                          | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+MQTT_PUBLISH                       | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+MQTT_SUBSCRIBE                     | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+MQTT_UNSUBSCRIBE                   | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+NOOP_ACTION                        | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+ON_EVENT_ACTION                    | LVGL 禁用（面板里拖不出来）                               | e=>"lvgl"!==e&&"eez-gui-lite"!==e
+OUTPUT_ACTION                      | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+OVERRIDE_STYLE_ACTION              | LVGL 禁用（面板里拖不出来）                               | e=>"lvgl"!==e&&"dashboard"!==e&&"eez-gui-lite"!==e
+SCPI_ACTION                        | LVGL 禁用（面板里拖不出来）                               | e=>"lvgl"!==e&&"eez-gui-lite"!==e
+SELECT_LANGUAGE_ACTION             | LVGL 禁用（面板里拖不出来）                               | e=>"lvgl"!==e&&"eez-gui-lite"!==e
+SET_COLOR_THEME_ACTION             | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+SET_PAGE_DIRECTION_ACTION          | LVGL 禁用（面板里拖不出来）                               | e=>"lvgl"!==e&&"eez-gui-lite"!==e
+SET_VARIABLE_ACTION                | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+SHOW_KEYBOARD_ACTION               | LVGL 禁用（面板里拖不出来）                               | e=>"lvgl"!==e&&"dashboard"!==e&&"eez-gui-lite"!==e
+SHOW_KEYPAD_ACTION                 | LVGL 禁用（面板里拖不出来）                               | e=>"lvgl"!==e&&"dashboard"!==e&&"eez-gui-lite"!==e
+SHOW_MESSAGE_BOX_ACTION            | LVGL 禁用（面板里拖不出来）                               | e=>"lvgl"!==e&&"dashboard"!==e&&"eez-gui-lite"!==e
+SHOW_PAGE_ACTION                   | LVGL 禁用（面板里拖不出来）                               | e=>"lvgl"!==e
+SORT_ARRAY_ACTION                  | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+START_ACTION                       | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+SWITCH_ACTION                      | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL
+TEST_AND_SET_ACTION                | 面板允许（LVGL 不是 FlowLite）→ 运行时需实测                 | (e,t)=>!("eez-gui-lite"===e||t&&t.projectTypeTraits.isEezFlowLite)
+WATCH_VARIABLE_ACTION              | 无谓词 = 全工程类型可拖出 → 运行时需实测                        | DEFAULT_ALL

@@ -508,6 +508,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | [PC_SIM](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/PC_SIM) | LVGL PC 仿真器（构建宿主 + SDL 窗口 + FreeRTOS 可选）。其自身有 [CODE_WIKI.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/PC_SIM/lv_port_pc_vscode_v9.5/CODE_WIKI.md) 详述 LVGL/FreeRTOS 细节 |
 | [apl_lvgl_v9_4](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/apl_lvgl_v9_4) | LVGL 9.4 内核组件（被 PC_SIM 引用） |
 | [envtest](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/envtest) | `SIM_TARGET_PROJ_DIR` 环境探针 |
+| [flow-understanding](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/flow-understanding) | **不是示例**：EEZ Flow 理解与取证专区。`MANUAL_MAP.md`（784 页手册的章节↔页码↔本地全文行号）、`notes/`（执行语义 / 变量表达式 49 函数 / **动作件 LVGL 可用性**三篇）、`tools/extract_studio_facts.py`（从装机 `app.asar` 抽权威事实：9 件在 LVGL 面板禁用、A43 实有 65 子动作）、`EXAMPLE_PLAN.md`（14 个待补示例 + 验收判据） |
 | `font-test/` · `wifi_connect_2/` | 仅含空目录骨架与 `build_rel` 缓存的工作中目录（暂无源文件） |
 
 ---

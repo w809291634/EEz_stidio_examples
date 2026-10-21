@@ -66,6 +66,11 @@ EEZ_stidio_examples/
 
 ## 3. 示例工程索引
 
+> **不是示例的专区目录**：[`flow-understanding/`](flow-understanding/) ——
+> EEZ Flow 的**理解与取证专区**（手册锚点地图、执行语义/表达式/动作件三篇蒸馏笔记、
+> 从装机 Studio 抽出的权威可用性表、以及"该补哪些示例"的规划）。
+> 判"EEZ 能不能做 X"先查它，别靠试错猜；它里面的结论会持续回灌本仓库各示例 README 与经验库。
+
 | 目录 | 演示什么 | 一句话 / 关键坑 |
 |---|---|---|
 | [`minimal-lvgl-project/`](minimal-lvgl-project/) | 最小可构建工程：`.eez-project` JSON 骨架 + headless 构建判据 | ★ "构建成功"≠有产物，要判据+产物对账；`destinationFolder` 要显式配 |

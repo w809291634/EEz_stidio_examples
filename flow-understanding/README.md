@@ -13,9 +13,16 @@
 flow-understanding/
 ├── README.md                        ← 本文件（目的 / 读法 / 索引 / 规矩）
 ├── MANUAL_MAP.md                    ← 手册地图：章节 ↔ 页码 ↔ 本地全文行号（复查入口）
-├── notes/                           ← 手册结论蒸馏（每条都带 P/A 锚点）
-│   └── flow-execution-semantics.md  ← ★ P6.1–P6.3 执行语义（队列/就绪/线型/四反例）
-└── EXAMPLE_PLAN.md                  ← 该补哪些示例：候选清单 + 手册出处 + 验收判据
+├── EXAMPLE_PLAN.md                  ← 该补哪些示例：14 个候选 + 手册/面板出处 + 验收判据
+├── tools/
+│   └── extract_studio_facts.py      ← ★ 从装机 app.asar 抽权威事实（面板可用性 + A43 注册表）
+└── notes/                           ← 手册与装机包的结论蒸馏（每条都带锚点）
+    ├── flow-execution-semantics.md  ← P6.1–P6.3 执行语义（队列/就绪/线型/四反例）
+    ├── flow-variables-expressions.md← P8 变量·表达式·49 个函数·求值时机
+    ├── flow-actions-lvgl.md         ← ★ 动作件 LVGL 清单（9 件被禁 / A43 有 65 子动作）
+    ├── _lvgl_palette_availability.txt        ← 脚本产物：件级可用性原始表
+    ├── _lvgl_action_registry_extract.txt     ← 脚本产物：A43 子动作注册表原始 dump（65 项）
+    └── _manual_vs_registry_diff.txt          ← 脚本产物：手册 ↔ 装机 差集（真缺 2 项：objGetDisplayX/Y）
 ```
 
 ## 三份资料的分工（别写串）
@@ -27,7 +34,7 @@ flow-understanding/
 | **只在该示例成立**的坑 | 那个示例子目录的 `README.md` |
 | 示例**该不该做、验收怎么判** | `EXAMPLE_PLAN.md`（本目录） |
 
-## 读手册的三条硬规矩（本目录内适用）
+## 读手册的硬规矩（本目录内适用）
 
 1. **双锚点**：每条结论后面要能指出「章节号 + 页码」（本地全文有 `第 N 页 / 共 784 页` 标记，
    `MANUAL_MAP.md` 备好了行号）。给不出锚点的句子一律标 `（推断，待核）`；
@@ -44,6 +51,18 @@ flow-understanding/
 - no-flow 对照工程给出的边界：`app-wifi-scan-flow-no-flow/README.md`
   （结论：native 动作不依赖 Flow；表达式绑定 / flow 件 / `SetVariable` 依赖 Flow）。
 
+## 读资料的第四条硬规矩（本次读手册读出来的教训）
+
+4. **手册是二手证据**：判"LVGL 工程能不能做 X"要以**装机包里的注册表/谓词**为第一证据，
+   实机 CLI 构建为第二证据。本轮实测已经抓到三处手册与产品不一致：
+   - 手册 A43 列 **63** 个 LVGL 子动作，装机注册表是 **65** 个（多 `objGetDisplayX` / `objGetDisplayY`）；
+   - 手册正文写了 `Animate`、`OnEvent`、`ShowKeyboard` 等件，但 **9 个件在 LVGL 面板里被禁用**
+     （`OnEvent`/`ShowPage`/`ShowKeyboard`/`ShowKeypad`/`ShowMessageBox`/`OverrideStyle`/
+     `SelectLanguage`/`SetPageDirection`/`SCPI`）——手册从没说它们不在 LVGL；
+   - 手册说 `Id` 字段是 EEZ-GUI 专用、`Persistent` 仅 Dashboard，这类**逐件限制散落在正文各处**，
+     没有汇总页。
+   重跑取证：`python flow-understanding/tools/extract_studio_facts.py`（只读，不改装机件）。
+
 ## 索引 · 目前已确立的结论（详证见 notes）
 
 | # | 结论 | 锚点 |
@@ -56,5 +75,15 @@ flow-understanding/
 | 6 | 编辑器**报错的 Flow 仍允许运行**（"画了不连"不会被构建挡住） | P6.3 · P.42 |
 | 7 | 变量四件套：`Evaluate` / `Watch`（**启动即发一次当前值**）/ `SetVariable` / 分支件 | P8.1 · P.58 |
 | 8 | Widget 属性可写成表达式，变量变化时属性自动更新 | P8.1 · P.58 |
+| 9 | 表达式层**只有 49 个函数**；`LVGL` 命名空间只 1 个（且指向的 W33 是坏链）；**没有 `Array.sort` / `toUpperCase` / `trim` / `replace` / `sqrt` / 保留小数位的 round** | P8.3 · P.63–P.74 |
+| 10 | **坐标类属性不是 Flow 表达式**：`Left/Top/Width/Height` 是 Number + 构建期四则运算（只 `+ - * /`），绑变量只会烘成死数字 | 各控件属性提示（如 raw 6693–6699） |
+| 11 | `Array.*` 全是**纯函数**（返回新数组，"original array will not be modified"）→ 必须 `SetVariable` 写回 | P8.3.6 · 第 83–85 页 |
+| 12 | **LVGL 没有任何内置持久化**：`Persistent` 与 `Read/WriteSetting` 都写明 Dashboard-only | P8 · 第 70 页；A61/A92 |
+| 13 | JSON / Blob / Stream / Object 变量 = Dashboard-only；LVGL 要复合数据只能**结构体（需开 Flow）** | P8.2.2/2.4/2.6 · 第 71 页 |
+| 14 | **9 个动作件在 LVGL 面板被禁用**（`OnEvent`/`ShowPage`/`ShowKeyboard`/`ShowKeypad`/`ShowMessageBox`/`OverrideStyle`/`SelectLanguage`/`SetPageDirection`/`SCPI`）；`LVGL`(A43) 是 LVGL 专属件 | 装机包 `enabledInComponentPalette`（`tools/`） |
+| 15 | A43 实际有 **65** 个子动作（手册只 63，多 `objGetDisplayX/Y`），覆盖切屏/几何/样式/flag/state/**焦点组 7 项**/**动画 7 项**/控件专用 | 装机包 `registerAction`（`tools/`） |
+| 16 | 官方 traits 允许 LVGL native 变量为 `enum/integer/float/double/boolean/string`——**与本仓库"只有 int/string 稳、布尔用 integer"的口径冲突，待实测裁决** | 装机包 `LVGLProjectTypeTraits` |
+| 17 | 手册自身有缺陷可直接引用为"别照抄"：`<`/`>` 说明写反、`Array.append` 说明是 `String.split` 的复制粘贴、`Math.round(x,2)` 与函数表矛盾、`Date.getDay` 是**月内日不是星期** | raw 2893–2896、3441–3530、第 73 页 |
 
-（`notes/flow-execution-semantics.md` 是第 1–8 条的完整推导；函数表与 A43 LVGL 子动作清单待补。）
+（`notes/flow-execution-semantics.md` = 1–8 的推导；`notes/flow-variables-expressions.md` = 9–13、17；
+`notes/flow-actions-lvgl.md` = 14–16；`EXAMPLE_PLAN.md` = 这些结论该变成哪些示例。）
