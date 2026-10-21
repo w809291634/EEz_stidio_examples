@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""app-wifi-connect2 —— WiFi 扫描列表（v1：列表 + 假数据 + 滚动）
+"""app-wifi-scan-flow —— WiFi 扫描列表（v1：列表 + 假数据 + 滚动）
 
 本文件是工程唯一设计源：由它生成 .eez-project，请勿手改产物。
 
-    python build_example.py        → app-wifi-connect2.eez-project
+    python build_example.py        → app-wifi-scan-flow.eez-project
     python design/cli_build.py     → src/ui/（EEZ CLI 生成，勿手改）
     python design/gen_font.py      → src/ui/fonts/ui_font_cn14.c
 
@@ -39,7 +39,7 @@ import sys
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PROJECT_FILE = os.path.join(HERE, "app-wifi-connect2.eez-project")
+PROJECT_FILE = os.path.join(HERE, "app-wifi-scan-flow.eez-project")
 
 SCREEN_W, SCREEN_H = 480, 320
 ROW_PITCH, ROW_H, ROW_COUNT = 50, 44, 10

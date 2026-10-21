@@ -19,11 +19,11 @@
   我产生的临时文件（脚本/日志）任务结束后自行清理。
 - 用户会自己还原不满意的改动；还原后以现状为准继续，不要擅自改回。
 
-## 设计图约定（app-wifi-connect2）
+## 设计图约定（app-wifi-scan-flow）
 - 图不累计：一个过程只留一张，与定稿冲突的直接删；编号是稳定 ID，删后不复用（允许跳号）。
 - 唯一设计源 design/mockup_gen.py；改图改常量重生成，不手改 SVG。
 
-## app-wifi-connect2 v4 架构（2026-10-21 落地，数组变量已移出 EEZ）
+## app-wifi-scan-flow v4 架构（2026-10-21 落地，数组变量已移出 EEZ）
 - EEZ 只持有**标量** native 变量（scan_state/ap_gen/scan_status），structs.h 已空壳、
   vars.h 的 FlowGlobalVariables 仅剩 NONE；列表数据**不进 EEZ**。
 - 列表数据路径：io 静态数组 s_aps → wifi_ap_at()/wifi_ap_count() → wifi_ui_sync

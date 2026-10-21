@@ -1,4 +1,4 @@
-# app-wifi-connect2 — WiFi 连接应用（基础工程模板）
+# app-wifi-scan-flow — WiFi 连接应用（基础工程模板）
 
 ## 定位
 
@@ -8,9 +8,9 @@
 ## 结构
 
 ```
-app-wifi-connect2/
+app-wifi-scan-flow/
 ├── build_example.py              ← 唯一设计源（生成的 .eez-project 勿手改）
-├── app-wifi-connect2.eez-project ← 生成产物（EEZ Studio 打开它）
+├── app-wifi-scan-flow.eez-project ← 生成产物（EEZ Studio 打开它）
 ├── design/
 │   ├── cli_build.py              ← EEZ CLI 构建（含 flow 检查错误守卫）
 │   ├── audit_chars.py            ← 逐字审计（加文字后启用）

@@ -98,7 +98,7 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
 ## 7. 目录与归属红线
 
 ```
-app-wifi-connect2/
+app-wifi-scan-flow/
 ├── build_example.py          ← 设计源（人写）★ 改 UI 只改这里
 ├── design/cli_build.py       ← EEZ CLI + flow 守卫
 ├── design/mockups/*.svg      ← 设计图（生成）

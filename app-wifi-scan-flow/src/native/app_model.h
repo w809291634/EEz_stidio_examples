@@ -1,5 +1,5 @@
 /*
- * app_model.h — WiFi 扫描契约头（app-wifi-connect2）
+ * app_model.h — WiFi 扫描契约头（app-wifi-scan-flow）
  *
  * 职责分界：
  *   UI（EEZ 生成码）只认变量名 + 动作名；

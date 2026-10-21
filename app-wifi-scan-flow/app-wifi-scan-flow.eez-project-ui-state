@@ -1,9 +1,9 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[app-wifi-connect2.eez-project]:/userPages/0",
-    "selectedActionObject": "[app-wifi-connect2.eez-project]:/actions/0",
-    "selectedGlobalVariableObject": "[app-wifi-connect2.eez-project]:/variables/globalVariables/0",
-    "selectedFontObject": "[app-wifi-connect2.eez-project]:/fonts/0",
+    "selectedUserPageObject": "[app-wifi-scan-flow.eez-project]:/userPages/0",
+    "selectedActionObject": "[app-wifi-scan-flow.eez-project]:/actions/0",
+    "selectedGlobalVariableObject": "[app-wifi-scan-flow.eez-project]:/variables/globalVariables/0",
+    "selectedFontObject": "[app-wifi-scan-flow.eez-project]:/fonts/0",
     "subnavigationSelectedItems": {
       "variables-tab/sub-navigation/selected-item": "Global"
     }
@@ -213,7 +213,7 @@
                   "name": "scan_start",
                   "component": "editor",
                   "config": {
-                    "objectPath": "[app-wifi-connect2.eez-project]:/actions/0",
+                    "objectPath": "[app-wifi-scan-flow.eez-project]:/actions/0",
                     "permanent": false
                   },
                   "icon": "material:code"
@@ -224,7 +224,7 @@
                   "name": "Main",
                   "component": "editor",
                   "config": {
-                    "objectPath": "[app-wifi-connect2.eez-project]:/userPages/0",
+                    "objectPath": "[app-wifi-scan-flow.eez-project]:/userPages/0",
                     "permanent": true
                   },
                   "icon": "svg:page"
@@ -1076,7 +1076,7 @@
   "selectedBuildConfiguration": "Default",
   "features": {},
   "objects": {
-    "[app-wifi-connect2.eez-project]:/userPages/0[flow-state]": {
+    "[app-wifi-scan-flow.eez-project]:/userPages/0[flow-state]": {
       "selectionFront": {},
       "selectionBack": {
         "0": {
@@ -1103,7 +1103,7 @@
         "scrollLeft": 0
       }
     },
-    "[app-wifi-connect2.eez-project]:/userWidgets/0[flow-state]": {
+    "[app-wifi-scan-flow.eez-project]:/userWidgets/0[flow-state]": {
       "selectionFront": {},
       "selectionBack": {},
       "transform": {
@@ -1120,7 +1120,7 @@
         "scrollLeft": 0
       }
     },
-    "[app-wifi-connect2.eez-project]:/actions/0[flow-state]": {
+    "[app-wifi-scan-flow.eez-project]:/actions/0[flow-state]": {
       "selection": {},
       "transform": {
         "translate": {

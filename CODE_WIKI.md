@@ -203,7 +203,7 @@ EEz_stidio_examples/
 
 **职责**：调用 EEZ Studio 可执行文件，把 `.eez-project` 编译成 `src/ui/` 下的 C/C++ 代码。
 参照实现：[tabview-swipe-switch/design/cli_build.py](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/tabview-swipe-switch/design/cli_build.py)（无字体版）、
-[app-wifi-connect2/design/cli_build.py](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-connect2/design/cli_build.py)（含 flow 错误守卫版）。
+[app-wifi-scan-flow/design/cli_build.py](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow/design/cli_build.py)（含 flow 错误守卫版）。
 
 要点：
 
@@ -494,7 +494,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | 目录 | 演示点 | 关键坑 / 要点 |
 |---|---|---|
 | [app-wifi-connect](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-connect) | WiFi 扫描/连接全流程 v3（链表渲染版）：EEZ 画壳 + native 业务层（契约头/命令环/io 平台分界/真 WiFi） | ★ 动作函数体只投递；★ `native_vars.h` 必须包 `extern "C"`；★ io 层不依赖 LVGL；新建 native 文件后删 `build_rel` 重配（GLOB 不重扫） |
-| [app-wifi-connect2](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-connect2) | WiFi 连接应用基础模板：空屏幕骨架（0 控件/字体/动作/变量）+ cli_build/audit/PC 仿真管线齐备 | ★ 控件照抄 EEZ 原生形态；★ `gen_font` 在 `cli_build` 之后；★ flow 错误守卫；含 `DESIGN.md`/`EEZ_CHECKLIST.md`/`IMPLEMENTATION.md`/`SCAN_BINDING.md`/`mockups/` 设计资料 |
+| [app-wifi-scan-flow](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow) | WiFi 连接应用基础模板：空屏幕骨架（0 控件/字体/动作/变量）+ cli_build/audit/PC 仿真管线齐备 | ★ 控件照抄 EEZ 原生形态；★ `gen_font` 在 `cli_build` 之后；★ flow 错误守卫；含 `DESIGN.md`/`EEZ_CHECKLIST.md`/`IMPLEMENTATION.md`/`SCAN_BINDING.md`/`mockups/` 设计资料 |
 | [perf-tabview-native-vs-eez](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/perf-tabview-native-vs-eez) | 资源消耗对照：同构 tabview，原生 LVGL vs EEZ（RAM/Flash 实测 + ESP32-P4 真机 map 拆解） | ★ 结论：EEZ 核心真实代价 ≈ **259KB flash + 28KB RAM**（PC 差值里的 1.33MB 大头其实是中文字体）；见 `parse_map.py` |
 
 ### 8.5 公共 / 辅助目录
@@ -555,7 +555,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | 仓库总说明 + 示例索引 | [README.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/README.md) | 四条经验获取途径、目录规范、PC 仿真器机制与坑 |
 | 新建示例模板说明 | [示例工程模板说明.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/示例工程模板说明.md) | 目录骨架、逐字拷贝 vs 按例重写清单、五步流程、坑速查 |
 | PC 仿真器 Code Wiki | [PC_SIM/.../CODE_WIKI.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/PC_SIM/lv_port_pc_vscode_v9.5/CODE_WIKI.md) | LVGL v9.5 子系统、FreeRTOS 集成、构建与调试 |
-| 应用设计资料 | [app-wifi-connect2/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-connect2) | `DESIGN.md`（UI 设计 v4）、`EEZ_CHECKLIST.md`（84 控件 / 51 变量照抄清单）、`IMPLEMENTATION.md`、`SCAN_BINDING.md`、`design/mockups/`（9 张过程图） |
+| 应用设计资料 | [app-wifi-scan-flow/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow) | `DESIGN.md`（UI 设计 v4）、`EEZ_CHECKLIST.md`（84 控件 / 51 变量照抄清单）、`IMPLEMENTATION.md`、`SCAN_BINDING.md`、`design/mockups/`（9 张过程图） |
 
 > **文档生成日期**：2026-10-20 · **基线版本**：EEZ Studio 0.29.0 / LVGL 9.4.0 / PC_SIM LVGL 9.5.0
 </content>
