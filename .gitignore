@@ -11,3 +11,4 @@ build_debug/
 build_rel_rw/
 __pycache__/
 *.pyc
+flow-examples/*/shots/*.bmp

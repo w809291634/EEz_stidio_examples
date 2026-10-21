@@ -33,11 +33,22 @@ flow-lvgl-actions-catalog/      A43 的 65 个子动作目录（EXAMPLE_PLAN ③
 flow-examples/<flow-主题>/
 ├── build_example.py             ← 唯一设计源；产物 .eez-project 勿手改
 ├── <flow-主题>.eez-project
+├── fonts/simhei.ttf             ← ★ 屏上有中文就要有（见下方铁律）
 ├── design/
 │   ├── cli_build.py             ← 逐字拷贝，只改 1 处 PROJ 工程名
+│   ├── gen_font.py              ← 逐字拷贝（它 import 本工程的 build_example 取字符集）
+│   ├── audit_chars.py           ← 逐字拷贝，交付前必跑
 │   └── sim_cmake/               ← run_sim.bat + main.c + lv_conf.h（逐字拷贝）
 └── src/ui/                      ← EEZ 生成产物（含 eez-flow.cpp/h）
 ```
+
+★ **中文字体铁律**（2026-10-21 翻车实录）：只要屏上会出现非 ASCII 字符
+（按钮文案、Label 文案、**变量被写成的中文取值**），就必须同时做到三件：
+①工程 `fonts[]` 里有字体条目；②控件样式 `text_font` 指过去；③`cli_build` 之后再跑
+`gen_font.py` 烘 `.c`。**少任何一件，EEZ 构建照样 0 错 0 警**，只有屏上一片豆腐。
+所以字符集不能靠手写：生成器里的 `_check_font_coverage()` 从生成的工程 JSON 反查
+（`description` 是编辑器注释、不上屏，排除），缺字直接拒绝生成。
+参照实现：`flow-page-timeline-animation/build_example.py`、`flow-variables-basics/build_example.py`。
 
 拷贝源与五步流程照 [`../示例工程模板说明.md`](../示例工程模板说明.md)（根目录那份）；
 ★ **改名/换位置时必须删本工程 `design/sim_cmake/build_rel/` 全量重配**
@@ -64,11 +75,12 @@ flow-examples/<flow-主题>/
 | 目录 | 演示点 | 状态 |
 |---|---|---|
 | [`flow-variables-basics/`](flow-variables-basics/) | Flow 变量的使用方法：读（表达式/模板串/Bar 单向）· 写（Slider 回写、`SetVariable` 单条与批量、`Evaluate`→数据线→`SetVariable`）· 监听（`Watch`）· 分支（`Switch`）· 作用域（全局 vs 页面局部 `l_step`） | CLI `BUILD RESULT: ok`（0 错 0 警，assets 1,210 B）+ 产物对账 + PC_SIM `[537/537] build succeeded`；**从仓库根迁入本目录时已删 `build_rel` 全量重配并复验通过**；两个负控（写错变量名 / 画布重叠）均生效；★ **行为验收未做**（点按钮看变量动，需起仿真） |
-| [`flow-page-timeline-animation/`](flow-page-timeline-animation/) | 页面动画时间线 + `Animate`：关键帧挂控件、游标在页面级；播放 / 跳帧(`speed=0`) / 倒放(`to<from`) / `seqout` 只在放完时发 / `pageTimelinePosition()` 读数 | CLI `ok`（0 错 0 警）+ 插值码实证 `screens.c:374+`（`getTimelinePosition` + 5 种缓动）+ PC_SIM `[537/537] build succeeded`；★ 6 条自检负控全部拦住（opacity 越界 / 同区间拆两帧 / 非法缓动名 / 非法属性名 / 关键帧倒序 / 总长超 Animate）；机制沉淀见 [`../flow-understanding/notes/flow-timeline-animation.md`](../flow-understanding/notes/flow-timeline-animation.md) |
+| [`flow-page-timeline-animation/`](flow-page-timeline-animation/) | 页面动画时间线 + `Animate`：关键帧挂控件、游标在页面级；播放 / 跳帧(`speed=0`) / 倒放(`to<from`) / `seqout` 只在放完时发 / `pageTimelinePosition()` 读数 | CLI `ok`（0 错 0 警）+ 插值码实证 `screens.c:381+`（`getTimelinePosition` + 5 种缓动）+ PC_SIM `run_sim.bat build` → `build succeeded`（`ui_font_cn14.c` 作为编译单元进 `main.exe`）；★ 7 条自检负控全部拦住（opacity 越界 / **rotate 越界** / 同区间拆两帧 / 非法缓动名 / 非法属性名 / 关键帧倒序 / 总长超 Animate）；★ 行为用 `FLOW_AUTOTEST` 无头自证（合成点击 + `lv_snapshot_take` 拍屏 + 几何读数），7 行读数表 + 6 张图在 `shots/`，中文渲染同时被证；机制沉淀见 [`../flow-understanding/notes/flow-timeline-animation.md`](../flow-understanding/notes/flow-timeline-animation.md) |
 
 ## 7. 与 `flow-understanding/` 的分工（别写串）
 
 - 这里放**能构建、能打开的工程**；那里放**读手册与装机包的结论**；
 - 示例里踩到的**通用** Flow 坑（换个 Flow 工程还成立）→ 回写
-  `../flow-understanding/notes/`（带页码），再回灌经验库 `intake/`；
+  `../flow-understanding/notes/`（带页码），再回灌**本地经验库**的 `intake/`
+  （那是仓库外的目录，位置见经验库自己的 `AGENTS.md`，不在本仓库里）；
 - 只在该示例成立的坑 → 留在该示例自己的 `README.md`。

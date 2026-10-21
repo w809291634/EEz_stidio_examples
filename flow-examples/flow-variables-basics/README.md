@@ -57,8 +57,11 @@
 flow-variables-basics/
 ├── build_example.py                 ← 唯一设计源（改 UI/改流图都改它）
 ├── flow-variables-basics.eez-project ← 生成产物，EEZ Studio 可直接打开看流图
+├── fonts/simhei.ttf                 ← 中文字体源（按钮文案有中文）
 ├── design/
 │   ├── cli_build.py                 ← EEZ headless CLI 构建 + flow 错误守卫
+│   ├── gen_font.py                  ← 烘 src/ui/fonts/ui_font_cn14.c（CLI 不烘，P-0140）
+│   ├── audit_chars.py               ← 逐字审计（屏上字符 ⊆ 字体字符集）
 │   └── sim_cmake/                   ← run_sim.bat + main.c + lv_conf.h（从 tabview 干净拷贝）
 └── src/ui/                          ← EEZ 生成（禁手改）；★ 有 eez-flow.cpp/h（Flow 在跑）
 ```
@@ -73,16 +76,26 @@ flow-variables-basics/
 | EEZ Studio | 0.29.0（`projectVersion=v3`，`projectType=lvgl`） |
 | LVGL | 9.4.0（PC 仿真宿主 9.5） |
 | 屏幕 | 480×320，深色，16bpp |
-| 字体 | 无自定义字体条目（文字全 ASCII，走内置 Montserrat）→ 免 `gen_font` 链 |
+| 字体 | **`cn14`（simhei 子集 98 字 = ASCII 可打印 + `批量写`）**——UI 上有中文就必须挂字体条目，见 §4 |
 | flowSupport | `true`；`generateSourceCodeForEezFramework=true` |
 
 ## 4. 怎么用
 
 ```bat
-python build_example.py            rem 生成 .eez-project
+python build_example.py            rem 生成 .eez-project；★ 内含字体覆盖自检（缺字拒绝生成）
 python design\cli_build.py         rem 判据：BUILD RESULT: ok + 产物对账（见 §5）
+python design\gen_font.py          rem ★ 必须在 cli_build 之后（CLI 不烘字体 .c，P-0140；
+                                   rem    且孤儿清理会把先烘出来的字体 .c 删掉）
+python design\audit_chars.py       rem 逐字审计：屏上会出现的字符 ⊆ 字体字符集
 双击 design\sim_cmake\run_sim.bat  rem 编译 + 起窗口，点四个按钮看变量动
 ```
+
+★ **为什么一个"讲变量"的示例要带字体链**：按钮文案 `批量写` 是中文。EEZ 的 LVGL 工程
+只要屏上有非 ASCII 字符，就必须 ①在工程里挂字体条目、②生成后烘 `.c`、③把控件的
+`text_font` 指过去——三件缺一件就是**一片豆腐，而且构建 0 错 0 警**（本轮就是这么翻车的：
+README 原先写"文字全 ASCII"，实际有中文，Run 预览里直接露馅）。所以生成器里加了
+`_check_font_coverage()`：它从**生成的工程 JSON** 里扫非 ASCII 字符（`description` 是编辑器
+注释、不上屏，排除），缺字直接拒绝生成，不靠人记。
 
 想看流图：EEZ Studio 打开 `.eez-project` → Page `Main` 的 **Flow 画布**，
 9 个件 + 10 条连线（4 条事件线、2 条数据线、时序线）都在里面。
@@ -91,7 +104,8 @@ python design\cli_build.py         rem 判据：BUILD RESULT: ok + 产物对账�
 
 | 检查 | 命令 | 结果 |
 |---|---|---|
-| CLI 构建 | `python design\cli_build.py` | `BUILD RESULT: ok`，`No error and no warning detected` + `EEZ Flow engine built`，assets **1,210 B** ✓ |
+| CLI 构建 | `python design\cli_build.py` | `BUILD RESULT: ok`，`No error and no warning detected` + `EEZ Flow engine built`，assets **3,212 B** ✓（挂字体前是 1,210 B，多的 2 KB 就是字体条目进 `assets[]` 的物证：`ui.c:8 const uint8_t assets[3212]`） |
+| ★ 中文字体链 | `gen_font.py` → `audit_chars.py` → `grep` | `src/ui/fonts/ui_font_cn14.c` **32,572 B**；`fonts.h:10 extern const lv_font_t ui_font_cn14`；`screens.c` 里引用 `&ui_font_cn14` **16 处**；审计 `UI 非 ASCII 字符数: 3 / OK` ✓ |
 | 产物对账 | `ls src/ui` | 12 模板文件 + **`eez-flow.cpp`(9,923 行) + `eez-flow.h`** ✓（Flow 在跑的物证） |
 | 变量入码 | `grep` `src/ui/vars.h` | `FLOW_GLOBAL_VARIABLE_G_COUNT/G_DOUBLE/G_FLAG/G_STATUS/G_BRANCH` 五个枚举项 ✓（`native` 区为空——本示例没有 native 变量） |
 | 流引擎在位 | `nm ..\..\PC_SIM\lv_port_pc_vscode_v9.5\bin\main.exe \| grep -c "_ZN3eez4flow"` | **541** 个 `eez::flow` mangled 符号（含 `setGlobalVariable`/`eez_flow_tick`；对照 `app-wifi-scan-flow-no-flow` = **0**）✓ |
@@ -101,7 +115,7 @@ python design\cli_build.py         rem 判据：BUILD RESULT: ok + 产物对账�
 | ★ 负控 A（局部变量真实性） | 把 `l_step` 改成 `l_bogus` 重新构建 | `FLOW-ERR: identifier 'l_bogus' is neither input or local or global variable` → **2 errors**；改回即 0 错 → 证明 Checks **确实**在校验标识符、`l_step` 确实按**局部变量**解析 ✓ |
 | ★ 负控 B（画布重叠守卫） | 内存里把最后两件挪到同一坐标再调 `_assert_flow_boxes()` | `流组件画布重叠：分支⑧：Switch 判 g_count × 分支⑧'：命中后写 g_branch`，退出码 1；正常坐标 PASS ✓ |
 | 布局自检 | 顶层 17 个控件逐个比矩形 | 无重叠、无越界 ✓ |
-| PC_SIM 编译链接 | `run_sim.bat build` | `[537/537] Linking ... build succeeded` ✓ |
+| PC_SIM 编译链接 | `run_sim.bat build` | `[8/8] Linking ... build succeeded` ✓（挂字体后增量重编：`ui_font_cn14.c` 作为一个编译单元进 `main.exe`，链接期没有 `undefined reference: ui_font_cn14` ⇒ 字体真的在二进制里） |
 | ★ 迁移后重验 | 从仓库根搬进 `flow-examples/` 时**删了 `design/sim_cmake/build_rel/`** 再全量重配 | 重编 `[537/537]` 通过、`main.exe` 已刷新（16:15）、`nm` 仍有 541 个 flow 符号 ✓<br>（不删缓存会拿旧绝对路径去编上一个位置的工程——这就是容器规则里"迁移必删 build_rel"的原因） |
 
 

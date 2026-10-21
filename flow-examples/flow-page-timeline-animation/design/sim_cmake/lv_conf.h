@@ -1095,7 +1095,9 @@
 /* Documentation for several of the below items can be found here: https://docs.lvgl.io/master/auxiliary-modules/index.html . */
 
 /** 1: Enable API to take snapshot for object */
-#define LV_USE_SNAPSHOT 0
+/* 本工程偏离通用模板：main.c 的 FLOW_AUTOTEST 无头自证要 lv_snapshot_take 拍屏
+ * 证明中文真的渲染（否则只能靠肉眼开窗口）。其它示例保持 0。 */
+#define LV_USE_SNAPSHOT 1
 
 /*1: Enable system monitor component*/
 #define LV_USE_SYSMON   1

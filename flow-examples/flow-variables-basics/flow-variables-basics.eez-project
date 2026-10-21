@@ -1,10 +1,10 @@
 {
   "themesVersion": 1,
-  "objID": "07e001d8-ac81-420e-b9da-cd2bd8b2df27",
+  "objID": "b2c4d193-33c1-42a1-8a3b-c61060ad22ba",
   "settings": {
-    "objID": "c231fd3c-dff5-4fe3-b0a6-633ef2720482",
+    "objID": "0cb78ba5-a7e7-429e-89f2-c31a6b6149b8",
     "general": {
-      "objID": "4f40e6c5-ee8d-449d-9c2b-a484e864ee14",
+      "objID": "31f794cf-95e6-4399-82bd-2c58209311de",
       "projectVersion": "v3",
       "projectType": "lvgl",
       "lvglVersion": "9.4.0",
@@ -26,10 +26,10 @@
       "cacheFonts": true
     },
     "build": {
-      "objID": "e05ab881-d987-43fb-932d-c1f1e15cc055",
+      "objID": "34491f58-21d9-4376-be61-04b47f48dcf8",
       "configurations": [
         {
-          "objID": "6c00a50f-cefc-4060-a173-e9f39ca4aabe",
+          "objID": "8e8fefd6-9568-4232-9331-c929b3f062b2",
           "name": "Default"
         }
       ],
@@ -47,62 +47,62 @@
       "expressionEvaluatorStackSize": 20,
       "files": [
         {
-          "objID": "58deb1ed-35b7-4268-b98c-efddf339b0c6",
+          "objID": "5fba7cd7-5020-4e47-8b52-479149c35985",
           "fileName": "screens.h",
           "template": "#ifndef EEZ_LVGL_UI_SCREENS_H\r\n#define EEZ_LVGL_UI_SCREENS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_SCREENS_DECL}\r\n//${eez-studio LVGL_SCREENS_DECL_EXT}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_SCREENS_H*/"
         },
         {
-          "objID": "45333986-4710-42ac-8203-e079e8cd2de1",
+          "objID": "b9908635-43ed-4b24-b64c-0851e4fc4658",
           "fileName": "screens.c",
           "template": "#include <string.h>\n\n#include \"screens.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n#include \"actions.h\"\n#include \"vars.h\"\n#include \"styles.h\"\n#include \"ui.h\"\n\n//${eez-studio LVGL_SCREENS_DEF}\n//${eez-studio LVGL_SCREENS_DEF_EXT}"
         },
         {
-          "objID": "83716c97-9517-43ec-9d1b-97dabda7fe2b",
+          "objID": "48f4df1c-ca77-4fbf-95f7-b8a7d4c37edd",
           "fileName": "actions.h",
           "template": "#ifndef EEZ_LVGL_UI_EVENTS_H\r\n#define EEZ_LVGL_UI_EVENTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_ACTIONS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_EVENTS_H*/"
         },
         {
-          "objID": "4845797e-731e-4edf-80d9-052f641f79b6",
+          "objID": "a2d1490d-ac66-4377-93c6-96c3d35334df",
           "fileName": "vars.h",
           "template": "#ifndef EEZ_LVGL_UI_VARS_H\r\n#define EEZ_LVGL_UI_VARS_H\r\n\r\n#include <stdint.h>\r\n#include <stdbool.h>\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n// enum declarations\r\n\r\n//${eez-studio FLOW_ENUMS}\r\n\r\n// Flow global variables\r\n\r\n//${eez-studio FLOW_GLOBAL_VARIABLES_ENUM}\r\n\r\n// Native global variables\r\n\r\n//${eez-studio LVGL_VARS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_VARS_H*/"
         },
         {
-          "objID": "20201ad5-fb79-412b-b8ac-5009d9812b9e",
+          "objID": "9cd11af0-06b5-42c7-a331-c53beefc32cf",
           "fileName": "structs.h",
           "template": "#ifndef EEZ_LVGL_UI_STRUCTS_H\n#define EEZ_LVGL_UI_STRUCTS_H\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n\n#include <eez/flow/flow.h>\n#include <stdint.h>\n#include <stdbool.h>\n\n#include \"vars.h\"\n\nusing namespace eez;\n\n//${eez-studio FLOW_STRUCTS}\n\n//${eez-studio FLOW_STRUCT_VALUES}\n\n#endif\n\n#endif /*EEZ_LVGL_UI_STRUCTS_H*/\n"
         },
         {
-          "objID": "e29307c8-5821-44fa-8b07-462f35d59a3c",
+          "objID": "71aa08f1-fd9f-42d2-933e-34375954c046",
           "fileName": "images.h",
           "template": "#ifndef EEZ_LVGL_UI_IMAGES_H\r\n#define EEZ_LVGL_UI_IMAGES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_IMAGES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_IMAGES_H*/"
         },
         {
-          "objID": "d17e5e88-9140-4548-96e7-4bb61c6d4628",
+          "objID": "7ab667ea-d03f-48a3-b4db-25341a2735ba",
           "fileName": "images.c",
           "template": "#include \"images.h\"\n\n//${eez-studio LVGL_IMAGES_DEF}"
         },
         {
-          "objID": "9ef5ddc9-f0d2-4757-9521-04e13750fac0",
+          "objID": "f3f1d252-443e-4636-83c7-1aea767f273e",
           "fileName": "fonts.h",
           "template": "#ifndef EEZ_LVGL_UI_FONTS_H\r\n#define EEZ_LVGL_UI_FONTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_FONTS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_FONTS_H*/"
         },
         {
-          "objID": "142aaf9c-87d8-4bce-82b9-a07f2269be7e",
+          "objID": "344479fa-dcb4-4f60-977c-16b064da4bb3",
           "fileName": "styles.h",
           "template": "#ifndef EEZ_LVGL_UI_STYLES_H\r\n#define EEZ_LVGL_UI_STYLES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_STYLES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_STYLES_H*/"
         },
         {
-          "objID": "0fbb1f98-cf22-4eb9-abc4-d277d80a565b",
+          "objID": "409d6fa2-d9ce-4526-8ec9-2f00168bca21",
           "fileName": "styles.c",
           "template": "#include \"styles.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n\n//${eez-studio LVGL_STYLES_DEF}\n"
         },
         {
-          "objID": "8636e67e-eb5e-443d-a1ad-24ce4bdc96df",
+          "objID": "5127bdf1-4fb4-4caa-836a-05c58daa1052",
           "fileName": "ui.h",
           "template": "#ifndef EEZ_LVGL_UI_GUI_H\n#define EEZ_LVGL_UI_GUI_H\n\n//${eez-studio LVGL_INCLUDE}\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n#include <eez/flow/lvgl_api.h>\n#endif\n\n#if !defined(EEZ_FOR_LVGL)\n#include \"screens.h\"\n#endif\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n//${eez-studio GUI_ASSETS_DECL}\n\nvoid ui_init();\nvoid ui_tick();\n\n#if !defined(EEZ_FOR_LVGL)\nvoid loadScreen(enum ScreensEnum screenId);\n#endif\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // EEZ_LVGL_UI_GUI_H"
         },
         {
-          "objID": "37c05795-9644-4c9d-9e1d-0321fbe6e85a",
+          "objID": "f1f3995e-f5e2-4878-afb9-bbb012c9907c",
           "fileName": "ui.c",
           "template": "#if defined(EEZ_FOR_LVGL)\n#include <eez/core/vars.h>\n#endif\n\n#include \"ui.h\"\n#include \"screens.h\"\n#include \"images.h\"\n#include \"actions.h\"\n#include \"vars.h\"\n\n//${eez-studio GUI_ASSETS_DEF}\n\n//${eez-studio LVGL_NATIVE_VARS_TABLE_DEF}\n\n//${eez-studio LVGL_ACTIONS_ARRAY_DEF}\n\n#if defined(EEZ_FOR_LVGL)\n\nvoid ui_init() {\n    eez_flow_init(assets, sizeof(assets), (lv_obj_t **)&objects, sizeof(objects), images, sizeof(images), actions);\n}\n\nvoid ui_tick() {\n    eez_flow_tick();\n    tick_screen(g_currentScreen);\n}\n\n#else\n\nstatic int16_t currentScreen = -1;\n\nstatic lv_obj_t *getLvglObjectFromIndex(int32_t index) {\n    if (index == -1) {\n        return 0;\n    }\n    return ((lv_obj_t **)&objects)[index];\n}\n\nvoid loadScreen(enum ScreensEnum screenId) {\n    currentScreen = screenId - 1;\n    lv_obj_t *screen = getLvglObjectFromIndex(currentScreen);\n    lv_scr_load_anim(screen, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);\n}\n\nvoid ui_init() {\n    create_screens();\n//${eez-studio LVGL_LOAD_FIRST_SCREEN}\n}\n\nvoid ui_tick() {\n    tick_screen(currentScreen);\n}\n\n#endif\n"
         }
@@ -110,10 +110,10 @@
     }
   },
   "variables": {
-    "objID": "f9760ded-ae5d-4e98-86a1-5eaa4b6182bb",
+    "objID": "957d861e-fcee-4bfd-bad1-47b046486cfb",
     "globalVariables": [
       {
-        "objID": "40945475-1783-4f3d-9c36-e83f9412618b",
+        "objID": "b9d43f3b-224b-4b86-a478-55caeea02e0e",
         "name": "g_count",
         "type": "integer",
         "defaultValue": "0",
@@ -121,7 +121,7 @@
         "native": false
       },
       {
-        "objID": "589285c8-135b-40f9-ace5-1b143ae42bb2",
+        "objID": "72b26c59-f8f6-4856-821b-4b132b04ba1d",
         "name": "g_double",
         "type": "integer",
         "defaultValue": "0",
@@ -129,7 +129,7 @@
         "native": false
       },
       {
-        "objID": "4ca8d624-8c26-4c74-ac8c-6a55df416e5e",
+        "objID": "49ab8fc9-46ee-4708-9a5a-0c79c339a09a",
         "name": "g_flag",
         "type": "boolean",
         "defaultValue": "false",
@@ -137,7 +137,7 @@
         "native": false
       },
       {
-        "objID": "33e1b1f7-c2d7-429f-ab4c-ddb261bcaf0b",
+        "objID": "9fcbdfa1-6bb0-42f4-9148-98d99093b296",
         "name": "g_status",
         "type": "string",
         "defaultValue": "\"idle\"",
@@ -145,7 +145,7 @@
         "native": false
       },
       {
-        "objID": "8a46eb57-3f8e-4fca-ba2d-1ed8269b7eae",
+        "objID": "f5d8cff4-4570-47e8-b609-e8c31c713589",
         "name": "g_branch",
         "type": "string",
         "defaultValue": "\"none\"",
@@ -159,10 +159,10 @@
   "actions": [],
   "userPages": [
     {
-      "objID": "7f677612-a929-42cb-b737-080f371a09a8",
+      "objID": "6faca423-f8b4-47ef-87a2-156827799915",
       "components": [
         {
-          "objID": "a9be8d56-b50d-4ba5-a7a1-b5e1dbebebd6",
+          "objID": "3bf4153c-0941-4a67-858f-487155762409",
           "type": "LVGLScreenWidget",
           "left": 0,
           "top": 0,
@@ -171,7 +171,7 @@
           "customInputs": [],
           "customOutputs": [],
           "style": {
-            "objID": "2846aa82-41f8-4178-8825-a7faf5682bde",
+            "objID": "b71fb99e-ce7f-4a62-8c18-69b658ae0fb0",
             "useStyle": "default",
             "conditionalStyles": [],
             "childStyles": []
@@ -184,7 +184,7 @@
           "heightUnit": "px",
           "children": [
             {
-              "objID": "8161634a-883e-4f31-bb7f-d2e46a924a96",
+              "objID": "1d729701-cf1b-43e7-86ab-a5e7c3fd2854",
               "type": "LVGLLabelWidget",
               "left": 16,
               "top": 10,
@@ -193,7 +193,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "bef3fa0d-714e-465b-887c-7aa5c277b848",
+                "objID": "abe6d835-7f44-4fcc-9ed4-9d4f090ef7e4",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -214,7 +214,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "4950bcf3-c529-4f87-9b12-8875dabdccb9",
+                "objID": "09b07fbf-fe4d-40f6-82fa-a073edbfaed5",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -226,7 +226,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0xf0f4fc"
+                      "text_color": "0xf0f4fc",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -240,7 +241,7 @@
               "useStaticText": true
             },
             {
-              "objID": "4bb8ef96-1cad-43a5-89a2-ef1d25b3b1a8",
+              "objID": "e295dea1-1d63-42b8-a090-565ff3488f87",
               "type": "LVGLLabelWidget",
               "left": 16,
               "top": 34,
@@ -249,7 +250,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "c8e78a33-f4e2-4c19-8ae4-e0a0c2ba5319",
+                "objID": "e54cfea3-13ab-4676-98d2-576b12d2fba9",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -270,7 +271,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "6ae644b3-964c-4cc6-aa1f-2ced0986c72c",
+                "objID": "55fc46a5-b181-4fdf-8c27-0a707d94b78f",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -282,7 +283,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0x8a99b3"
+                      "text_color": "0x8a99b3",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -296,7 +298,7 @@
               "useStaticText": true
             },
             {
-              "objID": "7211abcd-1027-4806-aa09-ef2dcf0e0f70",
+              "objID": "f18b9746-5679-4cdc-9392-5b1f1d15bf4c",
               "type": "LVGLLabelWidget",
               "left": 170,
               "top": 34,
@@ -305,7 +307,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "57bd4205-3382-4310-aa5d-7d47edc6d5b5",
+                "objID": "23a4ef50-05ab-4c37-a85f-f03d6fd16ded",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -326,7 +328,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "6889890b-88e4-4642-953e-bc9612ac3407",
+                "objID": "388542f6-6b26-48e3-a16b-f789869a7c72",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -338,7 +340,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0x3ddc97"
+                      "text_color": "0x3ddc97",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -352,7 +355,7 @@
               "useStaticText": true
             },
             {
-              "objID": "580a4977-ea9a-4fef-886d-4413661fea35",
+              "objID": "2a70883d-586b-4012-998f-ce23fc990ddf",
               "type": "LVGLLabelWidget",
               "left": 240,
               "top": 34,
@@ -361,7 +364,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "5bf839fb-202a-4868-9242-51f25e36cd11",
+                "objID": "f53d302f-ce0a-4af7-9b60-ef3f0a951566",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -382,7 +385,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "0d5510fc-0bc7-4a2a-8af0-f518df8d9e0b",
+                "objID": "b69c52b8-5373-478f-ae75-e6bbf8a10664",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -394,7 +397,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0xf0f4fc"
+                      "text_color": "0xf0f4fc",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -408,7 +412,7 @@
               "useStaticText": true
             },
             {
-              "objID": "db3161ff-d840-4e3a-96bb-2a8593c8b630",
+              "objID": "ff5a5bb4-4be5-4cd7-9236-108c192de404",
               "type": "LVGLLabelWidget",
               "left": 16,
               "top": 56,
@@ -417,7 +421,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "d88defda-829e-4245-909f-faec32f27c21",
+                "objID": "cf9cc7b1-1195-4ed5-ae46-adfb3bc0bba9",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -438,7 +442,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "c42b7a0b-a5e7-4abf-bbf7-b7776635cbdd",
+                "objID": "6fedb070-2162-42bd-a813-cbf90b4a2ee4",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -450,7 +454,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0x8a99b3"
+                      "text_color": "0x8a99b3",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -464,7 +469,7 @@
               "useStaticText": true
             },
             {
-              "objID": "d6ea3c21-01c9-4c92-a17e-6532c8444b98",
+              "objID": "e40a2431-141d-4008-8610-71a86bfd95fc",
               "type": "LVGLLabelWidget",
               "left": 170,
               "top": 56,
@@ -473,7 +478,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "9eb26181-c387-4abf-8625-70795f0984da",
+                "objID": "97d8ef78-10a3-488e-aee9-7e2e9f6569cf",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -494,7 +499,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "fa1639a3-8d98-482d-b481-d54fd4661a00",
+                "objID": "da52ee41-fe31-4787-9895-f02496df982d",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -506,7 +511,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0xf0f4fc"
+                      "text_color": "0xf0f4fc",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -520,7 +526,7 @@
               "useStaticText": true
             },
             {
-              "objID": "11ada875-9dd0-4244-b6f9-0fd535b188d0",
+              "objID": "8da80c48-91cc-4a5a-9b97-27ee284f7f07",
               "type": "LVGLLabelWidget",
               "left": 16,
               "top": 78,
@@ -529,7 +535,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "121a1d33-4b42-4f9a-91e7-b86bc5fbe419",
+                "objID": "ccaf355e-4e42-480d-b693-77a09ed12166",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -550,7 +556,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "8a47d3a7-b4e3-48fd-8409-537d524310f3",
+                "objID": "3e1fca39-cedd-465c-b607-25683f3bfb7f",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -562,7 +568,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0x8a99b3"
+                      "text_color": "0x8a99b3",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -576,7 +583,7 @@
               "useStaticText": true
             },
             {
-              "objID": "54187bc2-360f-48ee-9b86-4ff507df9311",
+              "objID": "78b191ac-cbc2-431d-9047-7b77e2c303a4",
               "type": "LVGLLabelWidget",
               "left": 170,
               "top": 78,
@@ -585,7 +592,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "e9bf5900-56f9-4de7-b7ce-7a537d488191",
+                "objID": "49575783-fcb0-4314-86d5-9b90eebba221",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -606,7 +613,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "0397fef2-1d83-408d-a356-e9ee718ac907",
+                "objID": "1662888c-88bd-4fd7-8b10-76a557f8d715",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -618,7 +625,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0x3ddc97"
+                      "text_color": "0x3ddc97",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -632,7 +640,7 @@
               "useStaticText": true
             },
             {
-              "objID": "29e1aaf0-f200-4650-b490-7ec6a292c6ac",
+              "objID": "478d6eec-9fb3-4416-8b7a-c1fc54c34a27",
               "type": "LVGLLabelWidget",
               "left": 16,
               "top": 100,
@@ -641,7 +649,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "9cf77edc-05d6-4138-820a-379aa6abc9dc",
+                "objID": "46ae9ae8-d534-442d-9f1e-05ad5019c976",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -662,7 +670,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "d9d255e2-80f2-412d-88ab-896192c484da",
+                "objID": "9f029fb7-1441-4ed5-83ef-e2864fdeaaab",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -674,7 +682,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0x8a99b3"
+                      "text_color": "0x8a99b3",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -688,7 +697,7 @@
               "useStaticText": true
             },
             {
-              "objID": "c609f224-1376-4042-89ab-41f31c0c9952",
+              "objID": "a83b278a-0e5d-4f92-88a7-a564cdc75467",
               "type": "LVGLBarWidget",
               "left": 170,
               "top": 100,
@@ -697,7 +706,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "bd0af6c0-f3df-42c6-9275-510aac3af9bb",
+                "objID": "bac739d4-d8d8-4d0d-af21-c857201ceab8",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -718,7 +727,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "888e0cec-f849-463a-97c8-b135ca116796",
+                "objID": "410b14cd-6ccb-432a-a217-93722443edb1",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -749,7 +758,7 @@
               "showProgress": false
             },
             {
-              "objID": "4120d687-5b49-4de6-9526-4240a7fd7f8c",
+              "objID": "6595abcc-674e-4b3f-b7cb-bca5dca8626a",
               "type": "LVGLLabelWidget",
               "left": 16,
               "top": 124,
@@ -758,7 +767,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "3fe8b238-3c43-49b3-a155-634bf0991e27",
+                "objID": "13109a4e-1089-424d-95c5-214ca3d7d00d",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -779,7 +788,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "1eeeed18-2f17-4145-b90c-e535bd2e5c7c",
+                "objID": "3a61e4a2-44e0-4868-8ed2-b1e058359e17",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -791,7 +800,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0x8a99b3"
+                      "text_color": "0x8a99b3",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -805,7 +815,7 @@
               "useStaticText": true
             },
             {
-              "objID": "783499d4-9f0b-4e3a-bb35-9f2400b776c6",
+              "objID": "9efab93d-bccf-4735-a668-f7b8c6486d0b",
               "type": "LVGLSliderWidget",
               "left": 170,
               "top": 124,
@@ -814,7 +824,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "5256f141-91c6-4eab-84cc-2303435c5f49",
+                "objID": "74fee26c-2334-48c9-be39-8baa220a0a0f",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -835,7 +845,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "4f5ac630-bbd6-433c-81a6-28a69ba2ca83",
+                "objID": "4670a6e8-31e8-4dfa-ba79-edeeb4d76358",
                 "definition": {}
               },
               "groupIndex": 0,
@@ -851,7 +861,7 @@
               "enableAnimation": false
             },
             {
-              "objID": "03fe92cc-4b2b-40fb-94db-c000b4abcf11",
+              "objID": "bdd79114-f14a-4d30-bbef-586f5ddd5cc7",
               "type": "LVGLButtonWidget",
               "left": 16,
               "top": 156,
@@ -860,7 +870,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "8efb069a-5a05-4c94-a253-fdbe89fb0e2d",
+                "objID": "7028a182-2b22-45a3-8964-0dcbf510d721",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -868,7 +878,7 @@
               "timeline": [],
               "eventHandlers": [
                 {
-                  "objID": "632bddd1-7bbe-421c-bd21-25893058e0f3",
+                  "objID": "ed3ec518-9839-4239-865b-9cc989ae6e81",
                   "eventName": "CLICKED",
                   "handlerType": "flow",
                   "userData": 0
@@ -880,7 +890,7 @@
               "heightUnit": "px",
               "children": [
                 {
-                  "objID": "5eb48fb6-0871-4b73-ba4c-c75c2b82757c",
+                  "objID": "4e096708-8efa-4383-871b-edbc2b15b07b",
                   "type": "LVGLLabelWidget",
                   "left": 0,
                   "top": 0,
@@ -894,12 +904,13 @@
                   "recolor": false,
                   "useStaticText": true,
                   "localStyles": {
-                    "objID": "3e87e915-fc81-4c96-9d1e-8330493e9f15",
+                    "objID": "ee3ad981-8b04-4532-a532-4bb26f3c2c9a",
                     "definition": {
                       "MAIN": {
                         "DEFAULT": {
                           "align": "CENTER",
-                          "text_color": "0xFFFFFF"
+                          "text_color": "0xFFFFFF",
+                          "text_font": "cn14"
                         }
                       }
                     }
@@ -915,7 +926,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "3274f963-16dd-4d6a-98ed-4e7612a4a2ae",
+                "objID": "47342f7d-9067-4d66-a3e7-292da34b8e3a",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -939,7 +950,7 @@
               "identifier": "btn_add"
             },
             {
-              "objID": "0a5a44e6-6b71-4485-bc76-81617446352b",
+              "objID": "b2599018-4cc5-4bab-8dfa-70f03efbd300",
               "type": "LVGLButtonWidget",
               "left": 128,
               "top": 156,
@@ -948,7 +959,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "3c851967-f5a1-429a-a09f-b6648669b7c0",
+                "objID": "1bba4d3f-9156-49aa-a0fc-a300de4ab34d",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -956,7 +967,7 @@
               "timeline": [],
               "eventHandlers": [
                 {
-                  "objID": "38f3842f-04ec-4747-a854-4bccbec28122",
+                  "objID": "3fed614c-4b64-4648-8b24-a6f489d61441",
                   "eventName": "CLICKED",
                   "handlerType": "flow",
                   "userData": 0
@@ -968,7 +979,7 @@
               "heightUnit": "px",
               "children": [
                 {
-                  "objID": "ec0ce09f-1c92-4c6d-9aa3-a51ab2a1a376",
+                  "objID": "953c7a48-8671-47d4-8688-46e69f7f6cab",
                   "type": "LVGLLabelWidget",
                   "left": 0,
                   "top": 0,
@@ -982,12 +993,13 @@
                   "recolor": false,
                   "useStaticText": true,
                   "localStyles": {
-                    "objID": "ede6ed10-9cf6-40ab-843d-f2837a6bc2f0",
+                    "objID": "e558aaf4-3a75-4bd3-93ba-7a1640c10608",
                     "definition": {
                       "MAIN": {
                         "DEFAULT": {
                           "align": "CENTER",
-                          "text_color": "0xFFFFFF"
+                          "text_color": "0xFFFFFF",
+                          "text_font": "cn14"
                         }
                       }
                     }
@@ -1003,7 +1015,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "d7779582-9e1f-4927-b3f0-46811df7cf61",
+                "objID": "2084a03b-0418-4a55-83dc-dc156e1dfc58",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -1027,7 +1039,7 @@
               "identifier": "btn_many"
             },
             {
-              "objID": "7c113dd8-314f-441e-8c6c-1f14cb16fa94",
+              "objID": "c09a886a-f1a1-467b-896a-8520a6d91b99",
               "type": "LVGLButtonWidget",
               "left": 240,
               "top": 156,
@@ -1036,7 +1048,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "3e51f8b1-f254-4acb-b9bd-d98479897147",
+                "objID": "a928a9c9-4967-4666-84f7-68574c02fe74",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -1044,7 +1056,7 @@
               "timeline": [],
               "eventHandlers": [
                 {
-                  "objID": "6ff603d7-a963-4663-b212-9d0159c5d20d",
+                  "objID": "721ec296-02b4-4962-8940-922a55a6a992",
                   "eventName": "CLICKED",
                   "handlerType": "flow",
                   "userData": 0
@@ -1056,7 +1068,7 @@
               "heightUnit": "px",
               "children": [
                 {
-                  "objID": "428418eb-6a0d-43c7-b0c2-2bbba9c1d5f5",
+                  "objID": "7f805545-b8c4-4d87-8a4b-ad48f4ecfe26",
                   "type": "LVGLLabelWidget",
                   "left": 0,
                   "top": 0,
@@ -1070,12 +1082,13 @@
                   "recolor": false,
                   "useStaticText": true,
                   "localStyles": {
-                    "objID": "c87730ba-f287-48c8-892a-96893917683a",
+                    "objID": "972cd4fc-12a3-45f3-8c9d-aef00fc1e03d",
                     "definition": {
                       "MAIN": {
                         "DEFAULT": {
                           "align": "CENTER",
-                          "text_color": "0xFFFFFF"
+                          "text_color": "0xFFFFFF",
+                          "text_font": "cn14"
                         }
                       }
                     }
@@ -1091,7 +1104,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "2c149318-719d-46e4-83aa-dc0139bd4ae9",
+                "objID": "0713976b-da14-424e-84b3-001bc22aa416",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -1115,7 +1128,7 @@
               "identifier": "btn_eval"
             },
             {
-              "objID": "e603b0e3-67d5-42a3-9c9e-33aede3b686d",
+              "objID": "de5bdaac-2a1d-41ce-90dc-78cb7930e84a",
               "type": "LVGLButtonWidget",
               "left": 352,
               "top": 156,
@@ -1124,7 +1137,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "6c01deb4-4a4b-4f65-9cff-b8b17fd4a042",
+                "objID": "08dc3e07-2a19-40b5-b0bc-92fa62bbdecc",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -1132,7 +1145,7 @@
               "timeline": [],
               "eventHandlers": [
                 {
-                  "objID": "da536b83-3a1f-484c-9c1f-afe885e1d823",
+                  "objID": "bc57cf09-5b8d-4dbf-afb7-0048b9ec7e19",
                   "eventName": "CLICKED",
                   "handlerType": "flow",
                   "userData": 0
@@ -1144,7 +1157,7 @@
               "heightUnit": "px",
               "children": [
                 {
-                  "objID": "1594aa58-96c8-44dc-8af9-df8f700d02e8",
+                  "objID": "0c645579-a103-46ae-ac69-664bfab4a329",
                   "type": "LVGLLabelWidget",
                   "left": 0,
                   "top": 0,
@@ -1158,12 +1171,13 @@
                   "recolor": false,
                   "useStaticText": true,
                   "localStyles": {
-                    "objID": "35f00e0a-91ce-45a0-9a7f-1c1955c989d1",
+                    "objID": "2c49ddfc-72e2-41c9-bef5-b378628d7680",
                     "definition": {
                       "MAIN": {
                         "DEFAULT": {
                           "align": "CENTER",
-                          "text_color": "0xFFFFFF"
+                          "text_color": "0xFFFFFF",
+                          "text_font": "cn14"
                         }
                       }
                     }
@@ -1179,7 +1193,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "3638393a-05cf-4eee-907b-e0d1ad2c6d30",
+                "objID": "35de0515-c59b-4ae5-af13-e1bac10aa23c",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -1203,7 +1217,7 @@
               "identifier": "btn_local"
             },
             {
-              "objID": "70d63bde-f8b7-4cbe-ab45-ce5e5223fae0",
+              "objID": "9d7636d6-1a08-4583-a81e-7f8d5f49c2de",
               "type": "LVGLLabelWidget",
               "left": 16,
               "top": 196,
@@ -1212,7 +1226,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "7ee49506-3f3c-4e88-b514-33bed9f8c5c0",
+                "objID": "5c546970-9b61-485f-b575-c18b13913925",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -1233,7 +1247,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "206d007f-fd97-471c-9193-c61f5910adf2",
+                "objID": "48a59650-d6c2-4f21-8afa-dbeb6b7b9d9e",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -1245,7 +1259,8 @@
                       "pad_column": 0,
                       "border_width": 0,
                       "outline_width": 0,
-                      "text_color": "0x8a99b3"
+                      "text_color": "0x8a99b3",
+                      "text_font": "cn14"
                     }
                   }
                 }
@@ -1268,7 +1283,7 @@
           "disabledStateType": "literal",
           "states": "",
           "localStyles": {
-            "objID": "17279cce-c3b6-41d5-ba69-0ed14df33af6",
+            "objID": "e1ff4cf2-a839-4d2d-b84c-fe2e8433a614",
             "definition": {
               "MAIN": {
                 "DEFAULT": {
@@ -1290,7 +1305,7 @@
           "groupIndex": 0
         },
         {
-          "objID": "38431c2c-c297-437e-b5a8-e04c73434635",
+          "objID": "eaeac2b9-01e9-4eb0-b848-4652b91831bf",
           "type": "SetVariableActionComponent",
           "left": 16,
           "top": 214,
@@ -1301,14 +1316,14 @@
           "description": "写路径⑤：SetVariable 单条",
           "entries": [
             {
-              "objID": "86492768-da01-469b-b4c5-966ecd393bac",
+              "objID": "ba8a48a4-0238-4634-8497-589791111db4",
               "variable": "g_count",
               "value": "g_count + 1"
             }
           ]
         },
         {
-          "objID": "23ce80c3-ee19-42d7-a818-06855aaf2d53",
+          "objID": "7f93df2c-4acc-409a-ada5-3f5b79b07781",
           "type": "SetVariableActionComponent",
           "left": 240,
           "top": 214,
@@ -1319,34 +1334,34 @@
           "description": "写路径⑤'：SetVariable 批量",
           "entries": [
             {
-              "objID": "aa3e520b-8984-469b-9b5d-668523c3a1dd",
+              "objID": "b8d5aa02-d251-4aec-b21b-2058922cd5a1",
               "variable": "g_count",
               "value": "0"
             },
             {
-              "objID": "44f1fb1d-24f9-4b87-836e-6b30bac1f619",
+              "objID": "647c66eb-4f07-4761-b68d-0e791a9e6fc3",
               "variable": "g_double",
               "value": "0"
             },
             {
-              "objID": "81a1b4cc-2ce4-4b3d-a32f-74e55e001174",
+              "objID": "26ef8c7b-e18b-420d-95f7-ca831d1093fa",
               "variable": "g_flag",
               "value": "false"
             },
             {
-              "objID": "350a7ecb-6f85-48ee-9040-f459c6252336",
+              "objID": "9886cc26-3107-409f-ad1f-b7c3e5d78425",
               "variable": "g_status",
               "value": "\"idle\""
             },
             {
-              "objID": "25baf673-5c7f-4c6f-8b94-43776047e3c1",
+              "objID": "2e2aa003-baf1-4637-a867-b00bbfdc2ecb",
               "variable": "g_branch",
               "value": "\"none\""
             }
           ]
         },
         {
-          "objID": "0e76bb21-e1b1-42a1-a7bd-77539ad49d9d",
+          "objID": "5eed2ff1-0d17-46ef-9516-58b1898a5894",
           "type": "EvalExprActionComponent",
           "left": 464,
           "top": 214,
@@ -1358,7 +1373,7 @@
           "expression": "g_count * 2"
         },
         {
-          "objID": "f63beac1-f122-4f1b-b22d-1dea4ad2edaf",
+          "objID": "a99241a4-4343-42c3-941b-f03d8da2253c",
           "type": "SetVariableActionComponent",
           "left": 464,
           "top": 300,
@@ -1366,7 +1381,7 @@
           "height": 60,
           "customInputs": [
             {
-              "objID": "45ab9052-9943-43c0-a035-a9ce9eae13ac",
+              "objID": "dfebf0bc-2bb2-4761-a860-e06f85562da0",
               "name": "r",
               "type": "any"
             }
@@ -1375,14 +1390,14 @@
           "description": "写路径⑥'：result 线写回 g_double",
           "entries": [
             {
-              "objID": "a33b6689-ea11-4ede-b4a5-ec272e34af52",
+              "objID": "5370d681-c83a-4150-b488-3f6c51f055fd",
               "variable": "g_double",
               "value": "r"
             }
           ]
         },
         {
-          "objID": "12f1e0b0-ae19-4cb4-926f-b55a8661e62f",
+          "objID": "4cc2df2a-8e53-4854-8f31-e840a38a4193",
           "type": "SetVariableActionComponent",
           "left": 680,
           "top": 214,
@@ -1393,14 +1408,14 @@
           "description": "作用域⑩：读页面局部变量 l_step",
           "entries": [
             {
-              "objID": "e010ce57-6d52-47f7-8ba8-62f27df13570",
+              "objID": "e9e31140-b5c9-45a2-9ce2-94f4c498179c",
               "variable": "g_count",
               "value": "g_count + l_step"
             }
           ]
         },
         {
-          "objID": "dc148091-bf95-44b3-bbf5-e7545a4e790b",
+          "objID": "88c06524-e938-42f3-b451-f95fe29d4654",
           "type": "WatchVariableActionComponent",
           "left": 16,
           "top": 300,
@@ -1412,7 +1427,7 @@
           "variable": "g_count"
         },
         {
-          "objID": "bce051d0-2cc7-4663-a8ee-87a58f7aa7ec",
+          "objID": "0a457500-8196-479a-80d3-b81e438cee6b",
           "type": "SetVariableActionComponent",
           "left": 240,
           "top": 300,
@@ -1420,7 +1435,7 @@
           "height": 60,
           "customInputs": [
             {
-              "objID": "da1e6f0d-acf8-4a73-a439-95badfc15829",
+              "objID": "43c5db96-e6d4-4328-925d-71a978d2b3dc",
               "name": "v",
               "type": "any"
             }
@@ -1429,19 +1444,19 @@
           "description": "监听⑦'：变化结果写回",
           "entries": [
             {
-              "objID": "1e5dc393-85f9-482f-9407-f33c724d5a7d",
+              "objID": "10de3d70-89bb-4bf2-ad24-69ea0440a4dc",
               "variable": "g_flag",
               "value": "v > 3"
             },
             {
-              "objID": "5813b94a-5970-4ec0-8f4f-e7946e8b49c3",
+              "objID": "f29c76fc-5ad1-4aaa-99bb-7b36d9e5b4db",
               "variable": "g_status",
               "value": "`${v} is watched`"
             }
           ]
         },
         {
-          "objID": "af617ae1-b789-45cf-811e-c394d5baed61",
+          "objID": "bf2b13f7-caff-4063-b37d-8b3d51ec679e",
           "type": "SwitchActionComponent",
           "left": 16,
           "top": 370,
@@ -1452,14 +1467,14 @@
           "description": "分支⑧：Switch 判 g_count",
           "tests": [
             {
-              "objID": "d53c7beb-c376-4c62-97f5-c43fe418fef7",
+              "objID": "2ef7b758-71a6-440d-a4fe-9ee96dd2f9ac",
               "condition": "g_count >= 10",
               "outputName": "FULL"
             }
           ]
         },
         {
-          "objID": "26aa02a1-ca2f-4688-9c51-9bbedc118e55",
+          "objID": "95fdd130-682f-4172-9040-3ec4f79d2d57",
           "type": "SetVariableActionComponent",
           "left": 240,
           "top": 390,
@@ -1470,7 +1485,7 @@
           "description": "分支⑧'：命中后写 g_branch",
           "entries": [
             {
-              "objID": "a3d22f4d-5a44-431a-a64a-5d3ebb07daf9",
+              "objID": "df1e7db0-ee10-4eec-b743-df2eabfd4bd1",
               "variable": "g_branch",
               "value": "\"full (>=10)\""
             }
@@ -1479,79 +1494,79 @@
       ],
       "connectionLines": [
         {
-          "objID": "b3c7cbc8-2a50-45f3-9b47-6cbe3212e43a",
-          "source": "03fe92cc-4b2b-40fb-94db-c000b4abcf11",
+          "objID": "ab3fdec6-c690-4d9e-91fc-3cba3636f7f3",
+          "source": "bdd79114-f14a-4d30-bbef-586f5ddd5cc7",
           "output": "CLICKED",
-          "target": "38431c2c-c297-437e-b5a8-e04c73434635",
+          "target": "eaeac2b9-01e9-4eb0-b848-4652b91831bf",
           "input": "@seqin"
         },
         {
-          "objID": "5c41e278-3a99-4ecb-b1e6-e42b69e7d9d6",
-          "source": "0a5a44e6-6b71-4485-bc76-81617446352b",
+          "objID": "cbbe69b2-2edd-4ecb-bba4-73f2a5561617",
+          "source": "b2599018-4cc5-4bab-8dfa-70f03efbd300",
           "output": "CLICKED",
-          "target": "23ce80c3-ee19-42d7-a818-06855aaf2d53",
+          "target": "7f93df2c-4acc-409a-ada5-3f5b79b07781",
           "input": "@seqin"
         },
         {
-          "objID": "0ca34be6-6e1a-49d3-9a9c-5dd38f045001",
-          "source": "7c113dd8-314f-441e-8c6c-1f14cb16fa94",
+          "objID": "25e3c16c-4b5e-40aa-87be-5c035b5c007e",
+          "source": "c09a886a-f1a1-467b-896a-8520a6d91b99",
           "output": "CLICKED",
-          "target": "0e76bb21-e1b1-42a1-a7bd-77539ad49d9d",
+          "target": "5eed2ff1-0d17-46ef-9516-58b1898a5894",
           "input": "@seqin"
         },
         {
-          "objID": "e4c378a8-52cc-4682-90b0-d66ba5fd9e25",
-          "source": "e603b0e3-67d5-42a3-9c9e-33aede3b686d",
+          "objID": "23f4909c-eb06-4160-8470-83b58c9e0624",
+          "source": "de5bdaac-2a1d-41ce-90dc-78cb7930e84a",
           "output": "CLICKED",
-          "target": "12f1e0b0-ae19-4cb4-926f-b55a8661e62f",
+          "target": "4cc2df2a-8e53-4854-8f31-e840a38a4193",
           "input": "@seqin"
         },
         {
-          "objID": "29ba256b-24b1-4e4b-ac2b-30194e9dc34a",
-          "source": "0e76bb21-e1b1-42a1-a7bd-77539ad49d9d",
+          "objID": "c68a461f-fccf-44f9-981b-d715ee3f8967",
+          "source": "5eed2ff1-0d17-46ef-9516-58b1898a5894",
           "output": "@seqout",
-          "target": "f63beac1-f122-4f1b-b22d-1dea4ad2edaf",
+          "target": "a99241a4-4343-42c3-941b-f03d8da2253c",
           "input": "@seqin"
         },
         {
-          "objID": "34b80a09-b158-41db-a57c-e7a188e20321",
-          "source": "0e76bb21-e1b1-42a1-a7bd-77539ad49d9d",
+          "objID": "833b1f59-5e55-4a4c-a3af-1e1830df0c68",
+          "source": "5eed2ff1-0d17-46ef-9516-58b1898a5894",
           "output": "result",
-          "target": "f63beac1-f122-4f1b-b22d-1dea4ad2edaf",
+          "target": "a99241a4-4343-42c3-941b-f03d8da2253c",
           "input": "r"
         },
         {
-          "objID": "03772a10-868e-4582-8ad8-bd9d983157e4",
-          "source": "dc148091-bf95-44b3-bbf5-e7545a4e790b",
+          "objID": "3e7b9f44-2ccf-40b3-be6f-a9f753b0fa73",
+          "source": "88c06524-e938-42f3-b451-f95fe29d4654",
           "output": "@seqout",
-          "target": "bce051d0-2cc7-4663-a8ee-87a58f7aa7ec",
+          "target": "0a457500-8196-479a-80d3-b81e438cee6b",
           "input": "@seqin"
         },
         {
-          "objID": "e7e483a8-616c-41c1-bae6-1c74e39e9651",
-          "source": "dc148091-bf95-44b3-bbf5-e7545a4e790b",
+          "objID": "2808b760-244c-4968-b6e5-038411688a87",
+          "source": "88c06524-e938-42f3-b451-f95fe29d4654",
           "output": "variable",
-          "target": "bce051d0-2cc7-4663-a8ee-87a58f7aa7ec",
+          "target": "0a457500-8196-479a-80d3-b81e438cee6b",
           "input": "v"
         },
         {
-          "objID": "388bc666-cd77-49c0-a983-911c246829cf",
-          "source": "38431c2c-c297-437e-b5a8-e04c73434635",
+          "objID": "323b40c2-1efd-4495-829d-6f9cefb09d25",
+          "source": "eaeac2b9-01e9-4eb0-b848-4652b91831bf",
           "output": "@seqout",
-          "target": "af617ae1-b789-45cf-811e-c394d5baed61",
+          "target": "bf2b13f7-caff-4063-b37d-8b3d51ec679e",
           "input": "@seqin"
         },
         {
-          "objID": "7238bfc1-c0a8-447a-8028-cbd287a505fa",
-          "source": "af617ae1-b789-45cf-811e-c394d5baed61",
+          "objID": "c79aa179-d9bd-4e3d-9340-4dc31e599684",
+          "source": "bf2b13f7-caff-4063-b37d-8b3d51ec679e",
           "output": "FULL",
-          "target": "26aa02a1-ca2f-4688-9c51-9bbedc118e55",
+          "target": "95fdd130-682f-4172-9040-3ec4f79d2d57",
           "input": "@seqin"
         }
       ],
       "localVariables": [
         {
-          "objID": "c77e9481-ba4f-40f4-81a3-48398ff93645",
+          "objID": "620abed5-25c2-4b8c-84db-dc650f25c1c0",
           "name": "l_step",
           "type": "integer",
           "defaultValue": "1",
@@ -1573,20 +1588,61 @@
   ],
   "userWidgets": [],
   "lvglStyles": {
-    "objID": "c55eac13-d58e-412a-8c36-7b1f4d779314",
+    "objID": "1e9415de-0b8e-4b06-8e65-8323c9dafb1d",
     "styles": [],
     "defaultStyles": {}
   },
   "lvglGroups": {
-    "objID": "700f9acf-f5f7-4994-b295-26c178b3268d",
+    "objID": "e0b9a32a-d329-4827-bcb4-a28b7d26139c",
     "groups": []
   },
-  "fonts": [],
+  "fonts": [
+    {
+      "objID": "94d40b2b-3fd8-4aa8-8613-232825720c42",
+      "name": "cn14",
+      "description": "UI 实际用字子集：98 字（ASCII + 批量写）",
+      "renderingEngine": "LVGL",
+      "source": {
+        "objID": "03d80dbf-9971-4af7-ab21-af28dfad62ae",
+        "filePath": "fonts/simhei.ttf",
+        "size": 14
+      },
+      "bpp": 4,
+      "threshold": 128,
+      "glyphs": [],
+      "screenOrientation": "all",
+      "alwaysBuild": false,
+      "lvglRanges": "32-126,20889,25209,37327",
+      "lvglSymbols": "",
+      "lvglAdditionalSources": [],
+      "lvglGlyphs": {
+        "objID": "9dfa96b9-a480-4516-b660-445bfa3779d7",
+        "encodings": [
+          {
+            "from": 32,
+            "to": 126
+          },
+          {
+            "from": 20889,
+            "to": 20889
+          },
+          {
+            "from": 25209,
+            "to": 25209
+          },
+          {
+            "from": 37327,
+            "to": 37327
+          }
+        ]
+      }
+    }
+  ],
   "bitmaps": [],
   "colors": [],
   "themes": [
     {
-      "objID": "3bc0a50a-0420-4532-a0ec-687c0f5fdf4f",
+      "objID": "3d15043f-147a-4b12-bfb5-537f1c48c3ab",
       "name": "Default",
       "colors": []
     }

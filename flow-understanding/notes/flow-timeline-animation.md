@@ -27,7 +27,7 @@
   "top":   {"enabled": true, "value": 60,  "easingFunction": "easeOutBack"},
   "width": {"enabled": true, "value": 150, "easingFunction": "linear"},
   "height": …, "scale": …, "scaleX": …, "scaleY": …,
-  "rotate": {"enabled": true, "value": 45, "easingFunction": "easeInOutSine"},
+  "rotate": {"enabled": true, "value": 450, "easingFunction": "easeInOutSine"},
   "opacity": {"enabled": true, "value": 0.27, "easingFunction": "linear"},
   "controlPoints": ""
 }
@@ -41,9 +41,9 @@
 
 ## 3. ★ 三条手册没写、但决定成败的机制
 
-### 3.1 `opacity` 是 **0..1**，不是 0..255
+### 3.1 两个属性的**单位域**和直觉不符：`opacity` 是 0..1、`rotate` 是 0.1°
 
-codegen 两侧各乘除一次：
+`opacity` —— codegen 两侧各乘除一次：
 
 ```c
 init:  ... = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_OPA).num / 255.0f;   // 归一
@@ -52,7 +52,20 @@ write: value.num = (int32_t)roundf(opacity_value * 255.0f);                     
 
 ⇒ 关键帧写 `opacity: 70` 会被当 70.0（远超 1），`*255` 后夹成全不透明——
 **现象是"淡出动画没反应"**，而 CLI 构建 0 错 0 警，完全不报。
-（示例 `build_example.py` 里 `_check_keyframes` 已把 0..1 做成硬断言。）
+
+`rotate` —— codegen **原样**塞进 LVGL 的旋转属性（读初值也一样，不做角度换算）：
+
+```c
+init:  ... = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ROTATION).num;
+write: value.num = (int32_t)roundf(rotate_value);
+lv_obj_set_local_style_prop(obj, LV_STYLE_TRANSFORM_ROTATION, value, LV_PART_MAIN);
+```
+
+而 LVGL 里 `transform_rotation` 的单位是 **0.1 度** ⇒ 关键帧填 `45` 只转 **4.5°**。
+实测：填 45 时 `lv_obj_get_style_transform_rotation()/10` 打印 2°/4°（游标 1.4 s / 3 s 两点），
+改成 450 后同一测点打印 9°→43°→0°（回程帧把 rotate 收回 0）——**这才是真转了 45°**。
+（两条都已在示例 `build_example.py` 的 `_check_keyframes` 里做成硬断言：
+opacity 越 0..1、rotate 越 0..3600 直接拒绝生成。）
 
 ### 3.2 命中第一个满足条件的关键帧就 `break` ⇒ **同区间不能拆两帧**
 
@@ -80,6 +93,28 @@ if (timeline_position >= start && timeline_position < end) {
 1. **倒放、跳帧、来回拖都可复现**（没有累积误差），所以时间线动画适合做回归夹具；
 2. 关键帧的 `value` 是**绝对目标**，不是增量；控件的创建位置就是 0 秒状态；
 3. 想要"只在某一刻闪一下"必须用后一帧写回，或者改用 A43 的 `animX/animOpacity`（件级一次性动画）。
+
+### 3.4 被时间线驱动的控件在 `children[]` 里要排在文字**前面**（z 序）
+
+`children[]` 数组顺序 = 生成码的创建顺序 = LVGL 的 z 序（后创建的在上面）。
+时间线控件的位置是**动的**，静态布局自检（逐个比矩形、只比创建位）看不到它中途压住谁。
+实测翻车：`card` 排在两条读数 Label 之后 ⇒ 播放中段卡片把 `timeline cursor = …` 整行盖掉。
+把动画控件挪到标签前面后，卡片从文字**底下**滑过，读数全程可读。
+⇒ **待办**（本轮没做，只是把 z 序改对了）：自检要补一条判据——**按每个关键帧的取值算出
+   控件的几何包络**（旋转还要按外接框放大），再看包络与静态文字区间的关系；
+   现在这条只比创建位的自检对时间线工程不够用。
+
+### 3.5 时间线动效的验收面 = PC_SIM 无头自证，不是 Run 预览
+
+`FLOW_AUTOTEST=1` 时 `design/sim_cmake/main.c` 用 `lv_obj_send_event(..., LV_EVENT_CLICKED, NULL)`
+合成点击、用 `lv_snapshot_take()` 拍屏、用 `lv_obj_get_style_*` 打几何——**人不碰鼠标**也能出
+一张表 + 六张图。要点：
+- 游标读数走**工程自己的** `读游标`（Evaluate → `Flow.pageTimelinePosition()` → `g_pos`），
+  不从外部猜，顺带把 ⑦ 也验了；
+- 采样点按**拍数**固定，但游标绝对值随机器负载有 ±0.1 s 抖动 ⇒ 判据写成
+  "中段严格落在 0 与 3 之间"、"倒放终点与初始逐字段相同"，不写死数值；
+- 需要 `lv_conf.h` 里 `LV_USE_SNAPSHOT 1`（本工程偏离通用模板，其它示例保持 0）；
+- 截图同时是**中文字体**的验收面：豆腐块只有像素能看出来，构建与 `audit_chars.py` 都不报。
 
 ## 4. `Animate(A2)` 的三行运行时语义（`eez-flow.cpp:2650-2699`）
 

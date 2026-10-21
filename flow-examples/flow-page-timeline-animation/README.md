@@ -9,7 +9,7 @@
 | 层 | 事实 | 出处 |
 |---|---|---|
 | 数据模型 | `timeline` 是**控件（Widget）级**数组，元素是关键帧 `{start,end,<属性>:{enabled,value,easingFunction}}`；页面级只有一个游标 | 装机包 `Widget.classInfo` + `TimelineKeyframe` 类字段 |
-| 代码生成 | `lvglBuildPageTimeline()` 在页面 tick 里发一段：`float timeline_position = getTimelinePosition(flowState);`，**游标变了才重算**；插值一律**从控件创建时的 style 初值起算**（`obj_card_x_init_value = lv_obj_get_style_prop(...)`） | 装机包 codegen + 本工程 `src/ui/screens.c:374-406` |
+| 代码生成 | `lvglBuildPageTimeline()` 在页面 tick 里发一段：`float timeline_position = getTimelinePosition(flowState);`，**游标变了才重算**；插值一律**从控件创建时的 style 初值起算**（`obj_card_x_init_value = lv_obj_get_style_prop(...)`） | 装机包 codegen + 本工程 `src/ui/screens.c:381-407` |
 | 运行时 | `Animate` 沿 `parentFlowState` **上溯到页面级** flowState 再写 `timelinePosition`；到 `To` 才 `propagateValueThroughSeqout` | `eez-flow.cpp:2650-2699` |
 
 ⇒ 因为"每帧从初值重放到当前游标"，**倒放、跳帧、来回拖都是确定可复现的**（也才敢做回归夹具）。
@@ -49,28 +49,73 @@ timeline cursor = <g_pos> s (range 0..3 s)
 
 ```
 flow-page-timeline-animation/
-├── build_example.py        ← 唯一设计源；★ 含 keyframe() 工厂 + 三条自检
+├── build_example.py        ← 唯一设计源；★ 含 keyframe() 工厂 + 三类自检（关键帧/画布/字体覆盖）
+├── fonts/simhei.ttf        ← 中文字体源（UI 有按钮文案 + g_status 取值是中文）
 ├── design/cli_build.py     ← EEZ CLI + flow 守卫
-├── design/sim_cmake/       ← run_sim.bat + main.c + lv_conf.h（从 flow-variables-basics 拷）
-└── src/ui/                 ← 生成产物；时间线块在 screens.c:374+
+├── design/gen_font.py      ← 烘 src/ui/fonts/ui_font_cn14.c（CLI 不烘，P-0140）
+├── design/audit_chars.py   ← 逐字审计：UI 文案字符 ⊆ 字体字符集
+├── design/sim_cmake/       ← run_sim.bat + main.c（含 FLOW_AUTOTEST 无头自证）+ lv_conf.h
+├── shots/                  ← 无头自证产物（6 张 PNG + 几何/游标读数）
+└── src/ui/                 ← 生成产物；时间线块在 screens.c:381+
 ```
-EEZ Studio 0.29 · LVGL 9.4 · 480×320 深色 · 全 ASCII 文字（不带字体条目，免 `gen_font` 链）· `flowSupport=true`。
+EEZ Studio 0.29 · LVGL 9.4 · 480×320 深色 · **中文 UI ⇒ 必挂字体条目**（`cn14`，
+子集 = ASCII 可打印 + `UI_CJK` 那 10 个字，38 KB）· `flowSupport=true`。
 
 ```bat
-python build_example.py            && rem 含三条自检，非法关键帧直接拒绝生成
+python build_example.py            && rem 三类自检：非法关键帧/画布重叠/缺字都直接拒绝生成
 python design\cli_build.py         && rem BUILD RESULT: ok
+python design\gen_font.py          && rem ★ 必须在 cli_build 之后（孤儿清理会删字体 .c）
+python design\audit_chars.py       && rem OK: 每一个文字都在字体字符集内
 双击 design\sim_cmake\run_sim.bat  && rem 点四个按钮看动效
+set FLOW_AUTOTEST=1 && set FLOW_AUTOEXIT=1 && main.exe   && rem 无头自证（下面那张贴图）
 ```
 
 ## 5. 实测状态（2026-10-21）
 
 | 检查 | 结果 |
 |---|---|
-| 生成器自检负控（6 条） | opacity 越界 / 同区间拆两帧 / 非法缓动名 / 非法属性名 / 关键帧倒序 / 总长超 Animate —— **全部拦住 ✓**，正常工程 PASS |
+| 生成器自检负控（7 条） | opacity 越界 / rotate 越界 / 同区间拆两帧 / 非法缓动名 / 非法属性名 / 关键帧倒序 / 总长超 Animate —— **全部拦住 ✓**，正常工程 PASS |
 | CLI 构建 | `BUILD RESULT: ok`，`No error and no warning detected` |
-| ★ 插值代码真发射 | `src/ui/screens.c:374` `getTimelinePosition(flowState)`；`:389-391` 抓 `LV_STYLE_X/Y/OPA` 初值；`:504` `width_value += eez_easeInOutQuad(t) * (424 - width_value)`；缓动实到 5 种：`eez_linear/easeInOutCubic/easeInOutQuad/easeInOutSine/easeOutBack` |
+| ★ 字体链 | `gen_font.py` → `src/ui/fonts/ui_font_cn14.c` **38,189 B**；`fonts.h` 声明 `ui_font_cn14`；`screens.c` 引用 `&ui_font_cn14` **9 处**；`audit_chars.py` → OK |
+| ★ 中文真的渲染出来了 | `shots/shot_after.png`：按钮 `播放/跳帧(speed=0)/倒放/读游标` + 状态行 `jumped (speed=0, From 无意义)` 全是汉字实形（不是豆腐块）。判据来自 `FLOW_AUTOTEST` 无头截图，不靠肉眼开窗口 |
+| ★ 插值代码真发射 | `src/ui/screens.c:382` `getTimelinePosition(flowState)`；`:397-403` 抓 `X/Y/OPA/ROTATION/WIDTH` 初值；`:444` `opacity_value += eez_linear(t) * (0.27 - opacity_value)`；缓动实到 5 种：`eez_linear/easeInOutCubic/easeInOutQuad/easeInOutSine/easeOutBack` |
+| ★ 行为自证（合成点击，无人参与） | 见下表 |
 | 布局/画布自检 | 控件无重叠无越界；流组件按 24px 网格分列，`_check_flow_boxes` PASS |
 | 验收面 | **动效必须 PC_SIM 看**（Run 预览时序不可信，P-0141）；`g_pos` 读数可在 Debug 的 Watch 面板对时 |
+
+### 5.1 无头行为自证（`FLOW_AUTOTEST=1 FLOW_AUTOEXIT=1`，2026-10-21 19:44）
+
+主循环每圈 `lv_tick_inc(2)`；触发/采样点按**拍数**固定（点击 30/250/400/550/700/1100/1160，
+截图与读数 20/270/420/570/720/1120/1190，见 `design/sim_cmake/main.c:autotest_hooks()`），
+"游标"一列是**工程自己的** `读游标` 按钮（Evaluate → `Flow.pageTimelinePosition()` → `g_pos`）
+读出来的，不是外部猜测。下面是其中一次运行的读数；游标绝对值随机器负载有 ±0.1 s 抖动，
+**不变的是区间关系**（每个中段采样都严格落在 0 与 3 之间、倒放终点与初始逐字段相同）。
+
+| 触发（采样拍） | card x / y / w | opa | rot | shadow w | 游标 | g_status |
+|---|---|---|---|---|---|---|
+| 初始（20） | 24 / 120 / 96 | 255 | 0° | 40 | 0 s | `ready (cursor at 0)` |
+| 点`播放`(30) 后（270） | 300 / 60 / 96 | **200** | **9°** | **184** | **1.191 s** | — |
+| 中段（420） | 293 / 62 / **150** | **69** | **43°** | **357** | **2.008 s** | — |
+| 接近终点（570） | 40 / 150 / 150 | 69 | 0° | 424 | 2.871 s | — |
+| 点`倒放`(700) 中途（720） | 58 / 144 / 150 | 69 | 3° | 421 | 2.871 s | `finished: seqout fired` |
+| 倒放回零（1120） | **24 / 120 / 96** | **255** | **0°** | **40** | **0 s** | `rewound to 0` |
+| 点`跳帧`(1160, speed=0)（1190） | 40 / 150 / 150 | 69 | 0° | 424 | **3 s（一步到位）** | `jumped (speed=0, From 无意义)` |
+
+- 中段采样点的 opa/rot/shadow **既不是初值也不是终值** ⇒ 插值成立（不是"到点一次性设值"）。
+- 倒放终点与初始**逐字段相同** ⇒ 插值是"从初值重放到当前游标"的纯函数，可复现。
+- `跳帧` 前游标已被倒放回 0，点完立刻是 3 ⇒ speed=0 真的一步到位，手册那句
+  "此时 From 无意义"是真的（本例 `From` 故意填 3，与结果无关）。
+- 截图 `shots/shot_*.png` 同时是**中文字体**的证据：按钮 `播放/跳帧/倒放/读游标`、
+  状态行 `无意义` 都是实形汉字。
+
+### 5.2 两个手册没写、必须记住的单位坑
+
+| 属性 | 域 | 证据 |
+|---|---|---|
+| `opacity` 关键帧 | **0..1**（不是 0..255） | codegen 读初值 `.../255.0f`、写回 `*255.0f`（`screens.c:399/484`）。填 70 会被夹成"全不透明"，**构建照样 0 错** |
+| `rotate` 关键帧 | **0.1°**（450 = 45°） | codegen 把值 `roundf` 后原样塞进 `LV_STYLE_TRANSFORM_ROTATION`（`screens.c:487`），LVGL 该属性单位是 0.1°。填 45 实测只有 4.5°（第一轮自证里 rot 打印 2°/4° 就是它） |
+
+两条都已经变成生成器里的硬断言（越界直接拒绝生成），不靠记性。
 
 ## 6. 踩过的坑（全是这一例特有的）
 
@@ -88,6 +133,13 @@ python design\cli_build.py         && rem BUILD RESULT: ok
   Animate 会推到**宿主页面**的游标上——多实例复用时会互相带动画（与 `app-wifi-scan-flow` §9 P1#10
   的"共享全局变量互串"是同一类问题）。
 - **`from` 是 Python 关键字**：生成器里不能写 `from=...`，只能 `**{"from": ...}`。
+- ★ **中文没挂字体条目 = 屏上一片豆腐，而且构建 0 错**（本例就是这么被用户当场指出来的：
+  "明显字体有问题，没有中文显示"）。修法三件齐全：`fonts[]` 条目 + 控件 `text_font` +
+  `cli_build` 之后跑 `gen_font.py`；防回归靠 `_check_font_coverage()`（从工程 JSON 反查非 ASCII
+  字符，缺字拒绝生成）。证据：`shots/shot_*.png` 里 `播放/跳帧/倒放/读游标/无意义` 是实形汉字。
+- ★ **动画控件在 `children[]` 里要排在文字前面**（数组顺序 = 创建顺序 = z 序）。
+  第一版 `card` 排在两条读数 Label 之后，播放中段就把 `timeline cursor = …` 整行盖住了；
+  静态布局自检（只比创建位）看不见这种中途遮挡——因为卡片是**会动的**。
 
 ## 7. 相关
 

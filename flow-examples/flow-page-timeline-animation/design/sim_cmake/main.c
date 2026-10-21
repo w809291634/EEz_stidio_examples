@@ -28,8 +28,85 @@
 #include "lv_sdl_window.h"   /* lv_sdl_window_get_window：真鼠标事件要拿 SDL_Window* 换 windowID */
 #include "ui.h"              /* EEZ 生成：ui_init / ui_tick（C 安全，不引入额外 C++ 头） */
 
+#include "screens.h"          /* objects_t：拿控件做量化断言 + 合成点击 */
+#include "src/others/snapshot/lv_snapshot.h"
+
 extern void ui_init(void);
 extern void ui_tick(void);
+
+/* ---- FLOW_AUTOTEST=1：无头自证（截图 + 几何 + 游标读数），不需要人点鼠标 ----
+ * 时序（1 拍 = 一圈主循环）：
+ *   20        拍"播放前"
+ *   30        合成点击"播放"（speed=1，0→3 s）
+ *   300/600/900  各点一次"读游标"（走本工程自己的 Flow.pageTimelinePosition() 通道）
+ *   320/620/920  打印几何 —— 三个采样点的值都落在首尾之间 ⇒ 证明是插值不是跳变
+ *   1000      合成点击"跳帧"（speed=0）
+ *   1030      拍"跳帧后" + 打状态，退出
+ * 三件事一次验掉：① 中文字体真的渲染（截图里按钮文案/g_status 的"无意义"）；
+ *                  ② 页面时间线插值真的生效；③ speed=0 真的立即跳帧。 */
+static void take_shot(const char *path)
+{
+    lv_draw_buf_t *buf = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_XRGB8888);
+    if (!buf) { printf("[SHOT] snapshot failed\n"); return; }
+    int w = (int)buf->header.w, h = (int)buf->header.h;
+    int stride = (int)buf->header.stride;
+    unsigned char *src = (unsigned char *)buf->data;
+    FILE *fp = fopen(path, "wb");
+    if (fp) {
+        int row = w * 4, data = row * h;
+        unsigned char hd[54] = { 'B','M' };
+        *(int *)(hd + 2) = 54 + data;
+        *(int *)(hd + 10) = 54;
+        *(int *)(hd + 14) = 40;
+        *(int *)(hd + 18) = w;
+        *(int *)(hd + 22) = -h;          /* 自顶向下，PIL 直接读 */
+        *(short *)(hd + 26) = 1;
+        *(short *)(hd + 28) = 32;
+        fwrite(hd, 1, 54, fp);           /* ← 文件头（少了这行 PIL 打不开） */
+        for (int y = 0; y < h; y++) fwrite(src + y * stride, 1, row, fp);
+        fclose(fp);
+        printf("[SHOT] saved %s\n", path);
+    }
+    lv_draw_buf_destroy(buf);
+}
+
+static void dump_geom(const char *tag)
+{
+    printf("[GEOM] %-6s card x=%4d y=%4d w=%4d opa=%3d rot=%4d | shadow w=%4d | %s | %s\n", tag,
+           (int)lv_obj_get_x(objects.card), (int)lv_obj_get_y(objects.card),
+           (int)lv_obj_get_width(objects.card),
+           (int)lv_obj_get_style_opa(objects.card, LV_PART_MAIN),
+           (int)lv_obj_get_style_transform_rotation(objects.card, LV_PART_MAIN) / 10,
+           (int)lv_obj_get_width(objects.shadow),
+           lv_label_get_text(objects.lbl_pos), lv_label_get_text(objects.lbl_status));
+}
+
+static void autotest_hooks(void)
+{
+    static int ticks = 0;
+    if (!getenv("FLOW_AUTOTEST")) return;
+    ticks++;
+    if (getenv("FLOW_TICKTRACE") && ticks <= 25) { printf("[TICK] %d%c", ticks, 10); fflush(stdout); }
+    if (ticks == 20) { take_shot("shot_before.bmp"); dump_geom("before"); }
+    if (ticks == 30) lv_obj_send_event(objects.btn_play, LV_EVENT_CLICKED, NULL);
+    if (ticks == 250 || ticks == 400 || ticks == 550)
+        lv_obj_send_event(objects.btn_probe, LV_EVENT_CLICKED, NULL);
+    if (ticks == 270) { take_shot("shot_mid1.bmp"); dump_geom("mid1"); }
+    if (ticks == 420) { take_shot("shot_mid2.bmp"); dump_geom("mid2"); }
+    if (ticks == 570) { take_shot("shot_mid3.bmp"); dump_geom("mid3"); }
+    if (ticks == 700) lv_obj_send_event(objects.btn_rew, LV_EVENT_CLICKED, NULL);
+    if (ticks == 720) dump_geom("rew-mid");
+    if (ticks == 1100) {
+        lv_obj_send_event(objects.btn_probe, LV_EVENT_CLICKED, NULL);
+    }
+    if (ticks == 1120) { take_shot("shot_rew.bmp"); dump_geom("rew-end"); }
+    if (ticks == 1160) lv_obj_send_event(objects.btn_jump, LV_EVENT_CLICKED, NULL);
+    if (ticks == 1170) lv_obj_send_event(objects.btn_probe, LV_EVENT_CLICKED, NULL);
+    if (ticks == 1190) {
+        take_shot("shot_after.bmp"); dump_geom("jump");
+        if (getenv("FLOW_AUTOEXIT")) exit(0);
+    }
+}
 
 #define SIM_W 480
 #define SIM_H 320
@@ -75,6 +152,7 @@ int main(int argc, char **argv)
         lv_tick_inc(2);
         lv_timer_handler();
         ui_tick();
+        autotest_hooks();
         usleep(4000);
     }
 

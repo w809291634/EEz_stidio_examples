@@ -26,10 +26,14 @@
     persistent         → LVGL 工程**禁用**（手册 P.58：仅 Dashboard）
     defaultValue       → LVGL 且未开 Flow 时**禁用**（无 Flow 时值不由 EEZ 初始化）
 
-文字全用 ASCII：本示例不带中文字体条目，避免把字体链（P-0140）混进变量主题里。
+UI 上有中文（按钮"批量写"）⇒ 必须挂字体条目 + 烘字体 .c：
+    python design/gen_font.py      → src/ui/fonts/ui_font_cn14.c（CLI 不烘，P-0140）
+字符集 = ASCII 可打印 + UI_CJK；_check_font_coverage() 在生成前扫工程 JSON，
+缺字直接拒绝生成（改文案忘加字 = 屏上一片豆腐，这里拦住）。
 """
 import json
 import os
+import re
 import sys
 import uuid
 
@@ -46,6 +50,79 @@ BTN = "0x1c2440"
 TEXT1 = "0xf0f4fc"
 TEXT2 = "0x8a99b3"
 ACC = "0x3ddc97"
+
+# --------------------------------------------------------------------------
+# 中文字体条目：只烘"UI 上真正会出现的字"，不搬 GB2312 全集。
+# ★ 变量在屏上显示的**取值**也是文字（g_status 被写成中文时同样要字形），
+#   所以字符集不是手写的——_check_font_coverage() 从生成的工程 JSON 里扫出来比对。
+# --------------------------------------------------------------------------
+FONT_FILE = "fonts/simhei.ttf"      # 相对工程目录（P-0035）
+FONT_NAME = "cn14"
+UI_CJK = "批量写"
+
+
+def _filter_by_font_cmap(chars, ttf_path):
+    """按 TTF cmap 过滤（P-0125/P-0169）：ranges 里字体没有的字会让 EEZ 提取失败，
+    fontTools 缺失时硬失败，绝不把未过滤字符集写进工程。"""
+    try:
+        from fontTools.ttLib import TTFont
+    except ImportError:
+        sys.stderr.write("FATAL: 需要 fontTools 才能按字体 cmap 过滤字符集："
+                         "python -m pip install fontTools" + chr(10))
+        sys.exit(2)
+    f = TTFont(ttf_path, lazy=True)
+    cmap = set(f.getBestCmap().keys())
+    f.close()
+    dropped = [c for c in chars if ord(c) not in cmap]
+    if dropped:
+        raise SystemExit("字体缺字：%s —— 换字或换文案，别硬写" % "".join(dropped))
+    return chars
+
+
+FONT_CHARS = "".join(sorted(set(chr(c) for c in range(0x20, 0x7F)) | set(UI_CJK)))
+# ★ ASCII 0x20-0x7E 必须并入（P-0125），漏了会让拉丁/数字全豆腐
+FONT_CHARS = _filter_by_font_cmap(FONT_CHARS, os.path.join(HERE, FONT_FILE))
+
+
+def font_entry(name, size, description):
+    """EEZ LVGL 字体条目（P-0125 定论：renderingEngine + lvglRanges 数字串 +
+    lvglGlyphs.encodings + glyphs 留空，缺一不可）。"""
+    cps = sorted({ord(c) for c in FONT_CHARS})
+    encodings, ranges = [], []
+    start = prev = cps[0]
+    for cp in cps[1:]:
+        if cp == prev + 1:
+            prev = cp
+            continue
+        encodings.append({"from": start, "to": prev})
+        ranges.append(str(start) if start == prev else "%d-%d" % (start, prev))
+        start = prev = cp
+    encodings.append({"from": start, "to": prev})
+    ranges.append(str(start) if start == prev else "%d-%d" % (start, prev))
+    return {
+        "objID": oid(), "name": name, "description": description,
+        "renderingEngine": "LVGL",
+        "source": {"objID": oid(), "filePath": FONT_FILE, "size": size},
+        "bpp": 4, "threshold": 128, "glyphs": [],
+        "screenOrientation": "all", "alwaysBuild": False,
+        "lvglRanges": ",".join(ranges),
+        "lvglSymbols": "",
+        "lvglAdditionalSources": [],
+        "lvglGlyphs": {"objID": oid(), "encodings": encodings},
+    }
+
+
+def _check_font_coverage(data):
+    """工程 JSON 里所有会显示在屏上的非 ASCII 字符必须都在字体子集里。
+    description 是编辑器注释、不上屏，排除在外。"""
+    blob = json.dumps(data, ensure_ascii=False)
+    blob = re.sub(r'"description":\s*"[^"]*"', '""', blob)
+    need = {c for c in blob if ord(c) > 0x7F}
+    missing = sorted(need - set(FONT_CHARS))
+    if missing:
+        raise SystemExit("字体字符集缺字：%s ⇒ 加进 UI_CJK 重跑，否则屏上是豆腐"
+                         % "".join(missing))
+    return len(need)
 
 ZERO_PAD = {
     "pad_top": 0, "pad_bottom": 0, "pad_left": 0, "pad_right": 0,
@@ -100,7 +177,8 @@ def label(x, y, w, h, text, color=TEXT1, identifier=None, expr=None):
     return widget(
         "LVGLLabelWidget", x, y, w, h,
         identifier=identifier,
-        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, text_color=color)}},
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, text_color=color,
+                                        text_font=FONT_NAME)}},
         text=text if expr is None else expr,
         textType="literal" if expr is None else "expression",
         longMode="WRAP", recolor=False, useStaticText=True,
@@ -118,7 +196,8 @@ def button(x, y, w, h, text, identifier):
         "text": text, "textType": "literal", "longMode": "WRAP",
         "recolor": False, "useStaticText": True,
         "localStyles": {"objID": oid(), "definition": {"MAIN": {"DEFAULT": {
-            "align": "CENTER", "text_color": "0xFFFFFF"}}}},
+            "align": "CENTER", "text_color": "0xFFFFFF",
+            "text_font": FONT_NAME}}}},
     }
     return widget(
         "LVGLButtonWidget", x, y, w, h,
@@ -372,7 +451,9 @@ def build_project():
         "userWidgets": [],
         "lvglStyles": {"objID": oid(), "styles": [], "defaultStyles": {}},
         "lvglGroups": {"objID": oid(), "groups": []},
-        "fonts": [],
+        "fonts": [font_entry(FONT_NAME, 14,
+                             "UI 实际用字子集：%d 字（ASCII + %s）"
+                             % (len(FONT_CHARS), UI_CJK))],
         "bitmaps": [], "colors": [],
         "themes": [{"objID": oid(), "name": "Default", "colors": []}],
     }
@@ -408,11 +489,13 @@ def _assert_flow_boxes(flow_components):
 def main():
     data = build_project()
     _assert_flow_boxes(data["userPages"][0]["components"][1:])
+    shown = _check_font_coverage(data)
     with open(PROJECT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
     print("written: %s (%d bytes)"
           % (PROJECT_FILE, os.path.getsize(PROJECT_FILE)))
+    print("UI 非 ASCII 字符 %d 个，字体子集 %d 字全部覆盖" % (shown, len(FONT_CHARS)))
 
 
 if __name__ == "__main__":

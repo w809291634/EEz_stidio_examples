@@ -29,6 +29,7 @@
 """
 import json
 import os
+import re
 import sys
 import uuid
 
@@ -45,6 +46,75 @@ BTN = "0x1c2440"
 TEXT1 = "0xf0f4fc"
 TEXT2 = "0x8a99b3"
 ACC = "0x3ddc97"
+
+# --------------------------------------------------------------------------
+# 中文字体：本示例 UI 上出现的中文很少，就按"实际用到的字"烘一个极小子集，
+# 不照搬 app-wifi-scan-flow 的 GB2312 全集（那是给任意 SSID 准备的，5MB 源文件）。
+# ★ 关键：_check_font_coverage() 会从**生成的工程 JSON** 里扫出所有中文，
+#   断言它们都在 FONT_CHARS 里 —— 以后改文案忘了加字，这里直接拒绝生成，
+#   而不是等到屏上一片豆腐才发现。
+# --------------------------------------------------------------------------
+FONT_FILE = "fonts/simhei.ttf"      # 相对工程目录（P-0035）
+FONT_NAME = "cn14"
+
+# UI 上真正会显示的汉字（按钮文案 + g_status 的取值）
+UI_CJK = "播放跳帧倒放读游标无意义"
+FONT_CHARS = "".join(sorted(set(chr(c) for c in range(0x20, 0x7F)) | set(UI_CJK)))
+# ★ ASCII 0x20-0x7E 必须并入（P-0125），漏了会让拉丁/数字全豆腐
+
+
+def _filter_by_font_cmap(chars, ttf_path):
+    """按 TTF cmap 过滤：ranges 里任何字体没有的字都会让 EEZ 提取报 extraction failed。
+    fontTools 缺失时硬失败，绝不把未过滤字符集写进工程（P-0169 根因）。"""
+    try:
+        from fontTools.ttLib import TTFont
+    except ImportError:
+        sys.stderr.write("FATAL: 需要 fontTools 才能按字体 cmap 过滤字符集："
+                         "python -m pip install fontTools" + chr(10))
+        sys.exit(2)
+    f = TTFont(ttf_path, lazy=True)
+    cmap = set(f.getBestCmap().keys())
+    f.close()
+    kept = [c for c in chars if ord(c) in cmap]
+    dropped = [c for c in chars if ord(c) not in cmap]
+    if dropped:
+        print("font coverage: dropped %d chars not in TTF: %s"
+              % (len(dropped), "".join(dropped[:40])))
+    if len(kept) != len(chars):
+        raise SystemExit("字体缺字：%s —— 换字或换文案，别硬写" % "".join(dropped))
+    return "".join(kept)
+
+
+FONT_CHARS = _filter_by_font_cmap(FONT_CHARS, os.path.join(HERE, FONT_FILE))
+
+
+def font_entry(name, size, description):
+    """EEZ LVGL 字体条目（P-0125 定论：renderingEngine + lvglRanges 数字串 +
+    lvglGlyphs.encodings + glyphs 留空，缺一不可）。"""
+    cps = sorted({ord(c) for c in FONT_CHARS})
+    encodings, ranges = [], []
+    start = prev = cps[0]
+    for cp in cps[1:]:
+        if cp == prev + 1:
+            prev = cp
+            continue
+        encodings.append({"from": start, "to": prev})
+        ranges.append(str(start) if start == prev else "%d-%d" % (start, prev))
+        start = prev = cp
+    encodings.append({"from": start, "to": prev})
+    ranges.append(str(start) if start == prev else "%d-%d" % (start, prev))
+    return {
+        "objID": oid(), "name": name, "description": description,
+        "renderingEngine": "LVGL",
+        "source": {"objID": oid(), "filePath": FONT_FILE, "size": size},
+        "bpp": 4, "threshold": 128, "glyphs": [],
+        "screenOrientation": "all", "alwaysBuild": False,
+        "lvglRanges": ",".join(ranges),
+        "lvglSymbols": "",
+        "lvglAdditionalSources": [],
+        "lvglGlyphs": {"objID": oid(), "encodings": encodings},
+    }
+
 
 # 缓动函数名白名单：与装机运行时 `float eez_<name>(...)` 的 31 个声明**逐名比对过，
 # 差集为空**（2026-10-21）。写错名字不会在构建期报错，只会在链接期炸 `undefined reference
@@ -142,7 +212,8 @@ def label(x, y, w, h, text, color=TEXT1, identifier=None, expr=None):
     return widget(
         "LVGLLabelWidget", x, y, w, h,
         identifier=identifier,
-        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, text_color=color)}},
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, text_color=color,
+                                               text_font=FONT_NAME)}},
         text=text if expr is None else expr,
         textType="literal" if expr is None else "expression",
         longMode="WRAP", recolor=False, useStaticText=True,
@@ -157,7 +228,8 @@ def button(x, y, w, h, text, identifier):
         "text": text, "textType": "literal", "longMode": "WRAP",
         "recolor": False, "useStaticText": True,
         "localStyles": {"objID": oid(), "definition": {"MAIN": {"DEFAULT": {
-            "align": "CENTER", "text_color": "0xFFFFFF"}}}},
+            "align": "CENTER", "text_color": "0xFFFFFF",
+            "text_font": FONT_NAME}}}},
     }
     return widget(
         "LVGLButtonWidget", x, y, w, h,
@@ -247,14 +319,19 @@ def build_project():
                       keyframe(1.0, 2.0,
                                # ★ opacity 用 0..1：codegen 读初值时除以 255、
                                #   写回时再乘 255，所以这里写 70 会被夹成全不透明
-                               rotate={"value": 45, "easing": "easeInOutSine"},
+                               # ★ rotate 用 0.1°：codegen 把值原样 roundf 后塞进
+                               #   LV_STYLE_TRANSFORM_ROTATION（screens.c:487），
+                               #   LVGL 该属性单位是 0.1° ⇒ 45 只转 4.5°，450 才是 45°
+                               rotate={"value": 450, "easing": "easeInOutSine"},
                                opacity={"value": 0.27, "easing": "linear"}),
                       # start == end ⇒ 手册 Fig.35 语义里的 "At 2.0 s set ..."
                       keyframe(2.0, 2.0,
                                width={"value": 150, "easing": "linear"}),
                       keyframe(2.0, TIMELINE_END,
                                left={"value": 40, "easing": "easeInOutQuad"},
-                               top={"value": 150, "easing": "easeInOutQuad"}),
+                               top={"value": 150, "easing": "easeInOutQuad"},
+                               # 回程把姿态也收回正位（和 left/top 同区间 ⇒ 必须同一帧）
+                               rotate={"value": 0, "easing": "easeInOutQuad"}),
                   ])
 
     # 配角：同一条游标驱动第二个控件（证明"页面一条线、多控件共用"）
@@ -275,16 +352,20 @@ def build_project():
     w_rew = button(240, 256, 104, 30, "倒放", "btn_rew")
     w_probe = button(352, 256, 112, 30, "读游标", "btn_probe")
 
+    # ★ 顺序 = LVGL 创建顺序 = z 序（后面的在上面）。card 的滑动路径会经过两条读数
+    #   标签（lbl_pos y=200 / lbl_hint y=220），所以两个动画控件必须排在标签**前面**，
+    #   否则播放到中段时卡片会把读数盖成看不见（0.27 透明度的卡片压在文字上）。
     children = [
+        card, shadow,
         label(16, 10, 448, 20, "EEZ Flow - page animation timeline + Animate",
               TEXT1, "lbl_title"),
         label(16, 34, 448, 18, "", ACC, "lbl_status", expr="g_status"),
         label(16, 200, 448, 18, "", TEXT2, "lbl_pos",
               expr="`timeline cursor = ${g_pos} s   (range 0 .. 3 s)`"),
         label(16, 220, 448, 16,
-              "card slides (0-1s) -> rotates+fades (1-2s) -> instant set at 2s -> back (2-3s)",
+              "slide (0-1s) -> rotate 45deg + fade (1-2s) -> width@2s -> back (2-3s)",
               TEXT2, "lbl_hint"),
-        card, shadow, w_play, w_jump, w_rew, w_probe,
+        w_play, w_jump, w_rew, w_probe,
     ]
 
     # ============ 2. 流图 ============
@@ -394,7 +475,9 @@ def build_project():
         "userWidgets": [],
         "lvglStyles": {"objID": oid(), "styles": [], "defaultStyles": {}},
         "lvglGroups": {"objID": oid(), "groups": []},
-        "fonts": [],
+        "fonts": [font_entry(FONT_NAME, 14,
+                             "UI 实际用字子集：%d 字（ASCII + %s）"
+                             % (len(FONT_CHARS), UI_CJK))],
         "bitmaps": [], "colors": [],
         "themes": [{"objID": oid(), "name": "Default", "colors": []}],
     }
@@ -403,6 +486,23 @@ def build_project():
 # --------------------------------------------------------------------------
 # 交付前自检（机器断言，不靠眼睛）
 # --------------------------------------------------------------------------
+def _check_font_coverage(data):
+    """扫生成的工程 JSON：任何出现在 UI 文本里的中文都必须在 FONT_CHARS 内。
+
+    覆盖范围 = 控件 text / 表达式里的字符串字面量 / 变量默认值 / SetVariable 的 value。
+    （流件的 description 只是编辑器批注、不进 UI，故排除。）
+    """
+    blob = json.dumps(data, ensure_ascii=False)
+    # 去掉 description 字段值再扫：它不会显示到屏上
+    blob = re.sub(r'"description":\s*"[^"]*"', '""', blob)
+    need = {c for c in blob if ord(c) > 0x7F}
+    missing = sorted(need - set(FONT_CHARS))
+    if missing:
+        raise SystemExit("字体字符集缺字：%s ⇒ 加进 UI_CJK 重跑，否则屏上是豆腐"
+                         % "".join(missing))
+    return len(need)
+
+
 def _check_keyframes(page_obj):
     """关键帧合法性：属性名、缓动名、单控件内时间不倒序、总长不超过 Animate 目标。
 
@@ -426,6 +526,9 @@ def _check_keyframes(page_obj):
             if "opacity" in kf and not (0.0 <= kf["opacity"]["value"] <= 1.0):
                 raise SystemExit("opacity 关键帧值 %s 越界：这里是 0..1 域，不是 0..255"
                                  % kf["opacity"]["value"])
+            if "rotate" in kf and not (0 <= abs(kf["rotate"]["value"]) <= 3600):
+                raise SystemExit("rotate 关键帧值 %s 越界：单位是 0.1°（3600 = 360°），"
+                                 "填 45 只会转 4.5°" % kf["rotate"]["value"])
             if kf["end"] < kf["start"]:
                 raise SystemExit("%s 关键帧 end < start" % w["identifier"])
             if kf["start"] < last_end - 1e-6:
@@ -481,13 +584,16 @@ def main():
     pg = data["userPages"][0]
     total = _check_keyframes(pg)
     _check_flow_boxes(pg["components"][1:])
+    shown = _check_font_coverage(data)
     with open(PROJECT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
     print("written: %s (%d bytes)"
           % (PROJECT_FILE, os.path.getsize(PROJECT_FILE)))
-    print("timeline 长度 %.1fs；控件带关键帧数：%d"
-          % (total, sum(1 for w in _walk_widgets(pg) if w.get("timeline"))))
+    print("timeline 长度 %.1fs；控件带关键帧数：%d；UI 非 ASCII 字符 %d 个，"
+          "字体子集 %d 字全部覆盖"
+          % (total, sum(1 for w in _walk_widgets(pg) if w.get("timeline")),
+             shown, len(FONT_CHARS)))
 
 
 if __name__ == "__main__":
