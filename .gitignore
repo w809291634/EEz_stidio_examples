@@ -12,3 +12,4 @@ build_rel_rw/
 __pycache__/
 *.pyc
 flow-examples/*/shots/*.bmp
+watch-app-list-no-flow/shots/*.bmp
