@@ -43,13 +43,19 @@ app-wifi-scan-flow-no-flow/
     └── ui/                             ← EEZ 生成（禁手改）；★ 无 eez-flow.cpp/h
 ```
 
-> `ARCHITECTURE.md` / `IMPLEMENTATION.md` / `FLOW_STRUCT_ROUTE.md` 等设计文档从母工程
-> `app-wifi-scan-flow` 继承，已按**双口径**改写（同一处并列「Flow 版」与「本变体」事实，
-> 别只读半句）：`ARCHITECTURE.md` §1②③/§2/§3/§7/§8/§9/§10、`IMPLEMENTATION.md` §7.1/§7.2 与顶部通则、
-> `FLOW_STRUCT_ROUTE.md` 顶部"本变体永远走不了这条路"横幅。
-> 架构图另出一张本变体版：**`design/mockups/mockup_20_noflow_arch.svg`**
-> （`python design/mockup_gen.py` 重生成；继承的 `mockup_17_flow_arch.svg` 是 Flow 形态，保留作对照）。
+> **继承过来的设计文档**（`ARCHITECTURE.md` / `IMPLEMENTATION.md`）已按**双口径**改写：
+> 同一处并列「Flow 版」与「本变体」事实，别只读半句——
+> `ARCHITECTURE.md` §1②③/§2/§3/§7/§8/§9/§10、`IMPLEMENTATION.md` §7 通则与 §7.1/§7.2。
 > `DESIGN.md` / `EEZ_CHECKLIST.md` / `EEZ_WORKFLOW.md` / `SCAN_BINDING.md` 不含 Flow 断言，原样继承。
+>
+> **★ 不属于本变体、已删除的继承件**（要看就去 `../app-wifi-scan-flow/`，别再拷回来）：
+> `FLOW_STRUCT_ROUTE.md`（Flow 结构体路线，本变体永不适用）、
+> `mockup_17_flow_arch.svg`（Flow 形态架构图；生成函数 `sc_flow_arch()` 与出图调用已一并删除，
+> 重跑 `python design/mockup_gen.py` 不会再生成它）、
+> `提示词.txt`（母工程会话提示词留痕）、`*.eez-project-ui-state`（母工程 EEZ GUI 编辑态）、
+> `design/sim_cmake/shot_{fake.bmp,final.png,scan.png}`（母工程历史截图，本变体跑仿真会重新落盘）、
+> `__pycache__/`。本目录现存过程图 **11 张**（10 张继承 + 本变体新增 `mockup_20_noflow_arch.svg`）。
+>
 > ★ `src/native/` **故意逐字节不改**（含 `app_model.h` 注释里的母工程名）——
 > `diff -r ../app-wifi-scan-flow/src/native src/native` 必须为空，这正是"只删运行时、不动业务"的证据。
 

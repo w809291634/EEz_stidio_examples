@@ -9,3 +9,5 @@ build4/
 build_rel/
 build_debug/
 build_rel_rw/
+__pycache__/
+*.pyc

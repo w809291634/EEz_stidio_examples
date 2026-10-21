@@ -485,117 +485,6 @@ def sc_sheet(s):
     s.text(358, 480, "（放进容器会被裁剪 + 坐标二次偏移，P-0007）", 8.5, T3)
 
 
-def sc_flow_arch(s):
-    """v4 路线架构图：EEZ 画界面 + 持有标量状态（≈85%）；列表数据由 native 直读 io 接口（≈15%）。"""
-    s.text(28, 38, "v4 架构：代码在哪、边界在哪", 20, T1, weight="500")
-    s.text(28, 64, "界面与标量状态在 EEZ 工程内（≈85%）；列表全量数据由 native 直读 io 接口（≈15%）",
-           12.5, T2)
-    s.path("M28 78 H652", stroke=LINE, sw=0.6)
-
-    def band(y, h, no, title, note=""):
-        s.rect(24, y, 632, h, "#0D1420", rx=10, stroke=LINE, sw=0.6)
-        s.text(36, y + 20, no, 9, T3)
-        s.text(58, y + 20, title, 10.5, T1, weight="500")
-        if note:
-            s.text(644, y + 20, note, 8.5, T3, anchor="end")
-
-    def card(x, y, w, h, title, lines, edge=LINE, tcol=T1):
-        s.rect(x, y, w, h, "#101A28", rx=8, stroke=edge, sw=0.6)
-        s.text(x + 10, y + 18, title, 9.5, tcol, weight="500")
-        for i, ln in enumerate(lines):
-            s.text(x + 10, y + 36 + i * 15, ln, 8.5, T2)
-
-    # ---------- ① EEZ 工程 ----------
-    band(88, 130, "①", "EEZ 工程 .eez-project（唯一真源）", "≈85% 的实现量")
-    cw, gap = 146, 12
-    cards = [
-        ("页面 / 组件", ["scr_host 宿主页", "wifi_panel 组件", "scr_pwd 连接页"], PRI),
-        ("数据模型（Flow，仅标量）", ["scan_state 扫描态", "ap_gen 内容代数", "scan_status 文案"], PRI),
-        ("逻辑（表达式）", ["空态 / 状态判据", "显隐（连接中…）", "点击·长按→动作"], PRI),
-        ("样式 / 字体", ["主题令牌", "cn14 · GB2312", "状态胶囊"], LINE),
-    ]
-    for i, (t, ls, e) in enumerate(cards):
-        card(36 + i * (cw + gap), 112, cw, 88, t, ls, e)
-    s.text(36, 210, "改布局、改文案、改判据 → GUI 里直接改；不写一行 C", 8.5, T3)
-
-    # 箭头
-    s.path("M340 218 V230", stroke=PRI_TXT, sw=1.3)
-    s.path("M335.5 225 l4.5 7 4.5 -7", stroke=PRI_TXT, sw=1.3)
-    s.text(354, 230, "cli_build", 8.5, PRI_TXT)
-
-    # ---------- ② 生成源码 ----------
-    band(236, 112, "②", "生成源码 src/ui/（EEZ 产出，勿手改）", "占生成量 ~65%")
-    chips = [
-        ("screens.c", ["控件树", "绑定表达式内联"]),
-        ("structs.h", ["空壳（无 Struct）", "数组已移出 EEZ"]),
-        ("vars.h", ["标量枚举", "get / set 访问器"]),
-        ("actions.c", ["事件入口", "→ Flow 动作"]),
-        ("assets", ["资源包", "eez_flow_init"]),
-    ]
-    chw = (608 - 4 * 8) / 5.0
-    for i, (n, ls) in enumerate(chips):
-        x = 36 + i * (chw + 8)
-        s.rect(x, 266, chw, 62, "#101A28", rx=7, stroke="#2A3550", sw=0.6)
-        s.text(x + 9, 283, n, 9.5, PRI_TXT, weight="500")
-        s.text(x + 9, 301, ls[0], 8.2, T2)
-        s.text(x + 9, 315, ls[1], 8.2, T3)
-    s.text(36, 342, "★ 红线：src/ui/ 由 EEZ 覆盖生成；所有改动手工只发生在 native/ 与 build_example.py",
-           8.5, T3)
-
-    # ---------- ③ Flow 运行时 ----------
-    band(360, 140, "③", "Flow 运行时（eez-flow · C++ 值语义容器）", "链接 eez/flow")
-    bw = (608 - 20) / 3.0
-    boxes = [
-        ("Value / ArrayValue", ["std::vector<Value>", "可变长 · 堆分配"], SUC),
-        ("表达式求值容器", ["标量状态在此流转", "本工程未用 Struct 数组"], SUC),
-        ("eez_flow_init / tick", ["assets 驱动 UI", "每帧求值表达式"], SUC),
-    ]
-    for i, (t, ls, e) in enumerate(boxes):
-        card(36 + i * (bw + 10), 392, bw, 62, t, ls, e, SUC)
-    s.text(36, 472, "设备侧是 C++ 容器；但本工程列表数据不放 Flow——native 直接读 io 静态数组",
-           8.5, T3)
-    s.text(36, 489, "→ 数据只存在一份：io 静态数组是唯一真值源；EEZ 只持标量状态、native 直读全量列表",
-           8.5, PRI_TXT)
-
-    # ---------- ④ native ----------
-    band(512, 152, "④", "native 层（唯一碰硬件）", "≈15% · 4 个文件")
-    nw = (608 - 20) / 3.0
-    nb = [
-        ("io_iface.h", ["契约面：wifi_ap_t[] + 命令", "纯头文件，零实现"], LINE),
-        ("wifi_ui_sync.cpp", ["native 直读 wifi_ap_at", "★ 唯一画列表处"], SUC),
-        ("io_esp / io_win / io_pc", ["扫描·连接·忘记·存密码", "同签名，换文件即换后端"], LINE),
-    ]
-    for i, (t, ls, e) in enumerate(nb):
-        card(36 + i * (nw + 10), 544, nw, 62, t, ls, e,
-             T1 if e is not FAIL else "#F0B4B4")
-    s.rect(36, 614, 608, 26, "#16203A", rx=6, stroke=LINE, sw=0.5)
-    s.text(48, 631, "硬件：esp_wifi + NVS（真机） · Windows WLAN API（PC 真机） · 假数据（仿真）",
-           8.8, T2)
-    s.text(36, 656, "native 取 io 数组画列表 + 回写标量状态；布局/文案/判据（标量）仍在 EEZ 表达式", 8.5, T3)
-
-    # ---------- ⑤ 三条目标 ----------
-    band(678, 152, "⑤", "三条设计目标怎么保证")
-    gb = [
-        ("信息全面性", ["io 7 字段全量上报", "信号/加密/频段/锁/保存/连接", "空列表判据 = wifi_ap_count == 0"], PRI_TXT),
-        ("功能稳定性", ["单一真值源 = io 静态数组", "三后端只换一个文件", "先填数组再置 scan_state=2"], SUC),
-        ("封装高级性", ["标量走 EEZ 表达式", "列表行 native 自绘（EEZ List wip）", "原生控件 + 表达式，零自创"], "#F0D48F"),
-    ]
-    gw = (608 - 20) / 3.0
-    for i, (t, ls, c) in enumerate(gb):
-        x = 36 + i * (gw + 10)
-        s.rect(x, 708, gw, 110, "#101A28", rx=8, stroke=LINE, sw=0.6)
-        s.text(x + 10, 728, t, 9.5, c, weight="500")
-        for j, ln in enumerate(ls):
-            s.text(x + 10, 750 + j * 17, ln, 8.5, T2)
-
-    # ---------- 占比条 ----------
-    s.text(28, 850, "实现量分布", 8.5, T3)
-    s.rect(28, 858, 530, 16, PRI, rx=4)
-    s.rect(558, 858, 94, 16, FAIL, rx=4)
-    s.text(293, 870, "EEZ 界面 + 标量状态 85%", 8.8, "#0B0F1A", anchor="middle", weight="500")
-    s.text(605, 870, "native 15%", 8.2, "#0B0F1A", anchor="middle", weight="500")
-
-
 def sc_noflow_arch(s):
     """no-flow 变体架构图：EEZ 只画静态外壳，执行模型回到纯 LVGL，没有 Flow 这一层。"""
     s.text(28, 38, "no-flow 架构：代码在哪、边界在哪", 20, T1, weight="500")
@@ -935,11 +824,6 @@ if __name__ == "__main__":
     p = build_wide("mockup_18_scan_to_ui.svg", "框图 · 扫描数据如何回流到 UI",
                    "9 步：点击 → action → 命令 → native 泵 → 扫描 → driver task 回调 → 置状态 → native 直读 io 画列表 → LVGL",
                    900, sc_scan_to_ui)
-    total += os.path.getsize(p)
-    print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
-    p = build_wide("mockup_17_flow_arch.svg", "架构图 · v4 路线（EEZ 画界面+标量状态，列表数据 native 直读 io）",
-                   "五层：EEZ 工程 → 生成源码 → Flow 运行时 → native 薄层 → 硬件；含占比与三条目标保障",
-                   884, sc_flow_arch)
     total += os.path.getsize(p)
     print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
     p = build_wide("mockup_20_noflow_arch.svg",

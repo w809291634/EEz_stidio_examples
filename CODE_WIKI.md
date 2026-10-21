@@ -561,8 +561,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | 新建示例模板说明 | [示例工程模板说明.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/示例工程模板说明.md) | 目录骨架、逐字拷贝 vs 按例重写清单、五步流程、坑速查 |
 | PC 仿真器 Code Wiki | [PC_SIM/.../CODE_WIKI.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/PC_SIM/lv_port_pc_vscode_v9.5/CODE_WIKI.md) | LVGL v9.5 子系统、FreeRTOS 集成、构建与调试 |
 | 应用设计资料 | [app-wifi-scan-flow/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow) | `ARCHITECTURE.md`（v4 五层架构）、`DESIGN.md`（UI 设计 v4）、`EEZ_CHECKLIST.md`（84 控件 / 51 变量照抄清单）、`IMPLEMENTATION.md`、`FLOW_STRUCT_ROUTE.md`（v3 历史方案）、`SCAN_BINDING.md`、`design/mockups/`（11 张过程图，`python design/mockup_gen.py` 重生成） |
-| no-flow 变体资料 | [app-wifi-scan-flow-no-flow/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow-no-flow) | 继承上述资料并**按双口径改写**（Flow 版事实 / no-flow 事实并列）；新增 `mockup_20_noflow_arch.svg` 架构图、`preflight.check_no_flow()` 反向门禁；Flow on/off 账单见其 `README.md` |
-| no-flow 变体资料 | [app-wifi-scan-flow-no-flow/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow-no-flow) | 同上（继承并已双口径改写），另加 `mockup_20_noflow_arch.svg`（共 12 张）；`README.md` 记 Flow on/off 账单与 no-flow 判据 |
+| no-flow 变体资料 | [app-wifi-scan-flow-no-flow/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow-no-flow) | 继承 `ARCHITECTURE.md`/`IMPLEMENTATION.md` 等并**按双口径改写**（Flow 版事实 / no-flow 事实并列）；**不属于本变体的继承件已删**（`FLOW_STRUCT_ROUTE.md`、`mockup_17_flow_arch.svg` 及其生成函数、`提示词.txt`、`*.eez-project-ui-state`、`shot_*` 历史截图、`__pycache__/`）；新增 `mockup_20_noflow_arch.svg`（共 11 张过程图）与 `preflight.check_no_flow()` 反向门禁；Flow on/off 账单见其 `README.md` |
 
 > **文档生成日期**：2026-10-20 · **基线版本**：EEZ Studio 0.29.0 / LVGL 9.4.0 / PC_SIM LVGL 9.5.0
 </content>

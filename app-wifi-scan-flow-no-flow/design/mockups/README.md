@@ -27,7 +27,7 @@
 
 | 文件 | 说明 |
 |---|---|
-| `mockup_17_flow_arch.svg` | v4 五层：EEZ 工程（界面，无变量）→ 生成源码 `src/ui` → Flow 运行时 → native 层（直读 io 画列表）→ 硬件；含 85/15 代码占比与三条目标保障 |
+| `mockup_20_noflow_arch.svg` | **本变体架构图**：五层 = EEZ 工程（`flowSupport=false`）→ 生成源码（无 `eez-flow.*`）→ 执行模型 Flow 版↔本变体对照 → native 层 → 账单；含实现量分布条 |
 | `mockup_18_scan_to_ui.svg` | v4 扫描回流 9 步：点击 → actions → 命令 → native 泵 → 扫描 → SCAN_DONE → 置状态 → native 直读 io 画列表 → LVGL |
 | `mockup_19_password_flow.svg` | 密码下行 5 步（输入→action→命令槽→校验→join） + 上行 5 步（事件→结果结构→pump→Flow→UI）+ reason→文案映射 |
 
@@ -35,6 +35,7 @@
 
 | 原图 | 删除原因 |
 |---|---|
+| `mockup_17_flow_arch.svg` | **Flow 运行时形态的架构图，不属本变体**（本目录不发射 `eez-flow.cpp/h`）。生成函数 `sc_flow_arch()` 与出图调用已一并删除，重跑 `mockup_gen.py` 不会再生成；要看对照版去 `../../app-wifi-scan-flow/design/mockups/` |
 | `mockup_04_password` / `05_password_keyboard` | 整页密码页，与定稿「半页 224」冲突 |
 | `mockup_10_page_layers` | 「整页覆盖」层级图，被 15 的 z 序规则取代 |
 | `mockup_12_explain_keyboard` | 结论是「必须整页」，与方案 C 矛盾 |

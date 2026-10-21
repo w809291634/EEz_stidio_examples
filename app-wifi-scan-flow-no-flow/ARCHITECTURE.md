@@ -1,7 +1,12 @@
 > **⚠ 本目录是 `app-wifi-scan-flow` 的 no-flow 变体**（`flowSupport=false` +
 > `generateSourceCodeForEezFramework=false`）。本文从母工程继承，已按**双口径**就地改写：
 > 同一处并列「Flow 版」与「本变体（no-flow）」两条事实，别只读半句。
-> 已改：§1 ②③（②′/③′ 是 Flow 版）、§2 第 2 条、§3 连接链路、§7 目录与自证判据、§8 全表、§9 表前口径说明。
+> 已改：§1 ②③（②′/③′ 是 Flow 版）、§2 第 2 条、§3 连接链路、§7 目录与自证判据、§8 全表、
+> §9 表前口径说明、§10 本变体定位。
+> **不属于本变体、本目录已删除的继承件**：`FLOW_STRUCT_ROUTE.md`（Flow 结构体路线）、
+> `mockup_17_flow_arch.svg`（连同 `mockup_gen.py` 里的 `sc_flow_arch()`）、`提示词.txt`（母工程会话留痕）、
+> `*.eez-project-ui-state`（母工程 GUI 编辑态）、`shot_*.{bmp,png}`（母工程历史截图）、`__pycache__/`。
+> 需要这些内容请去 `../app-wifi-scan-flow/`。
 > **本变体一句话事实**：不发射 `eez-flow.cpp/h`、`ui.c` 无 `assets[]`/`eez_flow_init`/`eez_flow_tick`、
 > 二进制 `eez::flow` 符号 **0 个**（Flow 版 501 个），但 native 动作仍由生成码直挂
 > （`screens.c:91`）。实测与账单见 `README.md`。
@@ -16,9 +21,10 @@
 
 # WiFi 模板架构（v4 收口）：EEZ 画界面（无变量），状态 native 直驱，列表数据 native 直读 io
 
-> 配套图：**`design/mockups/mockup_20_noflow_arch.svg`（本变体，重生成：`python design/mockup_gen.py`）**
-> · `mockup_17_flow_arch.svg`（v4 母工程 Flow 形态，继承）· `mockup_18_scan_to_ui.svg`（v4）
-> 相关文档：`FLOW_STRUCT_ROUTE.md`（v3 历史方案，已被 v4 取代）· `EEZ_CHECKLIST.md`（控件/变量）· `IMPLEMENTATION.md`（交互机制）
+> 配套图：**`design/mockups/mockup_20_noflow_arch.svg`（本变体唯一架构图；重生成 `python design/mockup_gen.py`）**
+> · `mockup_18_scan_to_ui.svg`（v4 扫描回流）· Flow 形态的 `mockup_17` 属母工程，本目录已删（见 `design/mockups/README.md`）
+> 相关文档：`EEZ_CHECKLIST.md`（控件/变量）· `IMPLEMENTATION.md`（交互机制）
+> · Flow 结构体路线 `../app-wifi-scan-flow/FLOW_STRUCT_ROUTE.md`（v3 历史，**本变体永不适用，本目录已不复制**）
 
 ## 0. 一句话
 

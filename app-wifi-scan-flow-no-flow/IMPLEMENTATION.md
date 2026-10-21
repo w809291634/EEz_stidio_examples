@@ -151,7 +151,8 @@ UI 与 `app_model` 一行不改。
 ## 7. 结构体 / 数组：两条路线
 
 > **路线 A（Flow）**：结构体 + 数组变量，绑定写 `aps[i].ssid`，变量数 37→3，
-> 但要换运行时（`EEZ_FOR_LVGL` + eez-flow + assets）。落地清单见 **`FLOW_STRUCT_ROUTE.md`**。
+> 但要换运行时（`EEZ_FOR_LVGL` + eez-flow + assets）。落地清单见母工程
+> **`../app-wifi-scan-flow/FLOW_STRUCT_ROUTE.md`**（本变体已删该文件——没有 Flow 就没有这条路）。
 >
 > **路线 B（本工程当前）**：EEZ 只有扁平标量，结构体留在 C 侧再投影。见下文 §7.4。
 > ★ **本变体连路线 A 的前提都没有**（无 Flow ⇒ 无 `Value`/`ArrayValue`/结构体数组），
