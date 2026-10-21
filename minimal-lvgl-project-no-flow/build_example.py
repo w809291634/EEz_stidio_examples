@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
-"""minimal-lvgl-project —— 最小可构建的 EEZ Studio LVGL 示例工程（生成器）
+"""minimal-lvgl-project-no-flow —— 最小可构建的 EEZ Studio LVGL 示例工程（纯 LVGL / 无 Flow 运行时）
 
-本文件是示例的唯一设计源：minimal-lvgl-project.eez-project 由它生成，请勿手改产物。
+本文件是示例的唯一设计源：minimal-lvgl-project-no-flow.eez-project 由它生成，请勿手改产物。
 
-    python build_example.py      # 重新生成 minimal-lvgl-project.eez-project
+    python build_example.py      # 重新生成 minimal-lvgl-project-no-flow.eez-project
+
+与 minimal-lvgl-project 的区别：关闭 EEZ Flow 运行时（flowSupport / generateSourceCodeForEezFramework
+均设为 False）。EEZ Studio 生成的是"纯 LVGL"分支代码——不再发射 eez-flow.cpp/h，ui.c / screens.c
+里的 eez_flow_init / getFlowState / eez_flow_init_fonts 等全部消失，UI 由 create_screens() /
+tick_screen() 直接驱动，main.c 仍只调 ui_init() / ui_tick()。
 
 屏幕基线：480x320 · LVGL 9.4 · EEZ Studio 0.29（工程模型 projectVersion=v3）。
 """
@@ -12,7 +17,7 @@ import os
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PROJECT_FILE = os.path.join(HERE, "minimal-lvgl-project.eez-project")
+PROJECT_FILE = os.path.join(HERE, "minimal-lvgl-project-no-flow.eez-project")
 
 SCREEN_W, SCREEN_H = 480, 320
 
@@ -160,7 +165,7 @@ def build_project():
                 "lvglVersion": "9.4.0",
                 "extensions": [],
                 "imports": [],
-                "flowSupport": True,
+                "flowSupport": False,
                 "displayWidth": SCREEN_W,
                 "displayHeight": SCREEN_H,
                 "circularDisplay": False,
@@ -186,7 +191,7 @@ def build_project():
                 "lvglInclude": "lvgl.h",
                 "screensLifetimeSupport": False,
                 "useDockerDesktop": True,
-                "generateSourceCodeForEezFramework": True,
+                "generateSourceCodeForEezFramework": False,
                 "compressFlowDefinition": False,
                 "executionQueueSize": 1000,
                 "expressionEvaluatorStackSize": 20,

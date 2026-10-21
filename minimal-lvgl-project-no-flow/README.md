@@ -1,7 +1,13 @@
-# minimal-lvgl-project —— 最小可构建的 EEZ Studio LVGL 工程
+# minimal-lvgl-project-no-flow —— 最小可构建的纯 LVGL（无 EEZ Flow）EEZ Studio 工程
 
 > **演示点**：一个 480×320 单页工程的最小完备结构 —— 从 `.eez-project` JSON 到 headless 构建出码。
 > 适合作为"第一个 EEZ 工程"的参照：工程 JSON 每个段落为什么长这样，注释里都写了。
+>
+> **no_flow 变体说明**：这是 `minimal-lvgl-project` 的姊妹版，**关闭了 EEZ Flow 运行时**
+> （`.eez-project` 里 `flowSupport` 与 `generateSourceCodeForEezFramework` 均为 `False`）。
+> EEZ Studio 因此只生成"纯 LVGL"分支代码 —— 不发射 `eez-flow.cpp/h`，
+> `ui_init()`/`ui_tick()` 直接走 `create_screens()`/`tick_screen()`，UI 由原生 LVGL 驱动，
+> 没有任何 flow 状态机。当你只想用 EEZ Studio 画界面、逻辑全放 native C 时，用这个。
 
 ## 演示点
 
@@ -14,8 +20,8 @@
 | 文件 | 说明 |
 |---|---|
 | `build_example.py` | ★ 唯一设计源：生成本工程的 `.eez-project`，改 UI 改它 |
-| `minimal-lvgl-project.eez-project` | 生成产物，EEZ Studio 可直接打开 |
-| `src/ui/` | 构建产物（可再生产物，已 gitignore；重新构建即再生） |
+| `minimal-lvgl-project-no-flow.eez-project` | 生成产物，EEZ Studio 可直接打开 |
+| `src/ui/` | 构建产物（可再生产物，已 gitignore；重新构建即再生）；**纯 LVGL，无 eez-flow.cpp/h** |
 
 ## 依赖版本
 

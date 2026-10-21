@@ -3,15 +3,17 @@
  * ---------------------------------------------------------------------------
  * 编译进 PC_SIM 的 `main` 可执行（CMakeLists 非 FreeRTOS 分支把 SIM_MAIN_DIR/main.c 直接引用）。
  *
+ * 本工程是 minimal-lvgl-project 的 **no_flow 变体**：EEZ Flow 运行时已关闭
+ * （.eez-project 的 flowSupport / generateSourceCodeForEezFramework 均为 False）。
+ * EEZ Studio 因此生成纯 LVGL 分支代码——不发射 eez-flow.cpp/h，ui_init() / ui_tick()
+ * 直接走 create_screens() / tick_screen()，不再调用 eez_flow_init()。
+ *
  * 设计要点：
  *  - 分辨率固定 480x320，与 EEZ 示例工程基线（displayWidth/Height）一致。
- *  - #include "ui.h" 会间接引入 eez-flow.h：该头文件头部自带 `#define EEZ_FOR_LVGL 1`
- *    且公共 API 用 extern "C" 包装（C/C++ 兼容），因此本 C 文件可直接调用
- *    ui_init() / ui_tick() 而无需在 lv_conf.h 里再定义 EEZ_FOR_LVGL。
- *  - ui_init() 内部无条件调用 eez_flow_init()（EEZ 9.29 生成的 ui.c 已是纯 flow 工程），
- *    手势切屏等 flow 动作自动生效，无需额外接线。
- *  - 手势（GESTURE）由 SDL 鼠标/触摸驱动产生，EEZ flow 运行时监听 LV_EVENT_GESTURE，
- *    故手势行为可在本 PC 仿真里验收（EEZ Studio 的 Run 预览不产生 GESTURE，见 P-0141）。
+ *  - #include "ui.h" 不再引入 eez-flow.h（EEZ_FOR_LVGL 未定义），ui_init / ui_tick
+ *    即为纯 LVGL 的初始化与每帧刷新，可被本 C 文件直接调用。
+ *  - 手势（GESTURE）由 SDL 鼠标/触摸驱动，原生 LVGL 监听 LV_EVENT_GESTURE，
+ *    无需 EEZ flow 运行时即可验收（EEZ Studio 的 Run 预览不产生 GESTURE，见 P-0141）。
  *
  * 切换目标工程：运行示例目录下的 run_sim.bat（它把本目录绝对路径注入 SIM_TARGET_PROJ_DIR）。
  *
