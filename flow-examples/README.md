@@ -64,6 +64,7 @@ flow-examples/<flow-主题>/
 | 目录 | 演示点 | 状态 |
 |---|---|---|
 | [`flow-variables-basics/`](flow-variables-basics/) | Flow 变量的使用方法：读（表达式/模板串/Bar 单向）· 写（Slider 回写、`SetVariable` 单条与批量、`Evaluate`→数据线→`SetVariable`）· 监听（`Watch`）· 分支（`Switch`）· 作用域（全局 vs 页面局部 `l_step`） | CLI `BUILD RESULT: ok`（0 错 0 警，assets 1,210 B）+ 产物对账 + PC_SIM `[537/537] build succeeded`；**从仓库根迁入本目录时已删 `build_rel` 全量重配并复验通过**；两个负控（写错变量名 / 画布重叠）均生效；★ **行为验收未做**（点按钮看变量动，需起仿真） |
+| [`flow-page-timeline-animation/`](flow-page-timeline-animation/) | 页面动画时间线 + `Animate`：关键帧挂控件、游标在页面级；播放 / 跳帧(`speed=0`) / 倒放(`to<from`) / `seqout` 只在放完时发 / `pageTimelinePosition()` 读数 | CLI `ok`（0 错 0 警）+ 插值码实证 `screens.c:374+`（`getTimelinePosition` + 5 种缓动）+ PC_SIM `[537/537] build succeeded`；★ 6 条自检负控全部拦住（opacity 越界 / 同区间拆两帧 / 非法缓动名 / 非法属性名 / 关键帧倒序 / 总长超 Animate）；机制沉淀见 [`../flow-understanding/notes/flow-timeline-animation.md`](../flow-understanding/notes/flow-timeline-animation.md) |
 
 ## 7. 与 `flow-understanding/` 的分工（别写串）
 

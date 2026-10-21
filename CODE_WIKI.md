@@ -504,6 +504,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | [perf-tabview-native-vs-eez](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/perf-tabview-native-vs-eez) | 资源消耗对照：同构 tabview，原生 LVGL vs EEZ（RAM/Flash 实测 + ESP32-P4 真机 map 拆解） | ★ 结论：EEZ 核心真实代价 ≈ **259KB flash + 28KB RAM**（PC 差值里的 1.33MB 大头其实是中文字体）；见 `parse_map.py` |
 | [app-wifi-scan-flow-no-flow](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow-no-flow) | 上者的 **Flow on/off A/B 变体**：仅把 `flowSupport`/`generateSourceCodeForEezFramework` 改 `false`，native 层与控件树逐字相同 | ★ 实测关 Flow 后 native 动作**仍由生成码直挂** `lv_obj_add_event_cb(..., action_scan_start, LV_EVENT_CLICKED, 0)`，业务零改动；★ 判据反写：`eez-flow.*` **不得**出现（`preflight.check_no_flow`）；★ 生成码 548,573→13,950 字节、二进制 `eez::flow` 符号 501→0 |
 | [flow-examples/flow-variables-basics](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/flow-examples/flow-variables-basics) | **Flow 变量的使用方法**（纯 EEZ、零 native C）：读=表达式/模板串/Bar 单向；写=Slider 回写、`SetVariable` 单条与批量、`Evaluate`→数据线→`SetVariable`；监听=`Watch`；分支=`Switch`；作用域=全局 `g_*` vs 页面局部 `l_step` | ★ 变量表只有一张，用法由 `flowSupport` × 变量 `native` 两条轴决定；★ Flow 件 JSON `type` 必须用 Studio 类名（`SetVariableActionComponent` 等）；★ `Watch` 输出名是 `variable`；★ 数据线要配自定义输入名并与时序线成对；★ 负控：写错变量名会被 Checks 拦（`identifier ... is neither input or local or global variable`） |
+| [flow-examples/flow-page-timeline-animation](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/flow-examples/flow-page-timeline-animation) | **页面动画时间线 + `Animate`（EXAMPLE_PLAN ⑮）**：游标在页面级 FlowState、关键帧在控件；倒放 / 跳帧 / `seqout` 通知都演到 | ★ 关键帧 `opacity` 是 0..1；★ 同区间不能拆两帧（codegen 命中即 break）；★ `Animate` 沿 `parentFlowState` 上溯 ⇒ User Widget 内放它会带动宿主页面动画；机制见 `flow-understanding/notes/flow-timeline-animation.md` |
 
 ### 8.6 flow-examples（Flow 机制类示例容器）
 
@@ -518,7 +519,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | [PC_SIM](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/PC_SIM) | LVGL PC 仿真器（构建宿主 + SDL 窗口 + FreeRTOS 可选）。其自身有 [CODE_WIKI.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/PC_SIM/lv_port_pc_vscode_v9.5/CODE_WIKI.md) 详述 LVGL/FreeRTOS 细节 |
 | [apl_lvgl_v9_4](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/apl_lvgl_v9_4) | LVGL 9.4 内核组件（被 PC_SIM 引用） |
 | [envtest](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/envtest) | `SIM_TARGET_PROJ_DIR` 环境探针 |
-| [flow-understanding](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/flow-understanding) | **不是示例**：EEZ Flow 理解与取证专区。`MANUAL_MAP.md`（784 页手册的章节↔页码↔本地全文行号）、`notes/`（执行语义 / 变量表达式 49 函数 / **动作件 LVGL 可用性**三篇）、`tools/extract_studio_facts.py`（从装机 `app.asar` 抽权威事实：9 件在 LVGL 面板禁用、A43 实有 65 子动作）、`EXAMPLE_PLAN.md`（14 个待补示例 + 验收判据） |
+| [flow-understanding](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/flow-understanding) | **不是示例**：EEZ Flow 理解与取证专区。`MANUAL_MAP.md`（784 页手册的章节↔页码↔本地全文行号）、`notes/`（执行语义 / 变量表达式 49 函数 / **动作件 LVGL 可用性**三篇）、`tools/extract_studio_facts.py`（从装机 `app.asar` 抽权威事实：9 件在 LVGL 面板禁用、A43 实有 65 子动作）、`EXAMPLE_PLAN.md`（23 个待补示例（四梯队 ①–㉓） + 验收判据） |
 | `font-test/` · `wifi_connect_2/` | 仅含空目录骨架与 `build_rel` 缓存的工作中目录（暂无源文件） |
 
 ---
