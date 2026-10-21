@@ -1,0 +1,20 @@
+<svg viewBox="0 0 680 500" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+  <title>03 · 无网络（空态）</title>
+  <desc>WiFi 图标 + 文案 + 重新扫描主按钮</desc>
+  <g transform="translate(40,40) scale(1.25)">
+    <rect x="0" y="0" width="480" height="320" rx="14" fill="#0B0F1A" stroke="#26314A" stroke-width="1"/>
+    <text x="16" y="26" fill="#F0F4FC" font-size="17" font-weight="500">WiFi</text>
+    <text x="16" y="42" fill="#8A99B3" font-size="11.5">已发现 0 个网络</text>
+    <rect x="400" y="13" width="64" height="26" fill="#161E30" rx="13" stroke="#26314A" stroke-width="0.5"/>
+    <text x="432" y="30" fill="#B9C6DC" font-size="11" text-anchor="middle">刷新</text>
+    <path d="M192 168 a48 48 0 0 1 96 0" fill="none" stroke="#5C6A85" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M207 168 a33 33 0 0 1 66 0" fill="none" stroke="#5C6A85" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M222 168 a18 18 0 0 1 36 0" fill="none" stroke="#5C6A85" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="240" cy="168" r="3.6" fill="#5C6A85"/>
+    <text x="240" y="218" fill="#F0F4FC" font-size="15" text-anchor="middle">未发现网络</text>
+    <text x="240" y="240" fill="#8A99B3" font-size="11" text-anchor="middle">请确认 WiFi 已开启，然后重新扫描</text>
+    <rect x="170" y="256" width="140" height="34" fill="#5B8CFF" rx="17"/>
+    <text x="240" y="278" fill="#FFFFFF" font-size="12" text-anchor="middle">重新扫描</text>
+  </g>
+  <text x="40" y="472" fill="#7C8AA5" font-size="12">03 空态：WiFi 图标 + 「未发现网络」+ 引导文案 + 重新扫描按钮</text>
+</svg>

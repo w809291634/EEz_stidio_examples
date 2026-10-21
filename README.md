@@ -69,6 +69,7 @@ EEZ_stidio_examples/
 | 目录 | 演示什么 | 一句话 / 关键坑 |
 |---|---|---|
 | [`minimal-lvgl-project/`](minimal-lvgl-project/) | 最小可构建工程：`.eez-project` JSON 骨架 + headless 构建判据 | ★ "构建成功"≠有产物，要判据+产物对账；`destinationFolder` 要显式配 |
+| [`minimal-lvgl-project-no-flow/`](minimal-lvgl-project-no-flow/) | 同上的 no-flow 姊妹版：`flowSupport`/`generateSourceCodeForEezFramework` 均 `false` → 只出纯 LVGL 代码，无 `eez-flow.cpp/h` | ★ 逻辑全放 native C 时用这版；`ui_init()` 走 `create_screens()` 分支 |
 | [`widget-gallery/`](widget-gallery/) | 7 类常用控件（Button/Slider/Switch/Bar/Spinner/Checkbox/Panel）的正确 JSON 形态 | ★ widgetFlags 漏 `CHECKABLE` → 控件变装饰件（LVGL 9.4 `lv_obj.c` 硬条件） |
 | [`font-entry-form/`](font-entry-form/) | 中文字体条目正确形态：`renderingEngine` + `lvglRanges` 数字表 + 相对路径 | ★ 决定性变量是条目形态不是字体文件；CLI 不烘字体 .c（P-0140） |
 | [`two-state-styles/`](two-state-styles/) | DEFAULT/CHECKED 两态样式 + `checkedState` 初始态 + 子元素颜色继承 | ★ 两态都要写全（只写默认态被主题盖住）；toggle 按钮要显式加 CHECKABLE |
@@ -83,6 +84,7 @@ EEZ_stidio_examples/
 | [`w23-w59-w73-w16-select-switch/`](w23-w59-w73-w16-select-switch/) | **选择与开关**（W23 Dropdown / W59 Roller / W73 Switch / W16 Checkbox），可见页签 Tabview 4 页 | ★ 联动主线：Dropdown+Roller 的 selected 绑同一 g_sel（assignable 双向，零 flow 图）；★ ToggleButton(W85) 是 EEZ-GUI 件、无 LVGL codegen（lvglBuild 报错）；Switch/Checkbox 无绑定属性；排障用 per-tab bisect |
 | [`app-wifi-connect/`](app-wifi-connect/) | **WiFi 扫描/连接全流程 v2**（KB 10 号架构迷你版）：EEZ 画壳+6 状态变量，业务/列表/驱动全在 src/native（契约头+命令环+io_iface 平台分界） | ★ 动作函数体只投递；★ native_vars.h 必须包 extern "C"；★ io 层不依赖 LVGL（clock() 计时）；★ 注释里别写 `xxx_*/`（提前闭合）；hiddenFlag 键名/字体全量/textarea 单向等 v1 坑仍有效 |
 | [`app-wifi-scan-flow/`](app-wifi-scan-flow/) | **WiFi 连接应用 v2（基础模板）**：空屏幕骨架（0 控件/字体/动作/变量）+ cli_build/audit/PC 仿真管线齐备 | ★ 控件照抄 EEZ 原生形态；★ gen_font 在 cli_build 之后；★ flow 错误守卫 |
+| [`app-wifi-scan-flow-no-flow/`](app-wifi-scan-flow-no-flow/) | **同上的 no-flow 变体**：只把 `flowSupport`/`generateSourceCodeForEezFramework` 关成 `false`，实测纯 LVGL 出码链路完整（生成码 548,573→13,950 字节，`eez::flow` 符号 501→0） | ★ **关 Flow 后 native 动作照样接线**：`screens.c` 直接 `lv_obj_add_event_cb(obj, action_scan_start, LV_EVENT_CLICKED, 0)`，业务零改动（纠正经验库 07 §2"事件 handler 依赖 flowSupport"）；★ 判据要反着写：`eez-flow.*` **不得**出现（preflight `check_no_flow`）；★ `BUILD_TEMPLATES` 的 `#if EEZ_FOR_LVGL/#else` 两分支都得留 |
 
 > 验证状态（2026-10-19）：九个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
 > 产物清单对账）。手势运行时行为（gesture-page-switch / one-way-gesture-switch）按 P-0141

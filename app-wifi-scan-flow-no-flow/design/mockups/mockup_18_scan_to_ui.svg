@@ -1,0 +1,99 @@
+<svg viewBox="0 0 680 900" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+  <title>框图 · 扫描数据如何回流到 UI</title>
+  <desc>9 步：点击 → action → 命令 → native 泵 → 扫描 → driver task 回调 → 置状态 → native 直读 io 画列表 → LVGL</desc>
+  <rect x="0" y="0" width="680" height="900" rx="14" fill="#0B0F1A" stroke="#26314A" stroke-width="1"/>
+    <text x="28" y="38" fill="#F0F4FC" font-size="20" font-weight="500">点「刷新」之后：硬件数据怎么回到 UI</text>
+    <text x="28" y="64" fill="#8A99B3" font-size="12.5">9 步单向回流；颜色 = 这段代码归谁（EEZ 生成 / native / 硬件）</text>
+    <path d="M28 78 H652" fill="none" stroke="#26314A" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="90" width="9" height="9" fill="#5B8CFF" rx="2"/>
+    <text x="42" y="99" fill="#8A99B3" font-size="8.5">EEZ 生成（src/ui）</text>
+    <rect x="160" y="90" width="9" height="9" fill="#3DDC97" rx="2"/>
+    <text x="174" y="99" fill="#8A99B3" font-size="8.5">native（你写）</text>
+    <rect x="256" y="90" width="9" height="9" fill="#E8A25C" rx="2"/>
+    <text x="270" y="99" fill="#8A99B3" font-size="8.5">硬件 / 驱动</text>
+    <rect x="28" y="116" width="624" height="62" fill="#101A28" rx="8" stroke="#5B8CFF" stroke-width="0.6"/>
+    <rect x="40" y="125" width="18" height="18" fill="#5B8CFF" rx="9" opacity="0.16"/>
+    <text x="49" y="138" fill="#5B8CFF" font-size="9" font-weight="500" text-anchor="middle">1</text>
+    <text x="68" y="142" fill="#F0F4FC" font-size="10.2" font-weight="500">点「刷 新」→ LV_EVENT_CLICKED</text>
+    <text x="68" y="161" fill="#8A99B3" font-size="8.2">EEZ 生成 screens.c：lv_obj_add_event_cb(btn_refresh, ...)</text>
+    <rect x="568" y="152" width="72" height="15" fill="#0B1220" rx="7" stroke="#5B8CFF" stroke-width="0.5"/>
+    <text x="604" y="162.5" fill="#5B8CFF" font-size="7.8" text-anchor="middle">EEZ 生成</text>
+    <path d="M49 174 V184" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 180 l3 4 3 -4" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="186" width="624" height="62" fill="#101A28" rx="8" stroke="#5B8CFF" stroke-width="0.6"/>
+    <rect x="40" y="195" width="18" height="18" fill="#5B8CFF" rx="9" opacity="0.16"/>
+    <text x="49" y="208" fill="#5B8CFF" font-size="9" font-weight="500" text-anchor="middle">2</text>
+    <text x="68" y="212" fill="#F0F4FC" font-size="10.2" font-weight="500">actions[] 表按 id 分发 → 你的 C 函数</text>
+    <text x="68" y="231" fill="#8A99B3" font-size="8.2">actions.h 声明 + ui.c 里 ActionExecFunc actions[]</text>
+    <rect x="574" y="222" width="66" height="15" fill="#0B1220" rx="7" stroke="#5B8CFF" stroke-width="0.5"/>
+    <text x="607" y="232.5" fill="#5B8CFF" font-size="7.8" text-anchor="middle">EEZ + 你</text>
+    <path d="M49 244 V254" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 250 l3 4 3 -4" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="256" width="624" height="62" fill="#101A28" rx="8" stroke="#3DDC97" stroke-width="0.6"/>
+    <rect x="40" y="265" width="18" height="18" fill="#3DDC97" rx="9" opacity="0.16"/>
+    <text x="49" y="278" fill="#3DDC97" font-size="9" font-weight="500" text-anchor="middle">3</text>
+    <text x="68" y="282" fill="#F0F4FC" font-size="10.2" font-weight="500">C 函数写命令：cmd_scan = 1</text>
+    <text x="68" y="301" fill="#8A99B3" font-size="8.2">native var 的 set 指针（INTEGER）或 setGlobalVariable()</text>
+    <rect x="584" y="292" width="56" height="15" fill="#0B1220" rx="7" stroke="#3DDC97" stroke-width="0.5"/>
+    <text x="612" y="302.5" fill="#3DDC97" font-size="7.8" text-anchor="middle">native</text>
+    <path d="M49 314 V324" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 320 l3 4 3 -4" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="326" width="624" height="62" fill="#101A28" rx="8" stroke="#3DDC97" stroke-width="0.6"/>
+    <rect x="40" y="335" width="18" height="18" fill="#3DDC97" rx="9" opacity="0.16"/>
+    <text x="49" y="348" fill="#3DDC97" font-size="9" font-weight="500" text-anchor="middle">4</text>
+    <text x="68" y="352" fill="#F0F4FC" font-size="10.2" font-weight="500">主循环每拍排空命令：ui_tick() → app_model_poll()</text>
+    <text x="68" y="371" fill="#8A99B3" font-size="8.2">main.c 调 ui_tick()；poll 读到 cmd_scan 才调 io_scan()</text>
+    <rect x="584" y="362" width="56" height="15" fill="#0B1220" rx="7" stroke="#3DDC97" stroke-width="0.5"/>
+    <text x="612" y="372.5" fill="#3DDC97" font-size="7.8" text-anchor="middle">native</text>
+    <path d="M49 384 V394" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 390 l3 4 3 -4" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="396" width="624" height="62" fill="#101A28" rx="8" stroke="#3DDC97" stroke-width="0.6"/>
+    <rect x="40" y="405" width="18" height="18" fill="#3DDC97" rx="9" opacity="0.16"/>
+    <text x="49" y="418" fill="#3DDC97" font-size="9" font-weight="500" text-anchor="middle">5</text>
+    <text x="68" y="422" fill="#F0F4FC" font-size="10.2" font-weight="500">发起扫描：esp_wifi_scan_start(WIFI_SCAN_ACTIVE)</text>
+    <text x="68" y="441" fill="#8A99B3" font-size="8.2">io_esp.cpp：异步，立即返回，不阻塞 UI</text>
+    <rect x="584" y="432" width="56" height="15" fill="#0B1220" rx="7" stroke="#3DDC97" stroke-width="0.5"/>
+    <text x="612" y="442.5" fill="#3DDC97" font-size="7.8" text-anchor="middle">native</text>
+    <path d="M49 454 V464" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 460 l3 4 3 -4" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="466" width="624" height="62" fill="#101A28" rx="8" stroke="#E8A25C" stroke-width="0.6"/>
+    <rect x="40" y="475" width="18" height="18" fill="#E8A25C" rx="9" opacity="0.16"/>
+    <text x="49" y="488" fill="#E8A25C" font-size="9" font-weight="500" text-anchor="middle">6</text>
+    <text x="68" y="492" fill="#F0F4FC" font-size="10.2" font-weight="500">WIFI_EVENT_SCAN_DONE（driver task）→ s_aps[16]</text>
+    <text x="68" y="511" fill="#8A99B3" font-size="8.2">esp_wifi_scan_get_ap_records()；此处【禁止】碰 LVGL / Flow</text>
+    <rect x="588" y="502" width="52" height="15" fill="#0B1220" rx="7" stroke="#E8A25C" stroke-width="0.5"/>
+    <text x="614" y="512.5" fill="#E8A25C" font-size="7.8" text-anchor="middle">硬件</text>
+    <path d="M49 524 V534" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 530 l3 4 3 -4" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="536" width="624" height="62" fill="#101A28" rx="8" stroke="#3DDC97" stroke-width="0.6"/>
+    <rect x="40" y="545" width="18" height="18" fill="#3DDC97" rx="9" opacity="0.16"/>
+    <text x="49" y="558" fill="#3DDC97" font-size="9" font-weight="500" text-anchor="middle">7</text>
+    <text x="68" y="562" fill="#F0F4FC" font-size="10.2" font-weight="500">数据已在 io 静态数组（s_aps[16]），只需置 scan_state=2</text>
+    <text x="68" y="581" fill="#8A99B3" font-size="8.2">无 Flow 数组桥；EEZ 不持有列表，native 直读</text>
+    <rect x="584" y="572" width="56" height="15" fill="#0B1220" rx="7" stroke="#3DDC97" stroke-width="0.5"/>
+    <text x="612" y="582.5" fill="#3DDC97" font-size="7.8" text-anchor="middle">native</text>
+    <path d="M49 594 V604" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 600 l3 4 3 -4" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="606" width="624" height="62" fill="#101A28" rx="8" stroke="#3DDC97" stroke-width="0.6"/>
+    <rect x="40" y="615" width="18" height="18" fill="#3DDC97" rx="9" opacity="0.16"/>
+    <text x="49" y="628" fill="#3DDC97" font-size="9" font-weight="500" text-anchor="middle">8</text>
+    <text x="68" y="632" fill="#F0F4FC" font-size="10.2" font-weight="500">ui_tick() → wifi_ui_sync 重建列表</text>
+    <text x="68" y="651" fill="#8A99B3" font-size="8.2">lv_obj_clean + 按 wifi_ap_count 循环 lv_list_add_button</text>
+    <rect x="560" y="642" width="80" height="15" fill="#0B1220" rx="7" stroke="#3DDC97" stroke-width="0.5"/>
+    <text x="600" y="652.5" fill="#3DDC97" font-size="7.8" text-anchor="middle">native</text>
+    <path d="M49 664 V674" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46 670 l3 4 3 -4" fill="none" stroke="#33405E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="28" y="676" width="624" height="62" fill="#101A28" rx="8" stroke="#5B8CFF" stroke-width="0.6"/>
+    <rect x="40" y="685" width="18" height="18" fill="#5B8CFF" rx="9" opacity="0.16"/>
+    <text x="49" y="698" fill="#5B8CFF" font-size="9" font-weight="500" text-anchor="middle">9</text>
+    <text x="68" y="702" fill="#F0F4FC" font-size="10.2" font-weight="500">LVGL 列表行 / 标量状态文案 → 屏幕</text>
+    <text x="68" y="721" fill="#8A99B3" font-size="8.2">行由 native 自绘；连接中 / 空态文案走 EEZ 标量状态</text>
+    <rect x="568" y="712" width="72" height="15" fill="#0B1220" rx="7" stroke="#5B8CFF" stroke-width="0.5"/>
+    <text x="604" y="722.5" fill="#5B8CFF" font-size="7.8" text-anchor="middle">native + EEZ</text>
+    <rect x="28" y="748" width="624" height="78" fill="#0D1420" rx="8" stroke="#26314A" stroke-width="0.6"/>
+    <text x="40" y="768" fill="#5C6A85" font-size="9.5">三条铁律（这一段最容易出事）</text>
+    <text x="40" y="786" fill="#8A99B3" font-size="8.2">① 线程：第 6 步在 WiFi driver task，绝不能直接调 LVGL/Flow —— 投递到 UI 任务（队列/信号量）</text>
+    <text x="40" y="801" fill="#8A99B3" font-size="8.2">② 顺序：先填 s_aps → 再置 scan_state=2；UI 只在 =2 时读，避免半成品</text>
+    <text x="40" y="816" fill="#8A99B3" font-size="8.2">③ 单一真值源：数据只存在 io 静态数组；换后端只换 io_*.cpp，列表渲染不变</text>
+    <text x="28" y="846" fill="#9DB8FF" font-size="8.5">EEZ 里真正的代码：screens.c（控件树+事件）· actions.h（动作声明）· vars.h（标量枚举）· ui.c（assets+init）；列表行由 wifi_ui_sync.cpp 自绘</text>
+</svg>

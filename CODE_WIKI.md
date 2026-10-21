@@ -466,6 +466,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | 目录 | 演示点 | 关键坑 / 要点 |
 |---|---|---|
 | [minimal-lvgl-project](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/minimal-lvgl-project) | 最小可构建工程：`.eez-project` JSON 骨架 + headless 构建判据 | ★"构建成功"≠有产物，要判据+产物对账；`destinationFolder` 要显式配 |
+| [minimal-lvgl-project-no-flow](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/minimal-lvgl-project-no-flow) | 同上的 no-flow 姊妹版：`flowSupport`/`generateSourceCodeForEezFramework` 均 `false` → 纯 LVGL 出码 | ★ 不发射 `eez-flow.cpp/h`；`ui_init()` 走 `create_screens()` 分支；逻辑全放 native C 时用这版 |
 | [widget-gallery](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/widget-gallery) | 7 类常用控件（Button/Slider/Switch/Bar/Spinner/Checkbox/Panel）的正确 JSON 形态 | ★ `widgetFlags` 漏 `CHECKABLE` → 控件变装饰件（LVGL 9.4 `lv_obj.c` 硬条件） |
 | [font-entry-form](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/font-entry-form) | 中文字体条目正确形态：`renderingEngine` + `lvglRanges` 数字表 + 相对路径 | ★ 决定性变量是条目形态不是字体文件；CLI 不烘字体 .c |
 | [two-state-styles](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/two-state-styles) | DEFAULT/CHECKED 两态样式 + `checkedState` 初始态 + 子元素颜色继承 | ★ 两态都要写全；toggle 按钮要显式加 CHECKABLE |
@@ -496,6 +497,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | [app-wifi-connect](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-connect) | WiFi 扫描/连接全流程 v3（链表渲染版）：EEZ 画壳 + native 业务层（契约头/命令环/io 平台分界/真 WiFi） | ★ 动作函数体只投递；★ `native_vars.h` 必须包 `extern "C"`；★ io 层不依赖 LVGL；新建 native 文件后删 `build_rel` 重配（GLOB 不重扫） |
 | [app-wifi-scan-flow](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow) | WiFi 连接应用基础模板：空屏幕骨架（0 控件/字体/动作/变量）+ cli_build/audit/PC 仿真管线齐备 | ★ 控件照抄 EEZ 原生形态；★ `gen_font` 在 `cli_build` 之后；★ flow 错误守卫；含 `DESIGN.md`/`EEZ_CHECKLIST.md`/`IMPLEMENTATION.md`/`SCAN_BINDING.md`/`mockups/` 设计资料 |
 | [perf-tabview-native-vs-eez](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/perf-tabview-native-vs-eez) | 资源消耗对照：同构 tabview，原生 LVGL vs EEZ（RAM/Flash 实测 + ESP32-P4 真机 map 拆解） | ★ 结论：EEZ 核心真实代价 ≈ **259KB flash + 28KB RAM**（PC 差值里的 1.33MB 大头其实是中文字体）；见 `parse_map.py` |
+| [app-wifi-scan-flow-no-flow](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow-no-flow) | 上者的 **Flow on/off A/B 变体**：仅把 `flowSupport`/`generateSourceCodeForEezFramework` 改 `false`，native 层与控件树逐字相同 | ★ 实测关 Flow 后 native 动作**仍由生成码直挂** `lv_obj_add_event_cb(..., action_scan_start, LV_EVENT_CLICKED, 0)`，业务零改动；★ 判据反写：`eez-flow.*` **不得**出现（`preflight.check_no_flow`）；★ 生成码 548,573→13,950 字节、二进制 `eez::flow` 符号 501→0 |
 
 ### 8.5 公共 / 辅助目录
 
@@ -517,6 +519,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | ★ CLI"构建成功"≠有产物 | 判据 = 日志标记 **+ 产物目录对账**（`src/ui/` 12 个模板文件 + `eez-flow.cpp/h`） |
 | ★ cli_build 必须等 `Build successfully finished` | `No error...` 出现在文件列表**之前**，提前 kill 会掐死 Flow engine 的发射阶段 |
 | ★ CLI 不烘字体/图片 .c | 纯 CLI 工作流需 `gen_font.py` / `gen_images.py` 补烘（GUI Build 才产） |
+| ★ `flowSupport:false` ≠ 事件链断 | 关 Flow 后 EEZ 不再发射 `eez-flow.cpp/h` 与 `assets[]`，`ui_init()` 走 `create_screens()`；但 **`implementationType:"native"` 的动作仍直挂** `lv_obj_add_event_cb(obj, action_xxx, LV_EVENT_CLICKED, 0)`（实测 `app-wifi-scan-flow-no-flow`）。依赖 Flow 的是**表达式绑定 / flow 组件 / SetVariable**，不是 native 动作 |
 | ★ `destinationFolder` 不配 → 产物落工程根 | 显式配 `src\ui` |
 | 构建日志 Chromium 噪音 | `disk_cache`/`Gpu Cache Cache failed` 等**不是构建错误** |
 
