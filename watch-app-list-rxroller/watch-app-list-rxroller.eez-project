@@ -1,0 +1,647 @@
+{
+  "themesVersion": 1,
+  "objID": "45a0eacc-e918-4dab-a444-697fa78dd24a",
+  "settings": {
+    "objID": "256eae3a-30ef-41d4-bc1e-f67970b75317",
+    "general": {
+      "objID": "9a60440f-8a91-4452-9456-9d9de8d8adb2",
+      "projectVersion": "v3",
+      "projectType": "lvgl",
+      "lvglVersion": "9.4.0",
+      "extensions": [],
+      "imports": [],
+      "flowSupport": false,
+      "displayWidth": 410,
+      "displayHeight": 502,
+      "circularDisplay": true,
+      "displayBorderRadius": 232,
+      "darkTheme": true,
+      "colorBpp": "16",
+      "bitmapColorFormat": "BGR",
+      "resourceFiles": [],
+      "hiddenWidgetLines": "dimmed",
+      "dimmedLinesOpacity": "20",
+      "embedBitmaps": true,
+      "embedFonts": true,
+      "cacheFonts": true
+    },
+    "build": {
+      "objID": "0cef7812-8196-4a40-a547-b09bc09837f1",
+      "configurations": [
+        {
+          "objID": "c0c23ec9-3232-4aa2-963b-d1ce2fc6e59c",
+          "name": "Default"
+        }
+      ],
+      "destinationFolder": "src\\ui",
+      "separateFolderForImagesAndFonts": true,
+      "imageExportMode": "source",
+      "fontExportMode": "source",
+      "fileSystemPath": "",
+      "lvglInclude": "lvgl.h",
+      "screensLifetimeSupport": false,
+      "useDockerDesktop": true,
+      "generateSourceCodeForEezFramework": false,
+      "compressFlowDefinition": false,
+      "executionQueueSize": 1000,
+      "expressionEvaluatorStackSize": 20,
+      "files": [
+        {
+          "objID": "ba24a607-5e12-4cb0-b06f-09037c150c12",
+          "fileName": "screens.h",
+          "template": "#ifndef EEZ_LVGL_UI_SCREENS_H\r\n#define EEZ_LVGL_UI_SCREENS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_SCREENS_DECL}\r\n//${eez-studio LVGL_SCREENS_DECL_EXT}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_SCREENS_H*/"
+        },
+        {
+          "objID": "785e5fa8-c12c-4c9f-80ff-bea9ff836ecb",
+          "fileName": "screens.c",
+          "template": "#include <string.h>\n\n#include \"screens.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n#include \"actions.h\"\n#include \"vars.h\"\n#include \"styles.h\"\n#include \"ui.h\"\n\n//${eez-studio LVGL_SCREENS_DEF}\n//${eez-studio LVGL_SCREENS_DEF_EXT}"
+        },
+        {
+          "objID": "fd6435a7-34c5-4030-b8f6-c2ada16d223a",
+          "fileName": "actions.h",
+          "template": "#ifndef EEZ_LVGL_UI_EVENTS_H\r\n#define EEZ_LVGL_UI_EVENTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_ACTIONS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_EVENTS_H*/"
+        },
+        {
+          "objID": "9ad36826-74d4-4eb9-89c0-1c66e1b894b5",
+          "fileName": "vars.h",
+          "template": "#ifndef EEZ_LVGL_UI_VARS_H\r\n#define EEZ_LVGL_UI_VARS_H\r\n\r\n#include <stdint.h>\r\n#include <stdbool.h>\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n// enum declarations\r\n\r\n//${eez-studio FLOW_ENUMS}\r\n\r\n// Flow global variables\r\n\r\n//${eez-studio FLOW_GLOBAL_VARIABLES_ENUM}\r\n\r\n// Native global variables\r\n\r\n//${eez-studio LVGL_VARS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_VARS_H*/"
+        },
+        {
+          "objID": "46b75b07-fced-441f-9b9f-64ff4f5747db",
+          "fileName": "structs.h",
+          "template": "#ifndef EEZ_LVGL_UI_STRUCTS_H\n#define EEZ_LVGL_UI_STRUCTS_H\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n\n#include <eez/flow/flow.h>\n#include <stdint.h>\n#include <stdbool.h>\n\n#include \"vars.h\"\n\nusing namespace eez;\n\n//${eez-studio FLOW_STRUCTS}\n\n//${eez-studio FLOW_STRUCT_VALUES}\n\n#endif\n\n#endif /*EEZ_LVGL_UI_STRUCTS_H*/\n"
+        },
+        {
+          "objID": "c765c1d0-c4a7-4656-a47e-abd2af751a2a",
+          "fileName": "images.h",
+          "template": "#ifndef EEZ_LVGL_UI_IMAGES_H\r\n#define EEZ_LVGL_UI_IMAGES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_IMAGES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_IMAGES_H*/"
+        },
+        {
+          "objID": "35adafc6-0c56-40f9-9aa8-8f89cc05177b",
+          "fileName": "images.c",
+          "template": "#include \"images.h\"\n\n//${eez-studio LVGL_IMAGES_DEF}"
+        },
+        {
+          "objID": "dfa47bfb-02ae-49fd-bdc6-e7aae27160d0",
+          "fileName": "fonts.h",
+          "template": "#ifndef EEZ_LVGL_UI_FONTS_H\r\n#define EEZ_LVGL_UI_FONTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_FONTS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_FONTS_H*/"
+        },
+        {
+          "objID": "0fbaaa6a-377c-4d9f-94f0-d8a8b90466fb",
+          "fileName": "styles.h",
+          "template": "#ifndef EEZ_LVGL_UI_STYLES_H\r\n#define EEZ_LVGL_UI_STYLES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_STYLES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_STYLES_H*/"
+        },
+        {
+          "objID": "f5f7b894-6a87-4c12-aae8-6255edc39141",
+          "fileName": "styles.c",
+          "template": "#include \"styles.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n\n//${eez-studio LVGL_STYLES_DEF}\n"
+        },
+        {
+          "objID": "4775cda5-2df5-46d1-8abf-598dc3d9176e",
+          "fileName": "ui.h",
+          "template": "#ifndef EEZ_LVGL_UI_GUI_H\n#define EEZ_LVGL_UI_GUI_H\n\n//${eez-studio LVGL_INCLUDE}\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n#include <eez/flow/lvgl_api.h>\n#endif\n\n#if !defined(EEZ_FOR_LVGL)\n#include \"screens.h\"\n#endif\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n//${eez-studio GUI_ASSETS_DECL}\n\nvoid ui_init();\nvoid ui_tick();\n\n#if !defined(EEZ_FOR_LVGL)\nvoid loadScreen(enum ScreensEnum screenId);\n#endif\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // EEZ_LVGL_UI_GUI_H"
+        },
+        {
+          "objID": "a624a425-8087-4907-96c9-f016d49391ad",
+          "fileName": "ui.c",
+          "template": "#if defined(EEZ_FOR_LVGL)\n#include <eez/core/vars.h>\n#endif\n\n#include \"ui.h\"\n#include \"screens.h\"\n#include \"images.h\"\n#include \"actions.h\"\n#include \"vars.h\"\n\n//${eez-studio GUI_ASSETS_DEF}\n\n//${eez-studio LVGL_NATIVE_VARS_TABLE_DEF}\n\n//${eez-studio LVGL_ACTIONS_ARRAY_DEF}\n\n#if defined(EEZ_FOR_LVGL)\n\nvoid ui_init() {\n    eez_flow_init(assets, sizeof(assets), (lv_obj_t **)&objects, sizeof(objects), images, sizeof(images), actions);\n}\n\nvoid ui_tick() {\n    eez_flow_tick();\n    tick_screen(g_currentScreen);\n}\n\n#else\n\nstatic int16_t currentScreen = -1;\n\nstatic lv_obj_t *getLvglObjectFromIndex(int32_t index) {\n    if (index == -1) {\n        return 0;\n    }\n    return ((lv_obj_t **)&objects)[index];\n}\n\nvoid loadScreen(enum ScreensEnum screenId) {\n    currentScreen = screenId - 1;\n    lv_obj_t *screen = getLvglObjectFromIndex(currentScreen);\n    lv_scr_load_anim(screen, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);\n}\n\nvoid ui_init() {\n    create_screens();\n//${eez-studio LVGL_LOAD_FIRST_SCREEN}\n}\n\nvoid ui_tick() {\n    tick_screen(currentScreen);\n}\n\n#endif\n"
+        }
+      ]
+    }
+  },
+  "variables": {
+    "objID": "1b0515c0-25d6-484c-9ba9-26109903c509",
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "userPages": [
+    {
+      "objID": "a2a56d56-5058-4259-b089-0d47f3cd9429",
+      "components": [
+        {
+          "objID": "328bf059-3e4a-403d-aa98-d2061ba1d1fa",
+          "type": "LVGLScreenWidget",
+          "left": 0,
+          "top": 0,
+          "width": 410,
+          "height": 502,
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "objID": "85ad9f35-45c2-4edb-9ccb-031f69eb6bbd",
+            "useStyle": "default",
+            "conditionalStyles": [],
+            "childStyles": []
+          },
+          "timeline": [],
+          "eventHandlers": [],
+          "leftUnit": "px",
+          "topUnit": "px",
+          "widthUnit": "px",
+          "heightUnit": "px",
+          "children": [
+            {
+              "objID": "b3eb7927-1e5a-4737-b7f6-6b6c0b327bd7",
+              "type": "LVGLContainerWidget",
+              "left": 0,
+              "top": 0,
+              "width": 410,
+              "height": 502,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "89bd8ae2-7b43-46ec-a143-ae617c02768c",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE|SCROLL_CHAIN_VER",
+              "hiddenFlagType": "literal",
+              "hiddenFlag": false,
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "9486a1ce-7513-4f33-9878-75522f1aad0e",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "bg_color": "0x0b0f1a",
+                      "bg_opa": 0,
+                      "radius": 0
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "identifier": "list_host"
+            },
+            {
+              "objID": "f0f5f777-13e5-40a0-b7ba-0517c3817740",
+              "type": "LVGLLabelWidget",
+              "left": 0,
+              "top": 8,
+              "width": 410,
+              "height": 20,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "817da7d6-0a60-4c7e-a694-7f92a40abccf",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+              "hiddenFlagType": "literal",
+              "hiddenFlag": false,
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "e8e9208c-c674-4d0e-a03b-41dc5eb20365",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "text_color": "0xf0f4fc",
+                      "text_font": "cn14"
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "identifier": "lbl_title",
+              "text": "应用列表",
+              "textType": "literal",
+              "longMode": "WRAP",
+              "recolor": false,
+              "useStaticText": true
+            },
+            {
+              "objID": "3133d33d-2127-452d-9486-a4f93d576b0c",
+              "type": "LVGLLabelWidget",
+              "left": 0,
+              "top": 482,
+              "width": 410,
+              "height": 18,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "55210d43-6676-4e06-a4d0-288a183786b6",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "GESTURE_BUBBLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+              "hiddenFlagType": "literal",
+              "hiddenFlag": false,
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "OFF",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "d4734faa-416f-4f4d-a735-233e921cf596",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "pad_top": 0,
+                      "pad_bottom": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_row": 0,
+                      "pad_column": 0,
+                      "border_width": 0,
+                      "outline_width": 0,
+                      "text_color": "0x3ddc97",
+                      "text_font": "cn14"
+                    }
+                  }
+                }
+              },
+              "groupIndex": 0,
+              "identifier": "lbl_status",
+              "text": "就绪",
+              "textType": "literal",
+              "longMode": "WRAP",
+              "recolor": false,
+              "useStaticText": true
+            }
+          ],
+          "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
+          "hiddenFlagType": "literal",
+          "hiddenFlag": false,
+          "clickableFlagType": "literal",
+          "flagScrollbarMode": "OFF",
+          "checkedStateType": "literal",
+          "disabledStateType": "literal",
+          "states": "",
+          "localStyles": {
+            "objID": "985e1dc6-b060-464a-8719-a8d8cff14ddd",
+            "definition": {
+              "MAIN": {
+                "DEFAULT": {
+                  "pad_top": 0,
+                  "pad_bottom": 0,
+                  "pad_left": 0,
+                  "pad_right": 0,
+                  "pad_row": 0,
+                  "pad_column": 0,
+                  "border_width": 0,
+                  "outline_width": 0,
+                  "bg_color": "0x0b0f1a",
+                  "bg_opa": 255,
+                  "radius": 0
+                }
+              }
+            }
+          },
+          "groupIndex": 0
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "componentGroups": [],
+      "userProperties": [],
+      "name": "Main",
+      "left": 0,
+      "top": 0,
+      "width": 410,
+      "height": 502,
+      "isUsedAsUserWidget": false,
+      "createAtStart": true,
+      "deleteOnScreenUnload": false
+    }
+  ],
+  "userWidgets": [],
+  "lvglStyles": {
+    "objID": "6a6a900d-43fc-4464-bdbb-cf54cd134981",
+    "styles": [],
+    "defaultStyles": {}
+  },
+  "lvglGroups": {
+    "objID": "3840102b-1127-4357-a851-678b8b4ebd62",
+    "groups": []
+  },
+  "fonts": [
+    {
+      "objID": "d1dae748-d779-466b-ad83-e522bc86d0df",
+      "name": "cn14",
+      "description": "UI 实际用字子集：155 字（ASCII + 中二亮列动历压吸呼器天定就屏已应开式录心手打找抬拍日时机查模步气氧照率理用疗眠睡码秒算练绪维置腕血表言计训记设语运钟间闹）",
+      "renderingEngine": "LVGL",
+      "source": {
+        "objID": "fb1e261b-f9e4-4aa9-92ef-c5c41d1a427f",
+        "filePath": "fonts/simhei.ttf",
+        "size": 14
+      },
+      "bpp": 4,
+      "threshold": 128,
+      "glyphs": [],
+      "screenOrientation": "all",
+      "alwaysBuild": false,
+      "lvglRanges": "32-126,20013,20108,20142,21015,21160,21382,21387,21560,21628,22120,22825,23450,23601,23631,24050,24212,24320,24335,24405,24515,25163,25171,25214,25260,25293,26085,26102,26426,26597,27169,27493,27668,27687,29031,29575,29702,29992,30103,30496,30561,30721,31186,31639,32451,32490,32500,32622,33109,34880,34920,35328,35745,35757,35760,35774,35821,36816,38047,38388,38393",
+      "lvglSymbols": "",
+      "lvglAdditionalSources": [],
+      "lvglGlyphs": {
+        "objID": "75d72bd8-f001-4a62-bc10-92625557056e",
+        "encodings": [
+          {
+            "from": 32,
+            "to": 126
+          },
+          {
+            "from": 20013,
+            "to": 20013
+          },
+          {
+            "from": 20108,
+            "to": 20108
+          },
+          {
+            "from": 20142,
+            "to": 20142
+          },
+          {
+            "from": 21015,
+            "to": 21015
+          },
+          {
+            "from": 21160,
+            "to": 21160
+          },
+          {
+            "from": 21382,
+            "to": 21382
+          },
+          {
+            "from": 21387,
+            "to": 21387
+          },
+          {
+            "from": 21560,
+            "to": 21560
+          },
+          {
+            "from": 21628,
+            "to": 21628
+          },
+          {
+            "from": 22120,
+            "to": 22120
+          },
+          {
+            "from": 22825,
+            "to": 22825
+          },
+          {
+            "from": 23450,
+            "to": 23450
+          },
+          {
+            "from": 23601,
+            "to": 23601
+          },
+          {
+            "from": 23631,
+            "to": 23631
+          },
+          {
+            "from": 24050,
+            "to": 24050
+          },
+          {
+            "from": 24212,
+            "to": 24212
+          },
+          {
+            "from": 24320,
+            "to": 24320
+          },
+          {
+            "from": 24335,
+            "to": 24335
+          },
+          {
+            "from": 24405,
+            "to": 24405
+          },
+          {
+            "from": 24515,
+            "to": 24515
+          },
+          {
+            "from": 25163,
+            "to": 25163
+          },
+          {
+            "from": 25171,
+            "to": 25171
+          },
+          {
+            "from": 25214,
+            "to": 25214
+          },
+          {
+            "from": 25260,
+            "to": 25260
+          },
+          {
+            "from": 25293,
+            "to": 25293
+          },
+          {
+            "from": 26085,
+            "to": 26085
+          },
+          {
+            "from": 26102,
+            "to": 26102
+          },
+          {
+            "from": 26426,
+            "to": 26426
+          },
+          {
+            "from": 26597,
+            "to": 26597
+          },
+          {
+            "from": 27169,
+            "to": 27169
+          },
+          {
+            "from": 27493,
+            "to": 27493
+          },
+          {
+            "from": 27668,
+            "to": 27668
+          },
+          {
+            "from": 27687,
+            "to": 27687
+          },
+          {
+            "from": 29031,
+            "to": 29031
+          },
+          {
+            "from": 29575,
+            "to": 29575
+          },
+          {
+            "from": 29702,
+            "to": 29702
+          },
+          {
+            "from": 29992,
+            "to": 29992
+          },
+          {
+            "from": 30103,
+            "to": 30103
+          },
+          {
+            "from": 30496,
+            "to": 30496
+          },
+          {
+            "from": 30561,
+            "to": 30561
+          },
+          {
+            "from": 30721,
+            "to": 30721
+          },
+          {
+            "from": 31186,
+            "to": 31186
+          },
+          {
+            "from": 31639,
+            "to": 31639
+          },
+          {
+            "from": 32451,
+            "to": 32451
+          },
+          {
+            "from": 32490,
+            "to": 32490
+          },
+          {
+            "from": 32500,
+            "to": 32500
+          },
+          {
+            "from": 32622,
+            "to": 32622
+          },
+          {
+            "from": 33109,
+            "to": 33109
+          },
+          {
+            "from": 34880,
+            "to": 34880
+          },
+          {
+            "from": 34920,
+            "to": 34920
+          },
+          {
+            "from": 35328,
+            "to": 35328
+          },
+          {
+            "from": 35745,
+            "to": 35745
+          },
+          {
+            "from": 35757,
+            "to": 35757
+          },
+          {
+            "from": 35760,
+            "to": 35760
+          },
+          {
+            "from": 35774,
+            "to": 35774
+          },
+          {
+            "from": 35821,
+            "to": 35821
+          },
+          {
+            "from": 36816,
+            "to": 36816
+          },
+          {
+            "from": 38047,
+            "to": 38047
+          },
+          {
+            "from": 38388,
+            "to": 38388
+          },
+          {
+            "from": 38393,
+            "to": 38393
+          }
+        ]
+      }
+    }
+  ],
+  "bitmaps": [],
+  "colors": [],
+  "themes": [
+    {
+      "objID": "ed9fe304-adcc-4f49-bf7a-b4f5b615d340",
+      "name": "Default",
+      "colors": []
+    }
+  ]
+}
