@@ -63,9 +63,18 @@ python design\cli_build.py        && rem EEZ CLI 构建（0 flow 错误才继续
 - **截图钩子**：`WIFI_AUTOSCAN=1 WIFI_SHOT=1 WIFI_AUTOEXIT=1` 无头跑完自动退出。
 
 > 演进：v1「容器+10 固定槽」废弃（hit_test 要求 CLICKABLE，P-0166）；
-> v2 改 List 控件；v3 把数据源从 io 层私有数组换成 **Flow 数组变量 aps[]**
-> （native 直接操作的容器，P-0167）。EEZ 里不会按数组长度自动建控件——
-> 渲染仍由 C 的 `lv_list_add_button` 循环完成（数据动态 + 渲染映射的分层）。
+> v2 改 List 控件；v3 数据源换 Flow 数组变量 aps[]（P-0167）；
+> **v4（现行，2026-10-21）：数组变量移出 EEZ**（`ap_info`/`aps[]`/`ap_len` 与 `ap_store` 桥删除），
+> 列表数据由 native 直读 io 接口（`wifi_ap_at`/`wifi_ap_count`），EEZ 只持 3 个标量
+> （`scan_state`/`ap_gen`/`scan_status`）——单一真值源 = io 静态数组。
+> 架构图/回流图已同步 v4（`mockup_17` / `mockup_18`），详见 `ARCHITECTURE.md` §修订 v4。
+
+### v4 改动（2026-10-21）
+
+- **EEZ 工程**：`structures=[]`、`flow_vars=[]`（数组与结构体删除）；`vars.h` 仅剩标量枚举、`structs.h` 空壳；
+- **native**：`ap_store.{h,cpp}` 删除；`wifi_ui_sync.cpp` 直读 `wifi_ap_at()`/`wifi_ap_count()`；io_pc 不再 publish；
+- **验证**：重编 12/12 过；无头运行 `[UI] list rebuilt: 12 rows from io (gen=1, count=12)`；
+  截图渲染与 v3 逐区域一致。
 
 ### 待做（按顺序）
 

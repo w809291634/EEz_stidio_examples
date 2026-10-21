@@ -1,5 +1,10 @@
 # Flow 路线：WiFi 结构体 + 数组怎么落地
 
+> **★ 已被 v4 取代（2026-10-21）**：数组变量已移出 EEZ（`ap_info`/`aps[]`/`ap_len` 删除，
+> `ap_store` 桥删除），列表数据由 native 直读 io 接口（`wifi_ap_at`/`wifi_ap_count`）。
+> 本文保留作 **v3 历史方案** 与技术调研记录（`makeArrayRef` 三坑等仍在 P-0167 有效）。
+> 现行架构见 `ARCHITECTURE.md`（v4）与 `design/mockups/mockup_17_flow_arch.svg`（v4）。
+
 > 前提：**走 EEZ Flow 运行时**（`EEZ_FOR_LVGL`）。这条路能用 `aps[i].ssid` 这种写法，
 > 变量数从 37 降到 3，但换执行模型。本文只写"要建什么、怎么填、卡在哪"。
 
