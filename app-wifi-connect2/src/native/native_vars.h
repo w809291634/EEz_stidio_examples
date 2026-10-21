@@ -12,8 +12,8 @@ extern "C" {
 
 int32_t get_var_scan_state(void);
 void    set_var_scan_state(int32_t v);
-int32_t get_var_ap_count(void);
-void    set_var_ap_count(int32_t v);
+int32_t get_var_ap_gen(void);
+void    set_var_ap_gen(int32_t v);
 const char *get_var_scan_status(void);
 void        set_var_scan_status(const char *s);
 

@@ -2,8 +2,15 @@
 > 原文中"固定 5 槽 / 每槽 12 元素 / 变量 ×5 / 16 条只显示前 5"等内容**全部作废**。
 > 原因：AP 数量不固定且要求滚动；EEZ 的 LVGL 侧（W42 List）是 work in progress，
 > 只有 EEZ-GUI 的 W40 List 支持 `Data` 数组 + `$index` 重复渲染。
-> 现行结构：EEZ 画头部 + **10 个固定槽**（`row_1..row_10`）+ 1 个可滚动容器（flex column，空槽自动收拢）；
-> **扫描结果按 RSSI 降序**填槽，超出 10 个时标题显示「共 N 个」；变量只留 3 个（`scan_state`/`ap_count`/`scan_status`），行文本由 C 直接写控件。
+> 现行结构：EEZ 画头部 + **1 个 List (LVGL) 控件**；行由 C 侧 `lv_list_add_button()`
+> 按 `ap_count` 动态创建（行数不限、原生可滚动）；**扫描结果按 RSSI 降序**填；
+> 变量只留 3 个（`scan_state`/`ap_count`/`scan_status`），行内容由 C 写控件。
+>
+> ★ v3 变更（2026-10-21）：废弃「10 固定槽 + 滚动容器」——LVGL 的
+> `lv_obj_hit_test()` 第一行要求 `LV_OBJ_FLAG_CLICKABLE`，EEZ 生成的容器/自建行
+> 均无此 flag，indev 无法命中 → 滚动链断（实测 act_obj 恒 NULL）。
+> 改用 List 控件后子项是 `lv_list_button`（button 子类，CLICKABLE），
+> 滚动链路天然成立（`lv_indev_scroll.c` 的 SCROLL_CHAIN 机制）。
 
 # WiFi 连接模板 · UI 设计 v4（列表式 · 信息齐全 · 简单）
 

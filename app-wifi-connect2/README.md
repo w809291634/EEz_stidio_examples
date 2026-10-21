@@ -47,16 +47,25 @@ python design\cli_build.py        && rem EEZ CLI 构建（0 flow 错误才继续
 | PC 仿真编译 | `run_sim.bat` | succeeded ✓ |
 | 无头运行 | `WIFI_AUTOSCAN=1 WIFI_SHOT=1` | `scan done: 12 APs (sorted by RSSI)` + 截图 ✓ |
 
-### v1 已实现
+### v3 已实现（List 控件 + Flow 结构体数组变量 · 2026-10-21 验证）
 
-- **列表页**：10 个固定行槽 + 滚动容器（`list_box` 448×242，行 pitch 50）；
-  空槽 `HIDDEN` 自动收拢；右侧滚动条；
-- **行内 7 项信息**：4 格信号条 / SSID / 加密类型 / RSSI dBm / 频段 / 状态胶囊；
-- **排序**：扫描结果 **RSSI 降序**（C 侧 `qsort`，SSID 兜底稳定）；
-- **数据源**：`io_pc` 假驱动（12 个 AP，2s 扫描），不接硬件；
-- **变量 3 个**：`scan_state` / `ap_count` / `scan_status`（native，C 桥）；
-  行内容由 `wifi_ui_sync.cpp` 直接写控件，**不建 Flow 绑定**；
+- **列表页**：EEZ **List (LVGL) 控件**（`lv_list_create`，448×242，scrollbar AUTO）；
+  行由 C 侧 `lv_list_add_button()` 按数组长度动态创建——**行数不限、原生可滚动**；
+- **行内 7 项信息**：4 格信号条 / SSID / 加密类型 / RSSI dBm / 频段 / 状态文字；
+- **排序**：扫描结果 **RSSI 降序**（io 层 `qsort`，SSID 兜底稳定）；
+- **数据模型（核心）**：EEZ 里定义 **Struct `ap_info`（7 字段）+ 数组变量
+  `aps: ap_info[]` + `ap_len`**——native 通过 `ap_store.cpp`
+  （`makeArrayRef` + `setGlobalVariable`）**直接读写这个 C++ 容器**；
+  io 层扫描完成即 publish，UI 层从同一变量读。数据全动态，无固定槽；
+- **native 标量变量 3 个**：`scan_state` / `ap_gen`（内容代数）/ `scan_status`；
+- **滚动已验证**：`WIFI_SCROLLTEST=1` 无头拖拽（注入真实 SDL 事件），
+  3/3 次 `scroll_y 0→165+` PASS；
 - **截图钩子**：`WIFI_AUTOSCAN=1 WIFI_SHOT=1 WIFI_AUTOEXIT=1` 无头跑完自动退出。
+
+> 演进：v1「容器+10 固定槽」废弃（hit_test 要求 CLICKABLE，P-0166）；
+> v2 改 List 控件；v3 把数据源从 io 层私有数组换成 **Flow 数组变量 aps[]**
+> （native 直接操作的容器，P-0167）。EEZ 里不会按数组长度自动建控件——
+> 渲染仍由 C 的 `lv_list_add_button` 循环完成（数据动态 + 渲染映射的分层）。
 
 ### 待做（按顺序）
 

@@ -1,6 +1,9 @@
 {
   "navigation": {
     "selectedUserPageObject": "[app-wifi-connect2.eez-project]:/userPages/0",
+    "selectedActionObject": "[app-wifi-connect2.eez-project]:/actions/0",
+    "selectedGlobalVariableObject": "[app-wifi-connect2.eez-project]:/variables/globalVariables/0",
+    "selectedFontObject": "[app-wifi-connect2.eez-project]:/fonts/0",
     "subnavigationSelectedItems": {
       "variables-tab/sub-navigation/selected-item": "Global"
     }
@@ -23,6 +26,7 @@
           },
           {
             "type": "border",
+            "selected": 1,
             "size": 240,
             "location": "right",
             "children": [
@@ -79,6 +83,7 @@
           {
             "type": "border",
             "selected": 0,
+            "size": 72.5,
             "location": "bottom",
             "children": [
               {
@@ -198,9 +203,21 @@
               "type": "tabset",
               "id": "EDITORS",
               "weight": 65,
+              "selected": 1,
               "enableDeleteWhenEmpty": false,
               "enableClose": false,
               "children": [
+                {
+                  "type": "tab",
+                  "id": "#b60b5f44-e6ff-420c-92d8-fa17ca3f2c26",
+                  "name": "scan_start",
+                  "component": "editor",
+                  "config": {
+                    "objectPath": "[app-wifi-connect2.eez-project]:/actions/0",
+                    "permanent": false
+                  },
+                  "icon": "material:code"
+                },
                 {
                   "type": "tab",
                   "id": "#2d0a8491-2446-459f-9f7a-c521d98620ad",
@@ -1063,9 +1080,13 @@
       "selectionFront": {},
       "selectionBack": {
         "0": {
-          "3": {
+          "1": {
             "$selected": true
-          }
+          },
+          "2": {
+            "0": {}
+          },
+          "3": {}
         }
       },
       "transform": {
@@ -1097,6 +1118,16 @@
         "position": 0,
         "secondToPx": 200,
         "scrollLeft": 0
+      }
+    },
+    "[app-wifi-connect2.eez-project]:/actions/0[flow-state]": {
+      "selection": {},
+      "transform": {
+        "translate": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": 1
       }
     }
   },

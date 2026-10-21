@@ -20,8 +20,8 @@ enum FlowGlobalVariables {
 
 extern int32_t get_var_scan_state();
 extern void set_var_scan_state(int32_t value);
-extern int32_t get_var_ap_count();
-extern void set_var_ap_count(int32_t value);
+extern int32_t get_var_ap_gen();
+extern void set_var_ap_gen(int32_t value);
 extern const char *get_var_scan_status();
 extern void set_var_scan_status(const char *value);
 

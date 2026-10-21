@@ -35,6 +35,7 @@
 """
 import json
 import os
+import sys
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -78,13 +79,20 @@ _RAW_CHARS = (gb2312_charset()
 
 def _filter_by_font_cmap(chars, ttf_path):
     """按 TTF cmap 过滤：lvglRanges 里任何"字体没有的字"都会让 EEZ
-    提取报 extraction failed（如 U+30FB 间隔号 simhei 没有）。"""
+    提取报 extraction failed（如 U+30FB 间隔号 simhei 没有）。
+
+    ★ 硬失败而非静默降级：fontTools 缺失时**直接退出**，绝不把
+    未过滤字符集写进工程——否则漏进去的缺字形字符会让 EEZ GUI
+    字体提取必报 extraction failed（P-0169 反复踩的根因）。"""
     try:
         from fontTools.ttLib import TTFont
     except ImportError:
-        print("WARN: fontTools 不可用，字符集未按字体过滤——"
-              "EEZ GUI 字体提取可能报 extraction failed")
-        return chars
+        sys.stderr.write(
+            "FATAL: fontTools 未安装，无法按字体 cmap 过滤字符集。\n"
+            "        请先执行：`python -m pip install fontTools`\n"
+            "        未过滤的字符集会包含字体没有的字形（如 U+30FB ·），\n"
+            "        导致 EEZ Studio 字体提取报 extraction failed。\n")
+        sys.exit(2)
     f = TTFont(ttf_path, lazy=True)
     cmap = set(f.getBestCmap().keys())
     f.close()
@@ -110,6 +118,10 @@ DEFAULT_FLAGS = {
     "LVGLContainerWidget": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SNAPPABLE",
     "LVGLTextareaWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
     "LVGLKeyboardWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+    # EEZ classInfo defaultFlags（lv_list 原生：CLICKABLE + SCROLLABLE + 全套 CHAIN
+    # ——子项是 lv_button，滚动链路天然通；实测容器+自建行因 hit_test 要求
+    # CLICKABLE 而全线失效，故改用 List 控件）
+    "LVGLListWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
 }
 
 # 容器类默认不可滚动；需要滚动的显式传 flags
@@ -214,7 +226,10 @@ def row_slot(i):
     return widget(
         "LVGLContainerWidget", 0, y, LIST_W, ROW_H,
         identifier="row_%d" % (i + 1),
-        flags="",                      # 行不滚动、不点击（纯展示）
+        # ★ SCROLL_CHAIN_VER 必填：indev 从按下的对象沿父链找 scrollable，
+        #   行本身不可滚 → 没有 CHAIN_VER 会 break，list_box 永远收不到
+        #   滚动（实测"滑不动"根因，lv_indev_scroll.c:325）
+        flags="SCROLL_CHAIN_VER",
         local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=ROW_BG,
                                         bg_opa=255, radius=10,
                                         border_width=1,
@@ -282,24 +297,33 @@ def build_project():
         button(400, 14, 64, 26, "刷 新", "scan_start", "btn_refresh"),
     ]
 
-    # ---------------- 列表（10 个固定槽 + 滚动容器）----------------
-    rows = [row_slot(i) for i in range(ROW_COUNT)]
+    # ---------------- 列表：EEZ List (LVGL) 控件 ----------------
+    # lv_list 原生可滚动（SCROLLABLE + 全套 CHAIN + 子项 lv_button 带
+    # CLICKABLE）；行由 C 侧 wifi_ui_sync.cpp 用 lv_list_add_text/add_button
+    # 按 ap_cnt 动态填充——EEZ 只画这一个空 List。
     list_box = widget(
-        "LVGLContainerWidget", LIST_X, LIST_Y, LIST_W, LIST_H,
+        "LVGLListWidget", LIST_X, LIST_Y, LIST_W, LIST_H,
         identifier="list_box",
-        flags=SCROLL_FLAGS,             # 可滚动（行 pitch 50 × 10 = 500 > 242）
         local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=BG,
                                         bg_opa=0, radius=0)}},
-        children=rows,
+        flagScrollbarMode="AUTO",       # 内容超高时显示滚动条
     )
 
     screen_children = head + [list_box]
 
     gvs = [
         ("scan_state", "integer", "0"),      # 0 未扫 1 扫描中 2 完成
-        ("ap_count", "integer", "0"),        # 扫描到的网络数（可 >10）
+        ("ap_gen", "integer", "0"),          # 内容代数：publish +1，UI 据此重建
         ("scan_status", "string", "''"),     # C 侧写 lbl_status 的文案
     ]
+
+    # ---- Flow 全局变量：仅保留标量（状态/代数/文案），列表数据走 native 直接读 io ----
+    # 结构体数组 aps[] 已移除：EEZ LVGL 无法渲染动态数组列表（List 控件是 wip，Flow
+    # 运行时无建控件 API，经验库 P-0152/P-0165）。列表行由 native 用 wifi_ap_at() /
+    # wifi_ap_count() 直接读 io 接口绘制，数组变量不进 EEZ。标量变量（scan_state /
+    # ap_gen / scan_status）仍由 EEZ flow 持有，状态文案等可绑 EEZ 显示。
+    flow_vars = []
+    structures = []
 
     return {
         "themesVersion": 1, "objID": oid(),
@@ -350,12 +374,11 @@ def build_project():
         },
         "variables": {
             "objID": oid(),
-            "globalVariables": [
-                {"objID": oid(), "name": n, "type": t, "defaultValue": d,
-                 "persistent": False, "native": True}
-                for (n, t, d) in gvs
-            ],
-            "structures": [], "enums": [],
+            "globalVariables": (
+                [{"objID": oid(), "name": n, "type": t, "defaultValue": d,
+                  "persistent": False, "native": True}
+                 for (n, t, d) in gvs] + flow_vars),
+            "structures": structures, "enums": [],
         },
         "actions": [
             {"objID": oid(), "name": "scan_start",

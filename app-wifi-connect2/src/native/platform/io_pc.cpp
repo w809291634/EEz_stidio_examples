@@ -80,7 +80,9 @@ static void publish(void)
     else
         snprintf(buf, sizeof(buf), "未发现网络，请重新扫描");
 
-    app_set_input_i(APP_IN_AP_COUNT, s_cnt);   /* 先填数据 */
+    /* 数据保留在 s_aps（io 静态数组），UI 经 wifi_ap_at()/wifi_ap_count() 直接读；
+     * 不再经 Flow 数组变量（aps[] 已移出 EEZ）。 */
+    app_set_input_i(APP_IN_AP_GEN, s_gen);     /* 内容代数：UI 据此重建 */
     app_set_input_s(APP_IN_SCAN_STATUS, buf);
     app_set_input_i(APP_IN_SCAN_STATE, 2);     /* 最后置完成 */
     printf("[IO] scan done: %d APs (sorted by RSSI)\n", s_cnt);
@@ -90,7 +92,7 @@ void io_init(void)
 {
     s_scan_state = 0;
     app_set_input_i(APP_IN_SCAN_STATE, 0);
-    app_set_input_i(APP_IN_AP_COUNT, 0);
+    app_set_input_i(APP_IN_AP_GEN, 0);
     app_set_input_s(APP_IN_SCAN_STATUS, "点击刷新开始扫描");
     printf("[IO] io_init (pc fake wifi)\n");
 }

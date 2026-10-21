@@ -10,7 +10,8 @@
  * 数据通道（三条）：
  *   A 动作（一次性命令）    -> APP_OUT_*，动作函数体只投递
  *   C 输入变量（状态回显）  -> APP_IN_*，io_sample_inputs 发布
- *   扫描结果列表            -> 只活在 io 层（s_aps[]），由 wifi_ui_sync 填 10 个固定槽
+ *   扫描结果列表            -> io 接口 wifi_ap_at()/wifi_ap_count()（native 直接读，
+ *                               数组变量已移出 EEZ；标量状态仍走 EEZ native 变量）
  */
 #pragma once
 #include <stdint.h>
@@ -24,7 +25,7 @@ extern "C" {
 
 typedef enum {
     APP_IN_SCAN_STATE = 0,   /* int: 0 空闲 1 扫描中 2 完成 */
-    APP_IN_AP_COUNT,         /* int: 扫描到的网络总数（可 > 10） */
+    APP_IN_AP_GEN,           /* int: aps[] 内容代数（publish +1，UI 据此重建） */
     APP_IN_SCAN_STATUS,      /* string: 标题下状态文案 */
     APP_IN_COUNT
 } app_input_id_t;
