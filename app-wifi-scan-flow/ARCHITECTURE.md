@@ -1,25 +1,28 @@
 > **★ 修订 v4（2026-10-21 08:57）**：**数组变量移出 EEZ**（`ap_info`/`aps[]`/`ap_len` 已删，
-> `structs.h` 空壳，`ap_store` 桥删除）；标量 `scan_state`/`ap_gen`/`scan_status` 留 EEZ。
+> `structs.h` 空壳，`ap_store` 桥删除）；标量走 EEZ native 变量。
+> **★ 修订 v4 收口（2026-10-21）**：**EEZ 不再持有任何变量**——`scan_state`/`ap_gen`/`scan_status`
+> 的 native 变量桥（`native_vars.*`）删除，`gvs=[]`；状态由 native 经 `app_model` 契约直驱，EEZ 仅画外壳。
 > 列表数据由 native 直读 io 接口（`wifi_ap_at`/`wifi_ap_count`），§2 第 3 条、§3 扫描链路、§4/§6 相关行已同步。
 > **修订 v2（2026-10-20 21:25）**：列表改为 **可滚动容器 + C 侧按 `ap_cnt` 建行**；
 > §4「数组 16 条 / UI 固定 5 行」、§6 槽位对比表、§9 第 3 条（16→5 容量）**作废**。
 
-# WiFi 模板架构（v4 路线）：EEZ 画界面 + 标量状态，列表数据 native 直读 io
+# WiFi 模板架构（v4 收口）：EEZ 画界面（无变量），状态 native 直驱，列表数据 native 直读 io
 
 > 配套图：`design/mockups/mockup_17_flow_arch.svg`（v4）· `mockup_18_scan_to_ui.svg`（v4）
 > 相关文档：`FLOW_STRUCT_ROUTE.md`（v3 历史方案，已被 v4 取代）· `EEZ_CHECKLIST.md`（控件/变量）· `IMPLEMENTATION.md`（交互机制）
 
 ## 0. 一句话
 
-**界面与标量状态（`scan_state`/`ap_gen`/`scan_status`）活在 EEZ 工程里（约 85%），经 `cli_build` 生成源码；
-列表全量数据不进 Flow——native 直读 io 静态数组（`wifi_ap_at`/`wifi_ap_count`）自绘 List 行（约 15%），唯一真值源是 io 静态数组。**
+**界面活在 EEZ 工程里（约 85%），经 `cli_build` 生成源码；状态（扫描态/文案/代数）不进 EEZ——
+由 native 经 `app_model` 契约直驱、列表直读 io 静态数组（`wifi_ap_at`/`wifi_ap_count`/`wifi_ap_gen`）
+自绘 List 行（约 15%），唯一真值源是 io 静态数组。EEZ 不持有任何变量。**
 
 ## 1. 五层结构（图中 ①→⑤）
 
 | 层 | 内容 | 谁写 | 能否手改 |
 |---|---|---|---|
-| ① EEZ 工程 `.eez-project` | 页面 / 组件 / 控件树 / 标量变量（3 个）/ 绑定表达式 / 事件动作 / 样式字体 | **设计源**（`build_example.py` 生成） | 通过生成器改；GUI 手改会被覆盖 |
-| ② 生成源码 `src/ui/` | `screens.c`（控件树+绑定内联）· `vars.h`（标量枚举）· `actions.c`（事件入口）· `assets`（Flow 资源）；`structs.h` 空壳 | `cli_build` 产出 | **禁止手改**（会被覆盖） |
+| ① EEZ 工程 `.eez-project` | 页面 / 组件 / 控件树 / 绑定表达式 / 事件动作 / 样式字体（**无变量**） | **设计源**（`build_example.py` 生成） | 通过生成器改；GUI 手改会被覆盖 |
+| ② 生成源码 `src/ui/` | `screens.c`（控件树+绑定内联）· `vars.h`（空枚举，无变量）· `actions.c`（事件入口）· `assets`（Flow 资源）；`structs.h` 空壳 | `cli_build` 产出 | **禁止手改**（会被覆盖） |
 | ③ Flow 运行时 | `eez-flow.cpp`（**9,923 行，已生成进 src/ui**）+ `Value`/`ArrayValue` + `eez_flow_init` / `eez_flow_tick`（本工程未用 Struct 数组） | EEZ 生成（不是外部库） | 不改；已编进二进制 |
 | ④ native 层 | `io_iface.h`（契约）· `wifi_ui_sync.cpp`（native 直读 io 画列表，唯一画列表处）· `io_esp/io_win/io_pc`（三后端） | **人写** | 唯一允许业务改动的地方 |
 | ⑤ 硬件 | esp_wifi + NVS / Windows WLAN API / 假数据 | 平台 | — |
@@ -29,10 +32,10 @@
 1. **EEZ → 生成码**：`build_example.py` 是唯一设计源；`src/ui/` 是产物。要改 UI 一律改生成器。
 2. **生成码 → 运行时**：`assets` 二进制 + `eez_flow_init(assets,…)`（`ui.c:48`）+ 每帧 `eez_flow_tick()`。
    ★ 实测：本工程**已经在跑 Flow**——`eez-flow.h` 自带 `#define EEZ_FOR_LVGL 1`，`eez-flow.cpp` 9,923 行一起生成，
-   编出的 `main.exe` 里有 501 个 `eez::flow` 符号。所以不是"待迁移"，而是"已就位"（v4 起只承载标量状态）。
+   编出的 `main.exe` 里有 501 个 `eez::flow` 符号。所以不是"待迁移"，而是"已就位"（v4 起只承载界面渲染，不承载任何变量）。
 3. **native ↔ io 数组（v4，无桥）**：数组变量已移出 EEZ，**没有跨运行时桥**。
    native 直接读写 io 静态数组，UI 列表行由 `wifi_ui_sync.cpp` 按 `wifi_ap_count()` 循环
-   `lv_list_add_button` 自绘（EEZ List 控件 wip，P-0152）。EEZ 只持 3 个标量。
+   `lv_list_add_button` 自绘（EEZ List 控件 wip，P-0152）。EEZ 不持有任何变量。
    换后端（PC/ESP）时 `wifi_ui_sync.cpp` 与 EEZ 侧都不改。
 
 ## 3. 数据流（两条主链路）
@@ -40,9 +43,9 @@
 **扫描（v4：无桥，native 直读）**
 ```
 io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/平滑）
-   → 置 scan_state = 2（标量，最后一步；无 Flow 数组桥）
+   → 置 APP_IN_SCAN_STATE = 2（native 契约，最后一步；无 Flow 数组桥）
    → native wifi_ui_sync：lv_obj_clean + 按 wifi_ap_count() 循环 lv_list_add_button
-   → 行内信号条/副行/状态全部 native 自绘；EEZ 只持标量（连接中/空态文案）
+   → 行内信号条/副行/状态全部 native 自绘；EEZ 不持有变量（连接中/空态文案由 native 直写）
 ```
 
 **连接**
@@ -68,7 +71,7 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
 | `saved` | bool | 「已保存」胶囊 |
 | `connected` | bool | 「已连接」胶囊 + 绿色描边 |
 
-- **空列表判据**：`wifi_ap_count() == 0`（native 侧判据，驱动空态文案走 `scan_status` 标量）；
+- **空列表判据**：`wifi_ap_count() == 0`（native 侧判据，驱动空态文案走 `APP_IN_SCAN_STATUS` 契约）；
 - **行数不限**：列表行 native 动态建（`lv_list_add_button`），可滚动（v2 起）；
 - **派生量不上报**：格数、状态文字、显隐全部现算，避免两个真值源。
 
@@ -89,7 +92,7 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
 
 | 维度 | 说明 |
 |---|---|
-| EEZ 变量数 | **3 个标量**（`scan_state` / `ap_gen` / `scan_status`）；数组已移出 EEZ |
+| EEZ 变量数 | **0**（EEZ 不持有任何变量；状态经 `app_model` 契约由 native 直驱） |
 | 列表数据 | io 契约 7 字段（`wifi_ap_t`），native 直读，零拷贝进 Flow |
 | 行模板 | native 按 `wifi_ap_count()` 动态建行，行数不限、可滚动 |
 | 加字段 | `io_iface.h` 的 `wifi_ap_t` +1 字段，`build_row` 画它 |

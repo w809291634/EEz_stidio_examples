@@ -57,7 +57,7 @@ python design\cli_build.py        && rem EEZ CLI 构建（0 flow 错误才继续
   `aps: ap_info[]` + `ap_len`**——native 通过 `ap_store.cpp`
   （`makeArrayRef` + `setGlobalVariable`）**直接读写这个 C++ 容器**；
   io 层扫描完成即 publish，UI 层从同一变量读。数据全动态，无固定槽；
-- **native 标量变量 3 个**：`scan_state` / `ap_gen`（内容代数）/ `scan_status`；
+- **EEZ 不持有变量**：状态（扫描态/文案/内容代数）由 native 经 `app_model` 契约直驱，EEZ 仅画界面外壳与空 lv_list；
 - **滚动已验证**：`WIFI_SCROLLTEST=1` 无头拖拽（注入真实 SDL 事件），
   3/3 次 `scroll_y 0→165+` PASS；
 - **截图钩子**：`WIFI_AUTOSCAN=1 WIFI_SHOT=1 WIFI_AUTOEXIT=1` 无头跑完自动退出。
@@ -65,13 +65,15 @@ python design\cli_build.py        && rem EEZ CLI 构建（0 flow 错误才继续
 > 演进：v1「容器+10 固定槽」废弃（hit_test 要求 CLICKABLE，P-0166）；
 > v2 改 List 控件；v3 数据源换 Flow 数组变量 aps[]（P-0167）；
 > **v4（现行，2026-10-21）：数组变量移出 EEZ**（`ap_info`/`aps[]`/`ap_len` 与 `ap_store` 桥删除），
-> 列表数据由 native 直读 io 接口（`wifi_ap_at`/`wifi_ap_count`），EEZ 只持 3 个标量
-> （`scan_state`/`ap_gen`/`scan_status`）——单一真值源 = io 静态数组。
+> 列表数据由 native 直读 io 接口（`wifi_ap_at`/`wifi_ap_count`/`wifi_ap_gen`）。
+> **v4 收口（同日稍后）：EEZ 不再持有任何变量**——`scan_state`/`ap_gen`/`scan_status` 三层
+> native 变量桥（`native_vars.*`）删除，`gvs=[]`；状态改由 native 经 `app_model` 契约直驱，
+> EEZ 仅画静态外壳。单一真值源 = io 静态数组。
 > 架构图/回流图已同步 v4（`mockup_17` / `mockup_18`），详见 `ARCHITECTURE.md` §修订 v4。
 
 ### v4 改动（2026-10-21）
 
-- **EEZ 工程**：`structures=[]`、`flow_vars=[]`（数组与结构体删除）；`vars.h` 仅剩标量枚举、`structs.h` 空壳；
+- **EEZ 工程**：`gvs=[]`、`structures=[]`、`flow_vars=[]`（**无任何变量**）；`vars.h` 空枚举、`structs.h` 空壳；
 - **native**：`ap_store.{h,cpp}` 删除；`wifi_ui_sync.cpp` 直读 `wifi_ap_at()`/`wifi_ap_count()`；io_pc 不再 publish；
 - **验证**：重编 12/12 过；无头运行 `[UI] list rebuilt: 12 rows from io (gen=1, count=12)`；
   截图渲染与 v3 逐区域一致。

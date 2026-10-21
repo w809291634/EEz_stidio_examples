@@ -1,10 +1,10 @@
 {
   "themesVersion": 1,
-  "objID": "897338af-a819-4635-8687-421115dceae6",
+  "objID": "87af1fcf-0046-4da7-b993-851b82a7c93a",
   "settings": {
-    "objID": "0c20cd9d-9ac6-46de-8e46-8640c9816c34",
+    "objID": "a85e0024-ced6-457b-a442-f207ce3df290",
     "general": {
-      "objID": "57528189-ca3f-4bb8-9b34-fca9a5432ccf",
+      "objID": "874d2690-b612-47c0-b2cf-8f0bd479f631",
       "projectVersion": "v3",
       "projectType": "lvgl",
       "lvglVersion": "9.4.0",
@@ -26,10 +26,10 @@
       "cacheFonts": true
     },
     "build": {
-      "objID": "7e45666e-8766-43c7-a5ed-3d05d30d16cf",
+      "objID": "1f3b83f9-274c-454b-a94d-efeefcc5b5bb",
       "configurations": [
         {
-          "objID": "173ac6a9-8c43-4e04-8aaf-4d4269ef6307",
+          "objID": "2cb6c3db-8f84-4046-9873-ae0edb23b8c5",
           "name": "Default"
         }
       ],
@@ -47,62 +47,62 @@
       "expressionEvaluatorStackSize": 20,
       "files": [
         {
-          "objID": "4bf5deae-2e6c-4c9f-b3ad-45b910d76a11",
+          "objID": "239894a8-9a08-4cb1-804b-ebf20f843f38",
           "fileName": "screens.h",
           "template": "#ifndef EEZ_LVGL_UI_SCREENS_H\r\n#define EEZ_LVGL_UI_SCREENS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_SCREENS_DECL}\r\n//${eez-studio LVGL_SCREENS_DECL_EXT}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_SCREENS_H*/"
         },
         {
-          "objID": "8baebdd2-3da6-4001-a342-038083ece6d4",
+          "objID": "0dd3c928-dd41-4c59-936e-ce06db6fdb72",
           "fileName": "screens.c",
           "template": "#include <string.h>\n\n#include \"screens.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n#include \"actions.h\"\n#include \"vars.h\"\n#include \"styles.h\"\n#include \"ui.h\"\n\n//${eez-studio LVGL_SCREENS_DEF}\n//${eez-studio LVGL_SCREENS_DEF_EXT}"
         },
         {
-          "objID": "f3f69a4e-6a1a-4c0d-913d-bd4de9b92958",
+          "objID": "a0a36860-a4cf-46c8-8f09-2b70fa5c8423",
           "fileName": "actions.h",
           "template": "#ifndef EEZ_LVGL_UI_EVENTS_H\r\n#define EEZ_LVGL_UI_EVENTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_ACTIONS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_EVENTS_H*/"
         },
         {
-          "objID": "ff0a3374-c8b1-462a-b91f-eb67587427ec",
+          "objID": "1e6027f9-07ac-42a2-9015-1de0396ef906",
           "fileName": "vars.h",
           "template": "#ifndef EEZ_LVGL_UI_VARS_H\r\n#define EEZ_LVGL_UI_VARS_H\r\n\r\n#include <stdint.h>\r\n#include <stdbool.h>\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n// enum declarations\r\n\r\n//${eez-studio FLOW_ENUMS}\r\n\r\n// Flow global variables\r\n\r\n//${eez-studio FLOW_GLOBAL_VARIABLES_ENUM}\r\n\r\n// Native global variables\r\n\r\n//${eez-studio LVGL_VARS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_VARS_H*/"
         },
         {
-          "objID": "368ddff2-ead1-4a5f-8f25-6989e10a0b85",
+          "objID": "77cb77ef-12cc-40d4-b4c7-12136aa9b711",
           "fileName": "structs.h",
           "template": "#ifndef EEZ_LVGL_UI_STRUCTS_H\n#define EEZ_LVGL_UI_STRUCTS_H\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n\n#include <eez/flow/flow.h>\n#include <stdint.h>\n#include <stdbool.h>\n\n#include \"vars.h\"\n\nusing namespace eez;\n\n//${eez-studio FLOW_STRUCTS}\n\n//${eez-studio FLOW_STRUCT_VALUES}\n\n#endif\n\n#endif /*EEZ_LVGL_UI_STRUCTS_H*/\n"
         },
         {
-          "objID": "ea9c77ef-e9df-47f1-9970-1829d5f84f2b",
+          "objID": "47af6df2-fbb7-4e21-bc07-f02a28f1fe1c",
           "fileName": "images.h",
           "template": "#ifndef EEZ_LVGL_UI_IMAGES_H\r\n#define EEZ_LVGL_UI_IMAGES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_IMAGES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_IMAGES_H*/"
         },
         {
-          "objID": "6091b5cb-e2f3-437e-8d16-9503f772a2e8",
+          "objID": "6e6aa3b7-62f3-4ad1-8c70-245454d4d3b7",
           "fileName": "images.c",
           "template": "#include \"images.h\"\n\n//${eez-studio LVGL_IMAGES_DEF}"
         },
         {
-          "objID": "b15ce688-7af1-4238-9763-4d3a51370dcb",
+          "objID": "9ef5472c-b515-4c0f-bad9-d2e9058211c1",
           "fileName": "fonts.h",
           "template": "#ifndef EEZ_LVGL_UI_FONTS_H\r\n#define EEZ_LVGL_UI_FONTS_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_FONTS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_FONTS_H*/"
         },
         {
-          "objID": "0d9fc716-628e-4801-b114-58120089f0df",
+          "objID": "4ade161c-646f-4c09-91b8-f7dcfdbe47a6",
           "fileName": "styles.h",
           "template": "#ifndef EEZ_LVGL_UI_STYLES_H\r\n#define EEZ_LVGL_UI_STYLES_H\r\n\r\n//${eez-studio LVGL_INCLUDE}\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_STYLES_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_STYLES_H*/"
         },
         {
-          "objID": "90d95028-cfab-4c2b-8613-e2f85f3c017c",
+          "objID": "7e873071-d2b1-40b8-a409-363ed95551f5",
           "fileName": "styles.c",
           "template": "#include \"styles.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n\n//${eez-studio LVGL_STYLES_DEF}\n"
         },
         {
-          "objID": "e3ab166c-2755-4a8f-be6b-3e072b35ee9b",
+          "objID": "bc4dd9aa-6735-40d2-a8c4-6ceaf7c828b3",
           "fileName": "ui.h",
           "template": "#ifndef EEZ_LVGL_UI_GUI_H\n#define EEZ_LVGL_UI_GUI_H\n\n//${eez-studio LVGL_INCLUDE}\n\n//${eez-studio EEZ_FOR_LVGL_CHECK}\n\n#if defined(EEZ_FOR_LVGL)\n#include <eez/flow/lvgl_api.h>\n#endif\n\n#if !defined(EEZ_FOR_LVGL)\n#include \"screens.h\"\n#endif\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n//${eez-studio GUI_ASSETS_DECL}\n\nvoid ui_init();\nvoid ui_tick();\n\n#if !defined(EEZ_FOR_LVGL)\nvoid loadScreen(enum ScreensEnum screenId);\n#endif\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif // EEZ_LVGL_UI_GUI_H"
         },
         {
-          "objID": "c088483e-d69d-4608-b15c-7a8a907f97f4",
+          "objID": "19febfaa-66e1-4579-aa51-6be954192844",
           "fileName": "ui.c",
           "template": "#if defined(EEZ_FOR_LVGL)\n#include <eez/core/vars.h>\n#endif\n\n#include \"ui.h\"\n#include \"screens.h\"\n#include \"images.h\"\n#include \"actions.h\"\n#include \"vars.h\"\n\n//${eez-studio GUI_ASSETS_DEF}\n\n//${eez-studio LVGL_NATIVE_VARS_TABLE_DEF}\n\n//${eez-studio LVGL_ACTIONS_ARRAY_DEF}\n\n#if defined(EEZ_FOR_LVGL)\n\nvoid ui_init() {\n    eez_flow_init(assets, sizeof(assets), (lv_obj_t **)&objects, sizeof(objects), images, sizeof(images), actions);\n}\n\nvoid ui_tick() {\n    eez_flow_tick();\n    tick_screen(g_currentScreen);\n}\n\n#else\n\nstatic int16_t currentScreen = -1;\n\nstatic lv_obj_t *getLvglObjectFromIndex(int32_t index) {\n    if (index == -1) {\n        return 0;\n    }\n    return ((lv_obj_t **)&objects)[index];\n}\n\nvoid loadScreen(enum ScreensEnum screenId) {\n    currentScreen = screenId - 1;\n    lv_obj_t *screen = getLvglObjectFromIndex(currentScreen);\n    lv_scr_load_anim(screen, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);\n}\n\nvoid ui_init() {\n    create_screens();\n//${eez-studio LVGL_LOAD_FIRST_SCREEN}\n}\n\nvoid ui_tick() {\n    tick_screen(currentScreen);\n}\n\n#endif\n"
         }
@@ -110,39 +110,14 @@
     }
   },
   "variables": {
-    "objID": "e3321ec4-3fd7-4525-bd3c-3136640fc87c",
-    "globalVariables": [
-      {
-        "objID": "16d0bf37-bbd3-42d2-af9b-d8b26eea66b1",
-        "name": "scan_state",
-        "type": "integer",
-        "defaultValue": "0",
-        "persistent": false,
-        "native": true
-      },
-      {
-        "objID": "71ce5eb3-3e9a-48c6-84d0-8206b2df55ac",
-        "name": "ap_gen",
-        "type": "integer",
-        "defaultValue": "0",
-        "persistent": false,
-        "native": true
-      },
-      {
-        "objID": "e86a681b-5fb9-47be-8429-38f7a8f9fe60",
-        "name": "scan_status",
-        "type": "string",
-        "defaultValue": "''",
-        "persistent": false,
-        "native": true
-      }
-    ],
+    "objID": "39351a61-17ed-4a4e-864b-435f2072af04",
+    "globalVariables": [],
     "structures": [],
     "enums": []
   },
   "actions": [
     {
-      "objID": "48cd157f-7650-4933-83ac-5b6c47eecb05",
+      "objID": "21680f5f-36ba-4234-9080-e775ae46a337",
       "name": "scan_start",
       "description": "wifi: scan_start",
       "implementationType": "native",
@@ -151,10 +126,10 @@
   ],
   "userPages": [
     {
-      "objID": "d8a0522a-e84c-42e3-a2ab-649974f8c344",
+      "objID": "d3e8e389-e067-42d3-b724-cbbe2e9cde57",
       "components": [
         {
-          "objID": "78e3186a-4250-4a50-b514-1ff4fcf24247",
+          "objID": "cd172224-1c28-48a6-9d56-91301b995113",
           "type": "LVGLScreenWidget",
           "left": 0,
           "top": 0,
@@ -163,7 +138,7 @@
           "customInputs": [],
           "customOutputs": [],
           "style": {
-            "objID": "7e05ccc4-3aeb-4105-8345-4ea2af0c9c45",
+            "objID": "71e8268a-5754-40d1-9a9d-4882f06c19b1",
             "useStyle": "default",
             "conditionalStyles": [],
             "childStyles": []
@@ -176,7 +151,7 @@
           "heightUnit": "px",
           "children": [
             {
-              "objID": "9187dc45-24de-4574-bd0f-44035ae296d1",
+              "objID": "fb399b3e-5f20-4de6-b9a4-583260a4117e",
               "type": "LVGLLabelWidget",
               "left": 16,
               "top": 14,
@@ -185,7 +160,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "8cee1331-0cf7-4def-8a0f-fb3cdfcef309",
+                "objID": "bd8874d2-11f2-40ca-b806-ded0ef7bb67d",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -206,7 +181,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "fb44ebe8-11ee-469f-bd30-11d448661ad8",
+                "objID": "706b0569-56ff-4d1b-802a-7216898a7c2b",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -233,7 +208,7 @@
               "useStaticText": true
             },
             {
-              "objID": "1b182520-f061-4a40-8925-f584950f142c",
+              "objID": "dbe5ad63-4c00-4b37-b1d3-404bde488811",
               "type": "LVGLLabelWidget",
               "left": 16,
               "top": 40,
@@ -242,7 +217,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "0da70bee-c913-40d3-96c4-2be6b3a05ae5",
+                "objID": "0c254f71-17da-4109-8f17-26578e70271e",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -263,7 +238,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "dc0ddf0c-5d0b-45d9-a76c-beba44dd0e7f",
+                "objID": "09f676bd-0521-414c-8ee6-56b18cdbf2c7",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -290,7 +265,7 @@
               "useStaticText": true
             },
             {
-              "objID": "dea01258-5a34-40cb-8502-5bb6175c7ce3",
+              "objID": "e865197e-915a-41ce-8240-ceb5a1e29817",
               "type": "LVGLButtonWidget",
               "left": 400,
               "top": 14,
@@ -299,7 +274,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "8ef47475-8e6a-42ce-a1d4-add5d691f64f",
+                "objID": "cdde5eb1-79a3-488f-baff-40207f4ca8c1",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -307,7 +282,7 @@
               "timeline": [],
               "eventHandlers": [
                 {
-                  "objID": "e8a9bddb-4052-4296-af6e-93261ae00fdb",
+                  "objID": "55debe54-c62a-450b-8784-a2996deb00b2",
                   "eventName": "CLICKED",
                   "handlerType": "action",
                   "action": "scan_start",
@@ -320,7 +295,7 @@
               "heightUnit": "px",
               "children": [
                 {
-                  "objID": "dfdda3ed-7fb2-45cc-ae16-a7f75eece6bd",
+                  "objID": "d45f1034-cae2-4e94-99e9-58d1f1f4095f",
                   "type": "LVGLLabelWidget",
                   "left": 0,
                   "top": 0,
@@ -334,7 +309,7 @@
                   "recolor": false,
                   "useStaticText": true,
                   "localStyles": {
-                    "objID": "c9bd6825-aeec-491c-abaa-ce349b679ae6",
+                    "objID": "5764cc87-a751-43ed-86db-f8c12c373476",
                     "definition": {
                       "MAIN": {
                         "DEFAULT": {
@@ -356,7 +331,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "a4cad116-d30c-4227-a569-3b1644eec1fc",
+                "objID": "254e4ecd-1e8a-44b2-8d50-24da2991cea4",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -379,7 +354,7 @@
               "identifier": "btn_refresh"
             },
             {
-              "objID": "49c14d52-f792-4783-a9f0-da17a7ae0e17",
+              "objID": "eb66e386-bb89-43af-9b48-0bf687bfc273",
               "type": "LVGLListWidget",
               "left": 16,
               "top": 64,
@@ -388,7 +363,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "14f49672-50b9-4d48-a5da-e7aaf1318eec",
+                "objID": "44a0ad2b-5d10-4cda-a8fd-8ebd6e6398e8",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -409,7 +384,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "35e78d39-f422-4a3d-af56-8b79e78f104b",
+                "objID": "323347c6-e0c5-407b-aa36-51cd54bbf80c",
                 "definition": {
                   "MAIN": {
                     "DEFAULT": {
@@ -441,7 +416,7 @@
           "disabledStateType": "literal",
           "states": "",
           "localStyles": {
-            "objID": "72839a10-3801-4b26-98d8-d468d51b30d7",
+            "objID": "0c836407-2e6b-41cb-95d0-a855c7513d4f",
             "definition": {
               "MAIN": {
                 "DEFAULT": {
@@ -479,22 +454,22 @@
   ],
   "userWidgets": [],
   "lvglStyles": {
-    "objID": "5256b543-07eb-4eec-985b-a5909d2c7c12",
+    "objID": "b995b330-d976-48f1-9b7e-c0691045aa07",
     "styles": [],
     "defaultStyles": {}
   },
   "lvglGroups": {
-    "objID": "50f127fe-e750-47a1-92c6-61567fa13e4d",
+    "objID": "16b5b55e-b737-43b5-a370-38512dd6fd06",
     "groups": []
   },
   "fonts": [
     {
-      "objID": "c2e82a22-0e5e-4ea4-9914-62fce24af65e",
+      "objID": "04e0042a-7963-4154-b65a-2fb77be3fa38",
       "name": "cn14",
       "description": "GB2312 符号区+一二级汉字 7445 字形 14px（标准字库子集）",
       "renderingEngine": "LVGL",
       "source": {
-        "objID": "7765cd44-67ac-48f3-8a9e-62467c2e2ee3",
+        "objID": "5b7e1842-41d1-4b2f-a6c8-53091ede3fa9",
         "filePath": "fonts/simhei.ttf",
         "size": 14
       },
@@ -507,7 +482,7 @@
       "lvglSymbols": "",
       "lvglAdditionalSources": [],
       "lvglGlyphs": {
-        "objID": "ee15f726-2ab6-4f71-9701-b41c793db9d4",
+        "objID": "6ecedb8d-1b1a-4a28-9dab-e4fa29a0aedc",
         "encodings": [
           {
             "from": 32,
@@ -15037,7 +15012,7 @@
   "colors": [],
   "themes": [
     {
-      "objID": "2111c4d7-9db5-459a-9316-0e3750b90abe",
+      "objID": "b83c4aaa-5e04-4c64-aec7-23f5c2f9e06f",
       "name": "Default",
       "colors": []
     }

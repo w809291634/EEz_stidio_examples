@@ -11,7 +11,7 @@
                    （P-0125：形态错 = 画布永远豆腐）
   4 字符集 ⊆ TTF   字符集必须被字体源 TTF 的 cmap 覆盖
                    （抓"extraction failed: doesn't have any characters in range"）
-  5 native_vars 桥 extern "C"（漏了 → C 侧链接 undefined reference）
+  5 EEZ 不持有 native 变量（gvs 为空；native_vars.* 已删，状态全走 app_model 契约）
   6 C 头注释提前闭合（注释里写 xxx_*/ 的 `*/` 序列）
   7 demo 无守卫退出（main.c 的 exit(0) 必须在 WIFI_AUTOEXIT 条件保护下）
 
@@ -155,7 +155,8 @@ try:
 except ImportError:
     print("SKIP: fontTools 不可用（检查 4 跳过）——请用 managed python")
 
-# ---------- 5 native_vars.h extern "C" ----------
+# ---------- 5 native_vars.h extern "C"（已弃用：native_vars.* 已删除，EEZ 工程 gvs 为空）----------
+# 若日后恢复 EEZ native 变量，再启用此检查；当前 native_vars.h 不存在，自动跳过。
 nv = os.path.join(ROOT, "src", "native", "native_vars.h")
 if os.path.exists(nv) and 'extern "C"' not in open(nv, encoding="utf-8").read():
     fail("native_vars.h 缺 extern \"C\"（C 侧链接必炸）")

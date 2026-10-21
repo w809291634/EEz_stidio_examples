@@ -47,9 +47,6 @@ const uint8_t assets[588] = {
 
 native_var_t native_vars[] = {
     { NATIVE_VAR_TYPE_NONE, 0, 0 },
-    { NATIVE_VAR_TYPE_INTEGER, get_var_scan_state, set_var_scan_state }, 
-    { NATIVE_VAR_TYPE_INTEGER, get_var_ap_gen, set_var_ap_gen }, 
-    { NATIVE_VAR_TYPE_STRING, get_var_scan_status, set_var_scan_status }, 
 };
 
 ActionExecFunc actions[] = {

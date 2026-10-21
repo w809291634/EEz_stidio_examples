@@ -10,7 +10,8 @@
  *   - 数据源直接读 io 接口 wifi_ap_at()/wifi_ap_count()（数组变量已移出 EEZ，
  *     不再经 Flow 数组 aps[]，避免 EEZ LVGL 无法渲染动态列表的限制 P-0152/P-0165）；
  *   - 状态文案/按钮文字也在这里写（避免 label 表达式被 codegen 编成空串）；
- *   - 标量状态（scan_state/ap_gen/scan_status）仍是 EEZ flow 持有的 native 变量。
+ *   - 标量状态（扫描态/文案）由本文件经 app_model 契约直驱，列表代数直读 io 的
+ *     wifi_ap_gen()；EEZ 不持有任何变量（native_vars.* 已删，v4 收口）。
  *
  * 为什么不用"容器 + 固定槽"（v1 已废弃）：
  *   lv_obj_hit_test() 第一行就要求 LV_OBJ_FLAG_CLICKABLE——自建行/容器
@@ -162,7 +163,7 @@ void wifi_ui_sync(void)
     if (!objects.list_box || !objects.lbl_status || !objects.btn_refresh)
         return;
 
-    int gen = (int)app_get_input_i(APP_IN_AP_GEN);   /* 内容代数（io 层 publish +1） */
+    int gen = wifi_ap_gen();   /* 内容代数（io 层 publish +1） */
     int state = (int)app_get_input_i(APP_IN_SCAN_STATE);
     int n = wifi_ap_count();                         /* io 层 AP 总数 */
 

@@ -72,7 +72,7 @@ set PY=C:\Users\yjt54\.workbuddy\binaries\python\envs\default\Scripts\python.exe
 | 错法 | 症状 | 正确写法 |
 |---|---|---|
 | 注释里出现 `xxx_*/yyy` | `extended character is not valid in an identifier` 一串错（坑 10） | 注释里避免 `*/` 序列 |
-| 头文件漏 `extern "C"` | C 侧 `undefined reference to get_var_*`（坑 11 / P-0020） | 声明全部包 `extern "C" { }` |
+| 头文件漏 `extern "C"` | C 侧 `undefined reference`（C/C++ 互操作，曾见于 `get_var_*`） | 声明全部包 `extern "C" { }` |
 | 平台层调 `lv_tick_get()` | 平台层离不开 LVGL，不可移植（坑 12） | 平台层用 `clock()` / 自己的 tick |
 | `printf("...\n")` 经 heredoc 写入 | 变成真换行，编译错 | 用 Write 工具写补丁脚本，别用 shell heredoc 传 `\n` |
 | 调试 `exit(0)` 忘了守卫 | "一点就退出"（坑 13） | `if (getenv("WIFI_AUTOEXIT")) exit(0);` |
@@ -82,7 +82,7 @@ set PY=C:\Users\yjt54\.workbuddy\binaries\python\envs\default\Scripts\python.exe
 | 现象 | 首疑 | 处置 |
 |---|---|---|
 | 编译 rc=1，**零输出** | gcc 不在 PATH（P-0013） | 把 mingw `bin` 加进 PATH 再跑 |
-| 链接缺 `get_var_*` | native 变量没注册 / 库顺序（P-0020） | 查 `native_vars[]` 表 + `extern "C"` |
+| 链接缺 native 符号 | native 符号未定义 / 库顺序（P-0020，曾见于 `get_var_*`；v4 收口后 EEZ 无 native 变量） | 查符号定义 + `extern "C"` |
 | CLI 挂住不返回 | EEZ 残留进程（坑 9） | `taskkill /F /IM "EEZ Studio.exe"` |
 
 ---

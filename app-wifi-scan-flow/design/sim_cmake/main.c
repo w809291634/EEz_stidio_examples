@@ -28,14 +28,12 @@
 #include "lv_sdl_window.h"   /* lv_sdl_window_get_window：真鼠标事件要拿 SDL_Window* 换 windowID */
 #include "ui.h"              /* EEZ 生成：ui_init / ui_tick（C 安全，不引入额外 C++ 头） */
 #include "screens.h"        /* objects_t：全局对象表（list_box 等） */
+#include "app_model.h"      /* native 契约：app_get_input_i / APP_IN_SCAN_STATE */
 
 extern void ui_init(void);
 extern void ui_tick(void);
 extern void user_io_init(void);   /* native：扫描状态机 + 契约状态初始化 */
 extern void user_io_tick(void);   /* native：每拍排空命令 + 推进扫描 + 同步列表 */
-
-extern int32_t get_var_scan_state(void);   /* native 变量桥（vars.h 声明） */
-extern int32_t get_var_ap_count(void);
 
 /* 自证渲染：lv_snapshot 从 LVGL 内部抓整屏（系统截图抓不到内容） */
 #include "src/others/snapshot/lv_snapshot.h"
@@ -79,7 +77,7 @@ static void headless_hooks(void)
         printf("[HOOK] autoscan fired\n");
     }
     if (getenv("WIFI_SHOT") && scanned && !shot &&
-            get_var_scan_state() == 2) {
+            app_get_input_i(APP_IN_SCAN_STATE) == 2) {
         take_shot("shot_fake.bmp");
         shot = 1;
         if (getenv("WIFI_AUTOEXIT")) exit(0);
@@ -169,7 +167,7 @@ static void scroll_test_hooks(void)
 {
     static int done = 0, wait = 0;
     if (!getenv("WIFI_SCROLLTEST") || done) return;
-    if (get_var_scan_state() != 2) { wait = 0; return; }
+    if (app_get_input_i(APP_IN_SCAN_STATE) != 2) { wait = 0; return; }
     /* user_io_tick() 在本函数之前调用：scan done 的同拍已填好列表，
      * 所以 scan_state==2 第一帧即可测（截图钩子会同帧 exit，不能等） */
     if (++wait < 1) return;

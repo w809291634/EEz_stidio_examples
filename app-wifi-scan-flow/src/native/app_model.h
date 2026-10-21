@@ -2,16 +2,16 @@
  * app_model.h — WiFi 扫描契约头（app-wifi-scan-flow）
  *
  * 职责分界：
- *   UI（EEZ 生成码）只认变量名 + 动作名；
- *   native_vars.cpp 的 get_var_* 从本契约读状态；
+ *   UI（EEZ 生成码）只认对象名 + 动作名，不持有变量；
+ *   wifi_ui_sync.cpp 每帧经本契约读状态、直写 LVGL 对象；
  *   native_actions.cpp 的 action_* 只投递命令；
  *   platform/io_*.cpp 只认 io_* 端口函数。
  *
- * 数据通道（三条）：
- *   A 动作（一次性命令）    -> APP_OUT_*，动作函数体只投递
- *   C 输入变量（状态回显）  -> APP_IN_*，io_sample_inputs 发布
- *   扫描结果列表            -> io 接口 wifi_ap_at()/wifi_ap_count()（native 直接读，
- *                               数组变量已移出 EEZ；标量状态仍走 EEZ native 变量）
+ * 数据通道：
+ *   A 动作（一次性命令）  -> APP_OUT_*，动作函数体只投递
+ *   C 输入（状态回显）    -> APP_IN_*，io_sample_inputs 发布（扫描态/文案）
+ *   扫描结果列表          -> io 接口 wifi_ap_at()/wifi_ap_count()/wifi_ap_gen()
+ *                            native 直接读，数组变量不进 EEZ
  */
 #pragma once
 #include <stdint.h>
@@ -25,7 +25,6 @@ extern "C" {
 
 typedef enum {
     APP_IN_SCAN_STATE = 0,   /* int: 0 空闲 1 扫描中 2 完成 */
-    APP_IN_AP_GEN,           /* int: aps[] 内容代数（publish +1，UI 据此重建） */
     APP_IN_SCAN_STATUS,      /* string: 标题下状态文案 */
     APP_IN_COUNT
 } app_input_id_t;
@@ -42,10 +41,8 @@ typedef union {
 
 /* ---- inputs ---- */
 void app_set_input_i(app_input_id_t id, int32_t v);
-void app_set_input_b(app_input_id_t id, bool v);
 void app_set_input_s(app_input_id_t id, const char *v);
 int32_t     app_get_input_i(app_input_id_t id);
-bool        app_get_input_b(app_input_id_t id);
 const char *app_get_input_s(app_input_id_t id);
 
 /* ---- outputs ---- */

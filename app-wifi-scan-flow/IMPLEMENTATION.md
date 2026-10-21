@@ -167,6 +167,10 @@ UI 与 `app_model` 一行不改。
 这种写法，必须切到 **Flow 运行时**（`EEZ_FOR_LVGL`：assets 二进制 + `eez/flow` 库 +
 `eez_flow_init/eez_flow_tick`）。
 
+> **v4 收口（2026-10-21）**：本工程**最终未采用** Flow 运行时——EEZ 不持有任何变量，
+> `native_vars.*` 已删除，状态由 native 经 `app_model` 契约直驱、列表直读 io 接口。
+> 上段结论描述的是 EEZ 的**能力边界**（native 标量只有 int/bool/string），非本工程现状。
+
 ### 7.2 切 Flow 要付的代价
 
 | 代价 | 说明 |
@@ -186,6 +190,10 @@ EEZ 表达式**没有 null / 空数组判断**，无论走哪条路都得有一�
 - 结构体方案：`ap_len == 0`（数组本身不带 length 语义）
 
 ### 7.4 采用的方案：结构体留在 C 侧，EEZ 只收「投影」
+
+> **v4 收口（2026-10-21）：本节为 v1→v3 采用的「投影到 5 扁平槽位」方案，已被废弃。
+> 当前工程改为 native 直读 io 接口画列表，EEZ 不持有任何变量，`app_set_input_b` /
+> `APP_IN_AP_COUNT` / `APP_IN_REMEMBER` 均已删除。仅作机制演进参考。**
 
 ```c
 /* 契约层（C 侧，任意长度、可排序/去重/平滑） */

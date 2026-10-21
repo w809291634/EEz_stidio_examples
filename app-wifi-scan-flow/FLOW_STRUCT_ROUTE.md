@@ -123,8 +123,8 @@ void publish(const ap_t *list, int n)
 |---|---|---|
 | 1 | `PC_SIM` CMake 加 `EEZ_FOR_LVGL` 定义 + 引入 eez-flow/eez-core 源 | 首次编译量变大 |
 | 2 | 生成 assets 并嵌入（`eez_flow_init` 需要） | 构建流程多一步 |
-| 3 | `src/native/app_model` 的 `get_var_* / set_var_*` 桥 → Flow 变量 API | io 层全部改写 |
-| 4 | `native_vars.cpp` 基本作废（Flow 变量不走这张表） | 少一层，但工具链要重建 |
+| 3 | `src/native/app_model` 的 `get_var_* / set_var_*` 桥 → Flow 变量 API | io 层全部改写（**v4 收口已逆转**：EEZ 不再持有变量，此桥删除） |
+| 4 | `native_vars.cpp` **已删除**（v4 收口：EEZ 不持有任何变量，无 Flow 变量桥） | 少一层 |
 | 5 | `cli_build` 的 flow 守卫、`audit_chars`、`measure_ui`、check_project | 这些围绕"生成 C 代码"写，需重新验证 |
 | 6 | 半页/键盘行为接线（`ui_behavior.cpp` 里直接操作 `objects.*`） | Flow 模式下 `objects` 仍可用，但要确认初始化顺序 |
 

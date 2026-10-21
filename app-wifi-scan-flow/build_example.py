@@ -19,10 +19,8 @@
         lbl_meta_N   (44,24,250,16)  类型·dBm·频段 #8a99b3
         lbl_state_N  (310,14,120,16) 状态        #8a99b3
 
-  变量（native，C 侧 get_var_/set_var_ 桥）：
-    scan_state  int  0=未扫 1=扫描中 2=完成
-    ap_count    int  扫描到的网络数（真实总数，可 >10）
-    scan_status str  C 侧直接写 lbl_status 的文案
+  变量：本工程 EEZ 不持有任何变量——扫描态/文案由 native 经 app_model 契约直驱，
+        列表直接读 io 接口（wifi_ap_at/wifi_ap_count）；EEZ 仅提供静态外壳与行对象。
 
   动作（native，C 侧 action_scan_start(lv_event_t*)）：
     scan_start  刷新按钮 → io_scan_start()
@@ -311,17 +309,13 @@ def build_project():
 
     screen_children = head + [list_box]
 
-    gvs = [
-        ("scan_state", "integer", "0"),      # 0 未扫 1 扫描中 2 完成
-        ("ap_gen", "integer", "0"),          # 内容代数：publish +1，UI 据此重建
-        ("scan_status", "string", "''"),     # C 侧写 lbl_status 的文案
-    ]
+    gvs = []   # 本工程 EEZ 不持有任何变量：状态由 native 经 app_model 契约直驱
 
-    # ---- Flow 全局变量：仅保留标量（状态/代数/文案），列表数据走 native 直接读 io ----
-    # 结构体数组 aps[] 已移除：EEZ LVGL 无法渲染动态数组列表（List 控件是 wip，Flow
-    # 运行时无建控件 API，经验库 P-0152/P-0165）。列表行由 native 用 wifi_ap_at() /
-    # wifi_ap_count() 直接读 io 接口绘制，数组变量不进 EEZ。标量变量（scan_state /
-    # ap_gen / scan_status）仍由 EEZ flow 持有，状态文案等可绑 EEZ 显示。
+    # ---- 变量策略（v4 收口）----
+    # EEZ 不持有任何变量：标量状态（扫描态/文案/内容代数）由 native 经 app_model 契约
+    # 直驱、列表直接读 io 接口（wifi_ap_at/wifi_ap_count/wifi_ap_gen）。EEZ 只画静态
+    # 外壳与空 lv_list，所有动态显示逻辑在 src/native/wifi_ui_sync.cpp 每帧比对后直写
+    # LVGL——彻底无 Flow 变量桥（native_vars.* 已删）。
     flow_vars = []
     structures = []
 

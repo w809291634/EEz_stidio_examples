@@ -21,11 +21,6 @@ void app_set_input_i(app_input_id_t id, int32_t v)
     if ((int)id >= 0 && id < APP_IN_COUNT) g_in_i[id] = v;
 }
 
-void app_set_input_b(app_input_id_t id, bool v)
-{
-    if ((int)id >= 0 && id < APP_IN_COUNT) g_in_i[id] = v ? 1 : 0;
-}
-
 void app_set_input_s(app_input_id_t id, const char *v)
 {
     if ((int)id < 0 || id >= APP_IN_COUNT) return;
@@ -36,11 +31,6 @@ void app_set_input_s(app_input_id_t id, const char *v)
 int32_t app_get_input_i(app_input_id_t id)
 {
     return ((int)id >= 0 && id < APP_IN_COUNT) ? g_in_i[id] : 0;
-}
-
-bool app_get_input_b(app_input_id_t id)
-{
-    return ((int)id >= 0 && id < APP_IN_COUNT) ? (g_in_i[id] != 0) : false;
 }
 
 const char *app_get_input_s(app_input_id_t id)
