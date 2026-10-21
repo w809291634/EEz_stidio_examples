@@ -1,5 +1,11 @@
 # 实现映射：EEZ 里建什么 · 怎么和硬件交互
 
+> **⚠ 本目录是 `app-wifi-scan-flow` 的 no-flow 变体**（`flowSupport=false`）。本文继承母工程，
+> §7 已按双口径改写（Flow 版事实 / 本变体事实并列）。**通则**：本文凡写「变量表 / 表达式绑定 /
+> `get_var_*`·`set_var_*` / 结构体数组 / Flow 运行时」的能力，本变体**一概没有**——
+> EEZ 只出静态控件树，状态走 native `app_model` 契约 + `wifi_ui_sync` 直写控件。
+> 需要这些能力时回母工程形态（或把两个开关改回 `true`）。
+
 > 目标：UI 层**零硬件代码**，硬件只在 io 层；两边通过「变量表」单向传数据。
 > 对应设计：`DESIGN.md`（v4 列表式 + 连接页两种形态）、`design/mockups/`（12/13 解释图）。
 
@@ -148,19 +154,21 @@ UI 与 `app_model` 一行不改。
 > 但要换运行时（`EEZ_FOR_LVGL` + eez-flow + assets）。落地清单见 **`FLOW_STRUCT_ROUTE.md`**。
 >
 > **路线 B（本工程当前）**：EEZ 只有扁平标量，结构体留在 C 侧再投影。见下文 §7.4。
+> ★ **本变体连路线 A 的前提都没有**（无 Flow ⇒ 无 `Value`/`ArrayValue`/结构体数组），
+>   实际形态比 B 更彻底：**EEZ 零变量**，数据只在 io 静态数组，`wifi_ui_sync` 直读直画。
 >
 > 下面 §7.1 / §7.2 是「为什么默认走 B」的证据与代价，仍然有效。
 
-### 7.1 事实核查（2026-10-20，EEZ Studio 0.29 + 本工程）
+### 7.1 事实核查（母工程 2026-10-20 · 本变体 2026-10-21 复测）
 
 | 证据 | 结论 |
 |---|---|
-| 工程 JSON：`variables.structures` 字段存在（当前为空） | EEZ **有**结构体/数组类型 |
-| `settings.general.flowSupport = true` | 本工程**已开启** Flow 支持 |
-| 生成模板 `structs.h`：`#if defined(EEZ_FOR_LVGL)` + `#include <eez/flow/flow.h>` + `${FLOW_STRUCTS}` / `${FLOW_STRUCT_VALUES}` | 结构体声明**只生成在 `EEZ_FOR_LVGL` 分支** |
-| 实测 `src/ui/ui.c`：`ui_init()` 直接 `eez_flow_init(assets,…)`，`ui_tick()` 调 `eez_flow_tick()` | 本工程**已在 Flow 运行时**（非待迁移） |
-| 本工程 PC 仿真走 `tick_screen(g_currentScreen)`（`!EEZ_FOR_LVGL`） | 我们**不在** Flow 运行时里 |
-| `reference/02_styles_fonts_vars.md` §P8.2.2 / §P8.2.5 | 「结构体/数组只能用于**启用了 EEZ Flow** 的项目」 |
+| 工程 JSON：`variables.structures` 字段存在（当前为空） | EEZ **有**结构体/数组类型（两变体同：字段在、值为空） |
+| `settings.general.flowSupport` | **Flow 版 = `true`（已开启）；本变体 = `false`（关掉）** —— 同一个开关决定下面三行的真假 |
+| 生成模板 `structs.h`：`#if defined(EEZ_FOR_LVGL)` + `#include <eez/flow/flow.h>` + `${FLOW_STRUCTS}` / `${FLOW_STRUCT_VALUES}` | 结构体声明**只生成在 `EEZ_FOR_LVGL` 分支**（两变体的模板都留着这两分支，本变体走 `#else`） |
+| 实测 `src/ui/ui.c`：`ui_init()` 直接 `eez_flow_init(assets,…)`，`ui_tick()` 调 `eez_flow_tick()` | **Flow 版事实**（`ui.c:57`/`:61`，`assets[588]` 在 `:8`） |
+| 「本工程 PC 仿真走 `tick_screen(g_currentScreen)`，所以我们**不在** Flow 运行时里」 | **错，两变体都别抄这句**：`g_currentScreen` 是 `EEZ_FOR_LVGL` 分支里的东西，`ui_init()` 已调 `eez_flow_init`。<br>**本变体事实**：`ui_init() = create_screens() + loadScreen()`，`ui_tick() = tick_screen(currentScreen)`，走的是模板 `#else` 分支，且 `src/ui/` 无 `eez-flow.cpp/h` |
+| `reference/02_styles_fonts_vars.md` §P8.2.2 / §P8.2.5 | 「结构体/数组只能用于**启用了 EEZ Flow** 的项目」——本变体因此**永远拿不到** `aps[i].ssid` 这类写法 |
 
 **结论**：在「生成 C 代码 + `get_var_*`/`set_var_*` 桥接」这条路上，EEZ 只有
 `int / bool / string` 三种 native 标量，**没有结构体和数组**。要用 `aps[i].ssid`
@@ -175,7 +183,7 @@ UI 与 `app_model` 一行不改。
 
 | 代价 | 说明 |
 |---|---|
-| 换执行模型 | ~~`create_screens()` → `eez_flow_init`~~ **已就位**；本次改动只是往 assets 里加结构体/变量，不改执行模型 |
+| 换执行模型 | **Flow 版：已就位**（`ui_init()` 就是 `eez_flow_init`）；**本变体：反着来**——执行模型已经退回纯 LVGL（`create_screens()`），要用 Flow 得把 `flowSupport`/`generateSourceCodeForEezFramework` 改回 `true` 并重新出码 |
 | 换变量桥 | C 侧不能再用 `set_var_*`，要走 Flow 全局变量 API；`io_*` 全部要改 |
 | 多一份运行时依赖 | 链接 `eez/flow`；PC_SIM 的 CMake 要额外集成（当前只链 lvgl + 源码） |
 | 工具链打回原形 | `cli_build` 的 flow 守卫、`audit_chars`、`measure_ui`、check_project 全部围绕「生成 C 代码」建立 |

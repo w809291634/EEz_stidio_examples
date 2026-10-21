@@ -596,6 +596,114 @@ def sc_flow_arch(s):
     s.text(605, 870, "native 15%", 8.2, "#0B0F1A", anchor="middle", weight="500")
 
 
+def sc_noflow_arch(s):
+    """no-flow 变体架构图：EEZ 只画静态外壳，执行模型回到纯 LVGL，没有 Flow 这一层。"""
+    s.text(28, 38, "no-flow 架构：代码在哪、边界在哪", 20, T1, weight="500")
+    s.text(28, 64, "flowSupport=false ⇒ EEZ 只出静态控件树；执行模型回到纯 LVGL，动态逻辑全在 native",
+           12.5, T2)
+    s.path("M28 78 H652", stroke=LINE, sw=0.6)
+
+    def band(y, h, no, title, note=""):
+        s.rect(24, y, 632, h, "#0D1420", rx=10, stroke=LINE, sw=0.6)
+        s.text(36, y + 20, no, 9, T3)
+        s.text(58, y + 20, title, 10.5, T1, weight="500")
+        if note:
+            s.text(644, y + 20, note, 8.5, T3, anchor="end")
+
+    def card(x, y, w, h, title, lines, edge=LINE, tcol=T1):
+        s.rect(x, y, w, h, "#101A28", rx=8, stroke=edge, sw=0.6)
+        s.text(x + 10, y + 18, title, 9.5, tcol, weight="500")
+        for i, ln in enumerate(lines):
+            s.text(x + 10, y + 36 + i * 15, ln, 8.5, T2)
+
+    # ---------- ① EEZ 工程（无 Flow） ----------
+    band(88, 130, "①", "EEZ 工程 .eez-project（唯一设计源）", "flowSupport=false")
+    cw, gap = 144, 12          # 36 + 3×156 + 144 = 648 ≤ 带右缘 656（母工程同排是 658，越界 2px）
+    cards = [
+        ("页面 / 控件树", ["main 单屏 480×320", "标题 + 状态行 + 刷新", "list_box（空 lv_list）"], PRI),
+        ("变量：无", ["gvs = []", "structures = []", "vars.h 是空枚举"], FAIL),
+        ("动作：1 个 native", ["scan_start", "implementationType", "= native（非 flow）"], PRI),
+        ("样式 / 字体", ["主题令牌内联", "cn14 · GB2312", "行样式由 native 复用"], LINE),
+    ]
+    for i, (t, ls, e) in enumerate(cards):
+        card(36 + i * (cw + gap), 112, cw, 88, t, ls, e)
+    s.text(36, 210, "★ 与母工程唯一差异：build_example.py 里 flowSupport / generateSourceCodeForEezFramework = False",
+           8.5, PRI_TXT)
+
+    # 箭头
+    s.path("M340 218 V230", stroke=PRI_TXT, sw=1.3)
+    s.path("M335.5 225 l4.5 7 4.5 -7", stroke=PRI_TXT, sw=1.3)
+    s.text(354, 230, "cli_build", 8.5, PRI_TXT)
+
+    # ---------- ② 生成源码 ----------
+    band(236, 112, "②", "生成源码 src/ui/（12 个模板文件 · 勿手改）", "无 eez-flow.cpp/h")
+    chips = [
+        ("screens.c", ["控件树 + 样式", "★ 直挂动作回调"]),
+        ("actions.h", ["extern void", "action_scan_start"]),
+        ("vars.h", ["空枚举", "（无 Flow 全局变量）"]),
+        ("ui.c", ["create_screens()", "+ loadScreen()"]),
+        ("structs.h", ["空壳", "（无 Value 容器）"]),
+    ]
+    chw = (608 - 4 * 8) / 5.0
+    for i, (n, ls) in enumerate(chips):
+        x = 36 + i * (chw + 8)
+        s.rect(x, 266, chw, 62, "#101A28", rx=7, stroke="#2A3550", sw=0.6)
+        s.text(x + 9, 283, n, 9.5, PRI_TXT, weight="500")
+        s.text(x + 9, 301, ls[0], 8.2, T2)
+        s.text(x + 9, 315, ls[1], 8.2, T3)
+    s.text(36, 342, "★ 红线：src/ui/ 由 EEZ 覆盖生成；改动只发生在 native/ 与 build_example.py",
+           8.5, T3)
+
+    # ---------- ③ 没有 Flow 这一层（对照） ----------
+    band(360, 124, "③", "执行模型：Flow 版 ↔ 本变体", "同一条结论两种真假")
+    bw = (608 - 10) / 2.0
+    card(36, 392, bw, 74, "Flow 版（母工程）",
+         ["ui_init → eez_flow_init(assets[588])", "ui_tick → eez_flow_tick + tick_screen",
+          "事件经 flowState 中转 · 二进制 501 符号"], LINE, T1)
+    card(36 + bw + 10, 392, bw, 74, "本变体（no-flow）",
+         ["ui_init → create_screens + loadScreen", "ui_tick → tick_screen(currentScreen)",
+          "lv_obj_add_event_cb 直连 · 二进制 0 符号"], SUC, SUC)
+    s.text(36, 476, "→ 摘掉的是运行时，不是功能：表达式绑定 / flow 组件 / SetVariable 才是 Flow 的收益",
+           8.5, PRI_TXT)
+
+    # ---------- ④ native ----------
+    band(496, 152, "④", "native 层（动态逻辑全在此 · 与母工程逐字节相同）", "零 Flow 引用")
+    nw = (608 - 20) / 3.0
+    nb = [
+        ("io_iface.h", ["契约面：wifi_ap_t 7 字段", "纯头文件，零实现"], LINE),
+        ("wifi_ui_sync.cpp", ["native 直读 wifi_ap_at", "★ 唯一画列表处"], SUC),
+        ("io_pc.cpp", ["假数据 + RSSI 排序", "io_win / io_esp 未落地"], LINE),
+    ]
+    for i, (t, ls, e) in enumerate(nb):
+        card(36 + i * (nw + 10), 528, nw, 62, t, ls, e)
+    s.rect(36, 598, 608, 26, "#16203A", rx=6, stroke=LINE, sw=0.5)
+    s.text(48, 615, "另有 app_model.{h,cpp}（命令环 + 契约状态）· native_actions.cpp（action_scan_start → 投递命令）",
+           8.8, T2)
+    s.text(36, 640, "扫描态/文案/列表行都由 native 每拍比对后直写 LVGL 控件（objects.*）", 8.5, T3)
+
+    # ---------- ⑤ 账单 ----------
+    band(664, 122, "⑤", "摘掉 Flow 的账单（实测 2026-10-21）", "可复现")
+    gw = (608 - 20) / 3.0
+    gb = [
+        ("生成码（不含字体）", ["548,573 B → 13,950 B", "少 eez-flow.cpp 9,923 行", "+ eez-flow.h 4,384 行"], PRI_TXT),
+        ("二进制符号", ["eez::flow：501 → 0", "nm main.exe | grep -i eez", "仅误命中 focus_freeze"], SUC),
+        ("门禁（反向判据）", ["eez-flow.* 出现 = FAIL", "preflight.check_no_flow", "动作断链同样 FAIL"], "#F0D48F"),
+    ]
+    for i, (t, ls, c) in enumerate(gb):
+        x = 36 + i * (gw + 10)
+        s.rect(x, 694, gw, 74, "#101A28", rx=8, stroke=LINE, sw=0.6)
+        s.text(x + 10, 712, t, 9.5, c, weight="500")
+        for j, ln in enumerate(ls):
+            s.text(x + 10, 732 + j * 15, ln, 8.5, T2)
+
+    # ---------- 占比条 ----------
+    s.text(28, 802, "实现量分布", 8.5, T3)
+    s.rect(28, 810, 430, 16, PRI, rx=4)
+    s.rect(458, 810, 194, 16, FAIL, rx=4)
+    s.text(243, 822, "EEZ 静态外壳（画界面）", 8.8, "#0B0F1A", anchor="middle", weight="500")
+    s.text(555, 822, "native 全部动态逻辑", 8.2, "#0B0F1A", anchor="middle", weight="500")
+
+
 def sc_scan_to_ui(s):
     """点击刷新后，硬件数据如何回流到 UI：9 步 + 归属标签。"""
     s.text(28, 38, "点「刷新」之后：硬件数据怎么回到 UI", 20, T1, weight="500")
@@ -832,6 +940,12 @@ if __name__ == "__main__":
     p = build_wide("mockup_17_flow_arch.svg", "架构图 · v4 路线（EEZ 画界面+标量状态，列表数据 native 直读 io）",
                    "五层：EEZ 工程 → 生成源码 → Flow 运行时 → native 薄层 → 硬件；含占比与三条目标保障",
                    884, sc_flow_arch)
+    total += os.path.getsize(p)
+    print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
+    p = build_wide("mockup_20_noflow_arch.svg",
+                   "架构图 · no-flow 变体（EEZ 静态外壳 + native 全动态，无 Flow 运行时）",
+                   "五层：EEZ 工程(flowSupport=false) → 生成源码(无 eez-flow) → 执行模型对照 → native 层 → 账单",
+                   836, sc_noflow_arch)
     total += os.path.getsize(p)
     print("written:", os.path.basename(p), os.path.getsize(p), "bytes")
     p = build_wide("mockup_15_subcontainer_sheet.svg", "方案图 · 子容器列表 + 半页连接",

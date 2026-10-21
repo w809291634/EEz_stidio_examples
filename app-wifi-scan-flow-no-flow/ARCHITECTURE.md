@@ -1,8 +1,10 @@
 > **⚠ 本目录是 `app-wifi-scan-flow` 的 no-flow 变体**（`flowSupport=false` +
-> `generateSourceCodeForEezFramework=false`）。本文从母工程原样继承，其中
-> **§1 表的第 ③ 行「Flow 运行时」与 §2 第 2 条「本工程已经在跑 Flow」对本目录不成立**：
-> 这里不发射 `eez-flow.cpp/h`、`ui.c` 无 `assets[]`/`eez_flow_init`，二进制 `eez::flow` 符号 0 个。
-> 其余各节（五层划分、native↔io 边界、列表链路、稳定性机制）两工程共用。实测与账单见 `README.md`。
+> `generateSourceCodeForEezFramework=false`）。本文从母工程继承，已按**双口径**就地改写：
+> 同一处并列「Flow 版」与「本变体（no-flow）」两条事实，别只读半句。
+> 已改：§1 ②③（②′/③′ 是 Flow 版）、§2 第 2 条、§3 连接链路、§7 目录与自证判据、§8 全表、§9 表前口径说明。
+> **本变体一句话事实**：不发射 `eez-flow.cpp/h`、`ui.c` 无 `assets[]`/`eez_flow_init`/`eez_flow_tick`、
+> 二进制 `eez::flow` 符号 **0 个**（Flow 版 501 个），但 native 动作仍由生成码直挂
+> （`screens.c:91`）。实测与账单见 `README.md`。
 
 > **★ 修订 v4（2026-10-21 08:57）**：**数组变量移出 EEZ**（`ap_info`/`aps[]`/`ap_len` 已删，
 > `structs.h` 空壳，`ap_store` 桥删除）；标量走 EEZ native 变量。
@@ -14,7 +16,8 @@
 
 # WiFi 模板架构（v4 收口）：EEZ 画界面（无变量），状态 native 直驱，列表数据 native 直读 io
 
-> 配套图：`design/mockups/mockup_17_flow_arch.svg`（v4）· `mockup_18_scan_to_ui.svg`（v4）
+> 配套图：**`design/mockups/mockup_20_noflow_arch.svg`（本变体，重生成：`python design/mockup_gen.py`）**
+> · `mockup_17_flow_arch.svg`（v4 母工程 Flow 形态，继承）· `mockup_18_scan_to_ui.svg`（v4）
 > 相关文档：`FLOW_STRUCT_ROUTE.md`（v3 历史方案，已被 v4 取代）· `EEZ_CHECKLIST.md`（控件/变量）· `IMPLEMENTATION.md`（交互机制）
 
 ## 0. 一句话
@@ -28,17 +31,24 @@
 | 层 | 内容 | 谁写 | 能否手改 |
 |---|---|---|---|
 | ① EEZ 工程 `.eez-project` | 页面 / 组件 / 控件树 / 绑定表达式 / 事件动作 / 样式字体（**无变量**） | **设计源**（`build_example.py` 生成） | 通过生成器改；GUI 手改会被覆盖 |
-| ② 生成源码 `src/ui/` | `screens.c`（控件树+绑定内联）· `vars.h`（空枚举，无变量）· `actions.c`（事件入口）· `assets`（Flow 资源）；`structs.h` 空壳 | `cli_build` 产出 | **禁止手改**（会被覆盖） |
-| ③ Flow 运行时 | `eez-flow.cpp`（**9,923 行，已生成进 src/ui**）+ `Value`/`ArrayValue` + `eez_flow_init` / `eez_flow_tick`（本工程未用 Struct 数组） | EEZ 生成（不是外部库） | 不改；已编进二进制 |
+| ② 生成源码 `src/ui/` | `screens.c`（控件树+样式内联）· `vars.h`（空枚举，无变量）· `actions.h`（native 动作声明）；`structs.h` 空壳 | `cli_build` 产出 | **禁止手改**（会被覆盖） |
+| ②′ 同上（**Flow 版差异**） | 母工程还多发 `ui.c` 里的 `assets[588]` + `actions[]` 表 | 同一 `cli_build` | 同上 |
+| ③ 执行模型（**本变体：无 Flow 运行时**） | `ui_init() = create_screens() + loadScreen()`、`ui_tick() = tick_screen(currentScreen)`；**不发射 `eez-flow.cpp/h`**，`src/ui/` 只有 12 个模板文件 | EEZ 生成 | 不改 |
+| ③′ 执行模型（**Flow 版**） | `eez-flow.cpp`（**9,923 行 / 369,589 B，生成进 src/ui**）+ `Value`/`ArrayValue` + `eez_flow_init` / `eez_flow_tick`（母工程 v4 未用 Struct 数组） | EEZ 生成（不是外部库） | 不改；已编进二进制 |
 | ④ native 层 | `io_iface.h`（契约）· `wifi_ui_sync.cpp`（native 直读 io 画列表，唯一画列表处）· `io_esp/io_win/io_pc`（三后端） | **人写** | 唯一允许业务改动的地方 |
 | ⑤ 硬件 | esp_wifi + NVS / Windows WLAN API / 假数据 | 平台 | — |
 
 ## 2. 三处关键边界（架构真正的"接缝"）
 
 1. **EEZ → 生成码**：`build_example.py` 是唯一设计源；`src/ui/` 是产物。要改 UI 一律改生成器。
-2. **生成码 → 运行时**：`assets` 二进制 + `eez_flow_init(assets,…)`（`ui.c:48`）+ 每帧 `eez_flow_tick()`。
-   ★ 实测：本工程**已经在跑 Flow**——`eez-flow.h` 自带 `#define EEZ_FOR_LVGL 1`，`eez-flow.cpp` 9,923 行一起生成，
-   编出的 `main.exe` 里有 501 个 `eez::flow` 符号。所以不是"待迁移"，而是"已就位"（v4 起只承载界面渲染，不承载任何变量）。
+2. **生成码 → 执行模型（两变体不同）**
+   - **本变体（no-flow）**：没有 Flow 这一层。`ui.c` 只有 `create_screens()`/`loadScreen()`/`tick_screen()`，
+     没有 `assets[]`、没有 `eez_flow_init/eez_flow_tick`；按钮 → native 动作由生成码**直挂**
+     （`screens.c:91`：`lv_obj_add_event_cb(obj, action_scan_start, LV_EVENT_CLICKED, (void *)0)`），
+     `nm main.exe | grep -i eez` 只剩误命中的 `lv_group_focus_freeze`，**`eez::flow` 符号 0 个**。
+   - **母工程（flow）**：`assets` 二进制 + `eez_flow_init(assets,…)` + 每帧 `eez_flow_tick()`；
+     ★ 实测**已经在跑 Flow**——`eez-flow.h` 自带 `#define EEZ_FOR_LVGL 1`，`eez-flow.cpp` 9,923 行一起生成，
+     编出的 `main.exe` 里有 501 个 `eez::flow` 符号。所以不是"待迁移"，而是"已就位"（v4 起只承载界面渲染，不承载任何变量）。
 3. **native ↔ io 数组（v4，无桥）**：数组变量已移出 EEZ，**没有跨运行时桥**。
    native 直接读写 io 静态数组，UI 列表行由 `wifi_ui_sync.cpp` 按 `wifi_ap_count()` 循环
    `lv_list_add_button` 自绘（EEZ List 控件 wip，P-0152）。EEZ 不持有任何变量。
@@ -54,14 +64,18 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
    → 行内信号条/副行/状态全部 native 自绘；EEZ 不持有变量（连接中/空态文案由 native 直写）
 ```
 
-**连接**
+**连接**（尚未实现的设计目标 · 见母工程 `../app-wifi-scan-flow/README.md`「待做」）
 ```
-行点击 → pick_index = N（Flow 变量）→ pwd_open = 1（半页上滑）
+行点击 → pick_index = N → pwd_open = 1（半页上滑）
    → 连接按钮 → 写 cmd_connect=1 + pwd + remember（outputs）
    → app_model 每拍排空命令环 → io_wifi_join()
    → 成功：wifi_state=2、conn_index=N；失败：wifi_state=3（UI 变红字，不清输入）
-   → UI 只读这些变量，不参与任何 WiFi 调用
+   → UI 只读这些状态，不参与任何 WiFi 调用
 ```
+> 母工程原文把 `pick_index`/`pwd_open`/`wifi_state` 写成「Flow 变量」——那是 v3 口径，v4 收口后
+> **EEZ 不持有任何变量**，这些状态本来就落在 native 契约（`app_model`）上。
+> **本变体更没有 Flow**：要落这条链路，状态只能放 `app_model` 输入/输出 + `wifi_ui_sync` 直写控件，
+> 或者把 `flowSupport` 开回 `true`（此时才需要 Flow 变量与表达式绑定）。
 
 ## 4. 信息全面性（io 契约层保证）
 
@@ -107,38 +121,55 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
 ## 7. 目录与归属红线
 
 ```
-app-wifi-scan-flow/
-├── build_example.py          ← 设计源（人写）★ 改 UI 只改这里
-├── design/cli_build.py       ← EEZ CLI + flow 守卫
-├── design/mockups/*.svg      ← 设计图（生成）
-├── src/ui/                   ← EEZ 生成（禁手改）
-└── src/native/
-    ├── app_model.cpp         ← 命令环 + 周期任务
-    ├── ui_behavior.cpp       ← 键盘弹出/收起等行为接线
+app-wifi-scan-flow-no-flow/
+├── build_example.py          ← 设计源（人写）★ 改 UI 只改这里；两个 no-flow 开关在本文件
+├── design/cli_build.py       ← EEZ CLI + flow 错误守卫
+├── design/preflight.py       ← 全链预检 + ★ check_no_flow 门禁（本变体新增）
+├── design/mockups/*.svg      ← 设计图（继承母工程；no-flow 架构图见 mockup_20）
+├── src/ui/                   ← EEZ 生成（禁手改）；★ 无 eez-flow.cpp/h
+└── src/native/               ← 与母工程逐字相同（零 Flow 引用，实测 grep = 0 命中）
+    ├── app_model.{h,cpp}     ← 契约 + 命令环 + 周期任务
+    ├── native_actions.cpp    ← EEZ 动作实现（action_scan_start → 投递命令）
+    ├── wifi_ui_sync.{h,cpp}  ← ★ 唯一画列表处（native 直读 io）
     └── platform/
         ├── io_iface.h        ← 契约
-        ├── wifi_ui_sync.cpp  ← ★ 唯一画列表处（native 直读 io）
-        └── io_{pc,win,esp}.cpp
+        └── io_pc.cpp         ← PC 假数据后端（io_win/io_esp 尚未落地）
 ```
 
-**自证判据（交付前跑）**
-1. `grep -rn "Wlan\|esp_wifi\|nvs_" src/ui src/native/app_model.cpp src/native/ui_behavior.cpp` → **0 命中**；
-2. 换 `io_pc` / `io_win`，`src/ui/` 编译产物逐字节相同；
-3. 变量面板手改 `scan_state` / `scan_status` → UI 立即响应（证明"变量即接口"；列表数据在 io 数组，不进 Flow）；
-4. `src/ui/` 里出现手工修改 → 视为缺陷（下次生成即丢）。
+> 母工程本文的原目录树写了 `ui_behavior.cpp` 与 `io_{win,esp}.cpp`，**两工程实际都不存在**
+> （上面是按 `find src/native -type f` 实测重写的）。
 
-## 8. 已核实 / 已推翻的结论（2026-10-20 20:55 实测）
+**自证判据（交付前跑）**
+1. `grep -rn "Wlan\|esp_wifi\|nvs_" src/ui src/native/app_model.cpp src/native/native_actions.cpp` → **0 命中**；
+2. 换 `io_pc` / `io_win`，`src/ui/` 编译产物逐字节相同；
+3. **Flow 版**：变量面板手改 `scan_state` / `scan_status` → UI 立即响应；**本变体（EEZ 零变量 + 无 Flow）没有这条可验**，
+   等价判据改成：native 写 `APP_IN_SCAN_STATUS` → `objects.lbl_status` 立即变字；
+4. `src/ui/` 里出现手工修改 → 视为缺陷（下次生成即丢）；
+5. **★ 本变体独有（反向）**：`src/ui/eez-flow.cpp|h` **不得存在**，`ui.c` 不得出现 `eez_flow_init`/`assets[]`
+   —— 已固化成 `design/preflight.py:check_no_flow()`，出现即 FAIL。
+
+## 8. 已核实 / 已推翻的结论（母工程 2026-10-20 20:55 实测 + 本变体 2026-10-21 复测）
 
 | 原结论 | 实测 | 证据 |
 |---|---|---|
-| 「本工程走 `create_screens()`，没在 Flow 运行时里」 | **错**：`ui_init()` 直接调 `eez_flow_init`，`ui_tick()` 调 `eez_flow_tick` | `src/ui/ui.c:46-54`；二进制含 501 个 `eez::flow` 符号 |
-| 「`ArrayValue` 内部是 `std::vector<Value>`，可变长」 | **错**：`struct ArrayValue { uint32_t arraySize; uint32_t arrayType; Value values[1]; }`，由 `Value::makeArrayRef(size, type, id)` 定长创建 | `eez-flow.h:1278-1282` |
-| 「需要额外链接 `eez/flow` 库」 | **错**：`eez-flow.cpp` 由 EEZ 生成在 `src/ui/`，已在构建里 | `wc -l` = 9923；构建产物可运行 |
-| 「4 个 API 名未核实，只能猜」 | **已核实**：`getGlobalVariable(uint32_t index)` / `setGlobalVariable(index, Value)` / `Value::makeArrayRef` / `value.getArray()->values[i]` | `eez-flow.h:2220-2223`、`1228`、`1155` |
+| 「本工程走 `create_screens()`，没在 Flow 运行时里」 | **Flow 版：错**——`ui_init()` 直接调 `eez_flow_init`，`ui_tick()` 调 `eez_flow_tick`（二进制含 501 个 `eez::flow` 符号）。<br>**本变体：对**——`ui_init() = create_screens() + loadScreen()`，`nm` 里 `eez::flow` 符号 **0 个**。<br>★ 同一条结论的真假**只由 `flowSupport` 决定**，所以两工程别互抄结论 | Flow 版 `src/ui/ui.c:46-54`；本变体 `src/ui/ui.c`（623 B，无 assets）+ `nm main.exe` |
+| 「`ArrayValue` 内部是 `std::vector<Value>`，可变长」 | **错**：`struct ArrayValue { uint32_t arraySize; uint32_t arrayType; Value values[1]; }`，由 `Value::makeArrayRef(size, type, id)` 定长创建。**本变体用不上**：没有 Flow 就没有 `Value`/`ArrayValue` | `eez-flow.h:1278-1282`（仅 Flow 版发射该头） |
+| 「需要额外链接 `eez/flow` 库」 | **错**：`eez-flow.cpp` 由 EEZ 生成在 `src/ui/`，已在构建里。**本变体**：`src/ui/` 里根本没有该文件，`PC_SIM` 的 `file(GLOB_RECURSE)` 自动少收两个，CMake 无需改 | `wc -l` = 9923（Flow 版）；本变体 `ls src/ui` = 12 个模板文件 |
+| 「4 个 API 名未核实，只能猜」 | **已核实**：`getGlobalVariable(uint32_t index)` / `setGlobalVariable(index, Value)` / `Value::makeArrayRef` / `value.getArray()->values[i]`——**本变体一个都不调用** | `eez-flow.h:2220-2223`、`1228`、`1155` |
+| 「事件 handler 依赖 `flowSupport`」（经验库 `reference/07_project_json_schema.md` §2） | **不完全成立**：`flowSupport:false` 下，`implementationType:"native"` 的动作**照样发射** `lv_obj_add_event_cb(obj, action_scan_start, LV_EVENT_CLICKED, 0)`；依赖 Flow 的是**表达式绑定 / flow 组件 / SetVariable**，不是 native 动作接线 | 本变体 `src/ui/screens.c:91`；全链 `preflight.py --with-sim` PASS |
 
-**引用计数语义**（决定数组能不能反复新建）：`Value` 有 `refCounter`，`operator=` 先 `freeRef()` 再给新值 `refCounter++`；`setGlobalVariable` 就是一次赋值。**所以每轮扫描重建数组不会泄漏**，但会有分配抖动。
+**引用计数语义**（决定数组能不能反复新建）：`Value` 有 `refCounter`，`operator=` 先 `freeRef()` 再给新值 `refCounter++`；`setGlobalVariable` 就是一次赋值。**所以每轮扫描重建数组不会泄漏**，但会有分配抖动。（本变体不涉及：数据只在 io 静态数组。）
 
 ## 9. 架构缺口清单（当前设计没覆盖到的）
+
+> **读这张表的两变体口径**：下面凡是写 `setGlobalVariable` / 表达式 / Flow 函数表 / `assets` 的条目
+> （P0 #1、P1 #7、P1 #11、P1 #12、P2 每帧求值成本），**在本变体里不适用**——没有 Flow 运行时，
+> 对应义务直接转成 native 侧责任：状态写 `app_model` 契约 + `wifi_ui_sync` 直写控件，
+> 文案拼接/截断/类型转换全部自己用 C 实现，也不存在"每帧表达式求值"的成本；
+> 字体不进 `assets`（走 `src/ui/fonts/ui_font_cn14.c`，5.0 MB 源文件）。
+> 其余条目（线程边界、字库覆盖、失败原因、去重、错误可见性）两变体同判。
+> ★ 顺带纠正一处母工程老数字：P1 #12 写「`assets` 仅 444 B」，母工程 v4 实测是 **`assets[588]`**
+> （`src/ui/ui.c:8`）；本变体则根本没有 `assets`。
 
 ### P0 · 不补就会出错
 
@@ -174,3 +205,9 @@ app-wifi-scan-flow/
 - **适合**：网络数固定可截断、交互以列表+表单为主、需要快速改 UI 的产品；
 - **不适合**：需要无限滚动/动态建行、需要复杂动画、需要把 UI 逻辑放进多线程回调的场景；
 - 一旦要"任意长度列表"，必须回到 C 侧自绘（`lv_obj_create` 循环），那就退出了本架构的收益区。
+
+> **本变体的定位（对上一条的正面回应）**：v4 收口后列表已经在 C 侧动态建行（`wifi_ui_sync.cpp`），
+> EEZ 只剩静态外壳——母工程 §2 的"退出收益区"这条，正是本变体把 Flow 关掉的依据
+> （经验库 `P-0170` §3 第 3 条：静态控件 + 单一点击回调的页面不该为完整引擎付费）。
+> 换句话说：**本变体 = 用 EEZ Studio 画界面、逻辑全在 native C**；
+> 需要 Flow 收益（表达式绑定、多页导航、动效、`Switch/Watch` 编排）时回母工程形态或把两开关改回 `true`。

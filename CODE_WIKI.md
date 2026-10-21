@@ -77,7 +77,7 @@ EEZ 官方仓库 <https://github.com/eez-open/studio>（Templates / Examples / i
 ├────────────────────────────────┼───────────────────────────────────────┤
 │  应用层（人写，可选）                                                  │
 │  src/native/  ← 业务逻辑（契约头 + 变量桥 + 动作 + 平台 io 层）        │
-│  显现于 app-wifi-connect（唯一带 native 层的复杂示例）                │
+│  显现于 app-wifi-connect / app-wifi-scan-flow / -no-flow               │
 │                                │                                       │
 ├────────────────────────────────┼───────────────────────────────────────┤
 │  仿真层（PC 上运行 UI 的构建/运行管线）                                │
@@ -458,8 +458,10 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 
 ## 8. 示例工程索引
 
-> 验证状态：九个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 + 产物清单对账），
-> 且全部通过 PC_SIM 仿真器一键编译（编译 + 链接 0 错）。
+> 验证状态：索引现有 17 行 / 磁盘 16 个示例目录（`app-list-scroll` 只有索引行、目录未落地）。
+> **2026-10-19 那轮全量体检覆盖当时 9 个示例**（EEZ Studio 0.29 headless CLI 构建 0 错 0 警 +
+> 产物清单对账，且 PC_SIM 编译链接 0 错）；此后新增示例以各自 README 为准，最近一次复测
+> 2026-10-21 `app-wifi-scan-flow-no-flow`（`preflight.py --with-sim` 全绿，含 no-flow 反向门禁）。
 
 ### 8.1 基础与控件
 
@@ -516,7 +518,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 
 | 坑 | 说明 |
 |---|---|
-| ★ CLI"构建成功"≠有产物 | 判据 = 日志标记 **+ 产物目录对账**（`src/ui/` 12 个模板文件 + `eez-flow.cpp/h`） |
+| ★ CLI"构建成功"≠有产物 | 判据 = 日志标记 **+ 产物目录对账**（Flow 工程：`src/ui/` 12 个模板文件 + `eez-flow.cpp/h`）。★ **no-flow 变体反着判**：12 个模板文件在、`eez-flow.*` **必须不存在**（见 `app-wifi-scan-flow-no-flow/design/preflight.py:check_no_flow`） |
 | ★ cli_build 必须等 `Build successfully finished` | `No error...` 出现在文件列表**之前**，提前 kill 会掐死 Flow engine 的发射阶段 |
 | ★ CLI 不烘字体/图片 .c | 纯 CLI 工作流需 `gen_font.py` / `gen_images.py` 补烘（GUI Build 才产） |
 | ★ `flowSupport:false` ≠ 事件链断 | 关 Flow 后 EEZ 不再发射 `eez-flow.cpp/h` 与 `assets[]`，`ui_init()` 走 `create_screens()`；但 **`implementationType:"native"` 的动作仍直挂** `lv_obj_add_event_cb(obj, action_xxx, LV_EVENT_CLICKED, 0)`（实测 `app-wifi-scan-flow-no-flow`）。依赖 Flow 的是**表达式绑定 / flow 组件 / SetVariable**，不是 native 动作 |
@@ -558,7 +560,9 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | 仓库总说明 + 示例索引 | [README.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/README.md) | 四条经验获取途径、目录规范、PC 仿真器机制与坑 |
 | 新建示例模板说明 | [示例工程模板说明.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/示例工程模板说明.md) | 目录骨架、逐字拷贝 vs 按例重写清单、五步流程、坑速查 |
 | PC 仿真器 Code Wiki | [PC_SIM/.../CODE_WIKI.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/PC_SIM/lv_port_pc_vscode_v9.5/CODE_WIKI.md) | LVGL v9.5 子系统、FreeRTOS 集成、构建与调试 |
-| 应用设计资料 | [app-wifi-scan-flow/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow) | `DESIGN.md`（UI 设计 v4）、`EEZ_CHECKLIST.md`（84 控件 / 51 变量照抄清单）、`IMPLEMENTATION.md`、`SCAN_BINDING.md`、`design/mockups/`（9 张过程图） |
+| 应用设计资料 | [app-wifi-scan-flow/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow) | `ARCHITECTURE.md`（v4 五层架构）、`DESIGN.md`（UI 设计 v4）、`EEZ_CHECKLIST.md`（84 控件 / 51 变量照抄清单）、`IMPLEMENTATION.md`、`FLOW_STRUCT_ROUTE.md`（v3 历史方案）、`SCAN_BINDING.md`、`design/mockups/`（11 张过程图，`python design/mockup_gen.py` 重生成） |
+| no-flow 变体资料 | [app-wifi-scan-flow-no-flow/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow-no-flow) | 继承上述资料并**按双口径改写**（Flow 版事实 / no-flow 事实并列）；新增 `mockup_20_noflow_arch.svg` 架构图、`preflight.check_no_flow()` 反向门禁；Flow on/off 账单见其 `README.md` |
+| no-flow 变体资料 | [app-wifi-scan-flow-no-flow/](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow-no-flow) | 同上（继承并已双口径改写），另加 `mockup_20_noflow_arch.svg`（共 12 张）；`README.md` 记 Flow on/off 账单与 no-flow 判据 |
 
 > **文档生成日期**：2026-10-20 · **基线版本**：EEZ Studio 0.29.0 / LVGL 9.4.0 / PC_SIM LVGL 9.5.0
 </content>

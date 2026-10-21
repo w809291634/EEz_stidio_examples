@@ -1,9 +1,17 @@
-# app-wifi-scan-flow — WiFi 连接应用（基础工程模板）
+# app-wifi-scan-flow — WiFi 扫描列表（母工程 · Flow 在跑）
 
 ## 定位
 
-**基础工程模板**：空屏幕骨架（零控件/零字体/零动作/零变量），作为 WiFi 连接
-应用 v2 的起点，功能按步骤逐个添加。原 `app-wifi-connect` 保持不动作为参考。
+**v4 现行形态**：单屏静态外壳（标题 / 状态行 / 刷新按钮 / 空 `lv_list`）+ cn14 中文字库
++ 1 个 native 动作，**EEZ 持有 0 个变量**——状态由 native 经 `app_model` 契约直驱，
+列表由 native 直读 io 接口自绘（唯一真值源 = io 静态数组）。
+
+> 演进：v1 空屏幕骨架 → v2 List 控件 → v3 Flow 数组变量 → **v4 数组变量与全部变量移出 EEZ**。
+> 现行架构与账单见 `ARCHITECTURE.md`（v4 收口）；原 `app-wifi-connect` 保持不动作为参考。
+
+> **姊妹版**：[`../app-wifi-scan-flow-no-flow/`](../app-wifi-scan-flow-no-flow/) —— 只把
+> `flowSupport` / `generateSourceCodeForEezFramework` 关成 `false` 的**无 Flow 运行时**对照版
+> （native 层逐字节相同）。Flow on/off 实测账单与结论见其 `README.md`。
 
 ## 结构
 

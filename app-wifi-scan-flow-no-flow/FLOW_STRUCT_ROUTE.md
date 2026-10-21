@@ -1,5 +1,12 @@
 # Flow 路线：WiFi 结构体 + 数组怎么落地
 
+> **⚠ 本目录（no-flow 变体）永远走不了本文这条路**：`flowSupport=false` ⇒ EEZ 不发射
+> `eez-flow.cpp/h`，`EEZ_FOR_LVGL` 不成立，于是本文依赖的 `Value` / `ArrayValue` /
+> `makeArrayRef` / `getGlobalVariable` / `setGlobalVariable` / `StructValue` **一个都不存在**，
+> `aps[i].ssid` 这类绑定写法也无从谈起。要按本文实施，前提是先回退成母工程形态
+> （`build_example.py` 里 `flowSupport`、`generateSourceCodeForEezFramework` 改回 `true`）。
+> 实测对照见 `README.md` 的账单表与 `ARCHITECTURE.md` §8。
+>
 > **★ 已被 v4 取代（2026-10-21）**：数组变量已移出 EEZ（`ap_info`/`aps[]`/`ap_len` 删除，
 > `ap_store` 桥删除），列表数据由 native 直读 io 接口（`wifi_ap_at`/`wifi_ap_count`）。
 > 本文保留作 **v3 历史方案** 与技术调研记录（`makeArrayRef` 三坑等仍在 P-0167 有效）。

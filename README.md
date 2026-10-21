@@ -83,16 +83,20 @@ EEZ_stidio_examples/
 | [`w14-w35-w62-chart-led-scale/`](w14-w35-w62-chart-led-scale/) | **数据可视化与状态指示**（W14 Chart / W35 Led / W62 Scale） | ★ Chart 在 EEZ 是空壳（零属性）→ ui_init 后 C 喂 series；★ Meter 仅 LVGL 8.x（9.4 没有）→ 用 Scale 替代；Led 的 color/brightness 都是 expression 可绑定；Scale 属性可选项多、只写要覆盖的键 |
 | [`w23-w59-w73-w16-select-switch/`](w23-w59-w73-w16-select-switch/) | **选择与开关**（W23 Dropdown / W59 Roller / W73 Switch / W16 Checkbox），可见页签 Tabview 4 页 | ★ 联动主线：Dropdown+Roller 的 selected 绑同一 g_sel（assignable 双向，零 flow 图）；★ ToggleButton(W85) 是 EEZ-GUI 件、无 LVGL codegen（lvglBuild 报错）；Switch/Checkbox 无绑定属性；排障用 per-tab bisect |
 | [`app-wifi-connect/`](app-wifi-connect/) | **WiFi 扫描/连接全流程 v2**（KB 10 号架构迷你版）：EEZ 画壳+6 状态变量，业务/列表/驱动全在 src/native（契约头+命令环+io_iface 平台分界） | ★ 动作函数体只投递；★ native_vars.h 必须包 extern "C"；★ io 层不依赖 LVGL（clock() 计时）；★ 注释里别写 `xxx_*/`（提前闭合）；hiddenFlag 键名/字体全量/textarea 单向等 v1 坑仍有效 |
-| [`app-wifi-scan-flow/`](app-wifi-scan-flow/) | **WiFi 连接应用 v2（基础模板）**：空屏幕骨架（0 控件/字体/动作/变量）+ cli_build/audit/PC 仿真管线齐备 | ★ 控件照抄 EEZ 原生形态；★ gen_font 在 cli_build 之后；★ flow 错误守卫 |
+| [`app-wifi-scan-flow/`](app-wifi-scan-flow/) | **WiFi 扫描列表 v4（母工程 · Flow 在跑）**：EEZ 画静态外壳（标题/状态行/刷新 + 空 `lv_list`）+ **EEZ 零变量**，状态与列表全由 native 直驱/直读 io | ★ 控件照抄 EEZ 原生形态；★ gen_font 在 cli_build 之后；★ flow 错误守卫；★ v4 起 `gvs=[]`，数组变量已移出 EEZ（见其 `ARCHITECTURE.md`） |
 | [`app-wifi-scan-flow-no-flow/`](app-wifi-scan-flow-no-flow/) | **同上的 no-flow 变体**：只把 `flowSupport`/`generateSourceCodeForEezFramework` 关成 `false`，实测纯 LVGL 出码链路完整（生成码 548,573→13,950 字节，`eez::flow` 符号 501→0） | ★ **关 Flow 后 native 动作照样接线**：`screens.c` 直接 `lv_obj_add_event_cb(obj, action_scan_start, LV_EVENT_CLICKED, 0)`，业务零改动（纠正经验库 07 §2"事件 handler 依赖 flowSupport"）；★ 判据要反着写：`eez-flow.*` **不得**出现（preflight `check_no_flow`）；★ `BUILD_TEMPLATES` 的 `#if EEZ_FOR_LVGL/#else` 两分支都得留 |
 
-> 验证状态（2026-10-19）：九个示例均通过 EEZ Studio 0.29 headless CLI 构建（0 错 0 警 +
-> 产物清单对账）。手势运行时行为（gesture-page-switch / one-way-gesture-switch）按 P-0141
+> 验证状态：**2026-10-19 那轮全量体检覆盖的是当时 9 个示例**（EEZ Studio 0.29 headless CLI
+> 构建 0 错 0 警 + 产物清单对账，且 PC_SIM 编译链接 0 错）。**索引现有 17 行 / 磁盘 16 个示例目录**
+> （`app-list-scroll` 仍只有索引行、目录未落地），此后新增示例的验证状态**以各自 README 为准**，
+> 本行不为未复测的工程背书。最近一次复测：2026-10-21 `app-wifi-scan-flow-no-flow`
+> 全链 `preflight.py --with-sim` PASS（含新增 no-flow 反向门禁）。
+> 手势运行时行为（gesture-page-switch / one-way-gesture-switch）按 P-0141
 > 必须在 PC_SIM/真机验收，Run 预览不产生 GESTURE 事件。
 > `font-entry-form` 的字体 .c 已落地：`src/ui/ui_font_cn14.c` / `ui_font_cn20.c`
 > （黑体子集 159 字形，lv_font_conv bpp4 生成，仿真器链接通过）。
 >
-> **全部示例均通过了 PC_SIM 仿真器一键编译验证（编译+链接 0 错，方法见第 4 节）。**
+> **PC 仿真器一键编译机制见第 4 节；换工程 = 双击该工程 `design\sim_cmake\run_sim.bat`。**
 
 ---
 

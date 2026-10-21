@@ -34,6 +34,8 @@ app-wifi-scan-flow-no-flow/
 │   ├── preflight.py                    ← ★ 一键全链 + no-flow 判据（本变体新增）
 │   ├── cli_build.py                    ← EEZ CLI 构建 + flow 错误守卫
 │   ├── gen_font.py / audit_chars.py / check_project.py / ui_check.py
+│   ├── mockup_gen.py                   ← 出图；★ 本变体新增 sc_noflow_arch() → mockup_20
+│   ├── mockups/mockup_20_noflow_arch.svg ← ★ 本变体架构图（五层 + Flow/本变体对照 + 账单）
 │   └── sim_cmake/                      ← run_sim.bat + main.c + lv_conf.h（PC 仿真）
 ├── fonts/simhei.ttf
 └── src/
@@ -41,10 +43,15 @@ app-wifi-scan-flow-no-flow/
     └── ui/                             ← EEZ 生成（禁手改）；★ 无 eez-flow.cpp/h
 ```
 
-> `ARCHITECTURE.md` / `DESIGN.md` / `EEZ_*.md` / `SCAN_BINDING.md` 是从母工程
-> `app-wifi-scan-flow` 原样继承的，描述的是**共用架构**（五层、native↔io 边界、列表链路）。
-> 其中涉及"本工程在跑 Flow"的段落（如 `ARCHITECTURE.md` §1 第③行、§2 第 2 条）
-> 对本变体不成立——差异只有一条：这里没有 Flow 运行时。
+> `ARCHITECTURE.md` / `IMPLEMENTATION.md` / `FLOW_STRUCT_ROUTE.md` 等设计文档从母工程
+> `app-wifi-scan-flow` 继承，已按**双口径**改写（同一处并列「Flow 版」与「本变体」事实，
+> 别只读半句）：`ARCHITECTURE.md` §1②③/§2/§3/§7/§8/§9/§10、`IMPLEMENTATION.md` §7.1/§7.2 与顶部通则、
+> `FLOW_STRUCT_ROUTE.md` 顶部"本变体永远走不了这条路"横幅。
+> 架构图另出一张本变体版：**`design/mockups/mockup_20_noflow_arch.svg`**
+> （`python design/mockup_gen.py` 重生成；继承的 `mockup_17_flow_arch.svg` 是 Flow 形态，保留作对照）。
+> `DESIGN.md` / `EEZ_CHECKLIST.md` / `EEZ_WORKFLOW.md` / `SCAN_BINDING.md` 不含 Flow 断言，原样继承。
+> ★ `src/native/` **故意逐字节不改**（含 `app_model.h` 注释里的母工程名）——
+> `diff -r ../app-wifi-scan-flow/src/native src/native` 必须为空，这正是"只删运行时、不动业务"的证据。
 
 ## 依赖版本
 
