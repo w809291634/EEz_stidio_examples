@@ -40,12 +40,16 @@ EEZ_stidio_examples/
 │   ├── README.md          ← ★ 必备（写什么见下）
 │   ├── <工程名>.eez-project
 │   └── ...
+├── flow-examples/          ← ★ 例外：**Flow 机制类示例**统一住这里（每个仍是独立子目录）
+│   ├── README.md          ← 归属判据 / 命名 / 骨架 / 登记规则
+│   └── <flow-主题>/
 └── ...
 ```
 
 ### 新建一个示例工程的固定动作
 
-1. 在本仓库根新建 `<示例主题>/` 子目录；
+1. 在本仓库根新建 `<示例主题>/` 子目录；**演示点是 Flow 机制本身**（变量/执行语义/动作件/表达式）的
+   改建在 `flow-examples/<flow-主题>/`（判据见 [`flow-examples/README.md`](flow-examples/README.md) §1）；
 2. 拷入 EEZ 工程文件（`.eez-project`、`.ei`、`vars/` 等），
    **剔除可再生产物**：`build/`、`generated/`、SDK 拷贝、大体积缓存；
 3. 为该工程写 `README.md`，最少写清四件事：
@@ -53,7 +57,8 @@ EEZ_stidio_examples/
    - **工程结构**：关键文件各自是什么；
    - **依赖版本**：EEZ Studio 版本、LVGL 版本、目标平台；
    - **踩过的坑**：症状 / 根因 / 修法（严重坑在标题加 ★）；
-4. 在本文件第 3 节索引表加一行。
+4. 在本文件第 3 节索引表加一行（`flow-examples/` 里的工程链接写 `flow-examples/<名>/`，
+   并在 [`flow-examples/README.md`](flow-examples/README.md) §6 清单再登一行）。
 
 ### 与经验库的分流
 
@@ -82,7 +87,7 @@ EEZ_stidio_examples/
 | [`one-way-gesture-switch/`](one-way-gesture-switch/) | **只允许单向手势**：仅接 LEFT（左滑循环 A→B→C→A），右滑根本不画组件/不连线 | ★ 单向 = 干脆不生成另一方向的 Switch/Action（别"画了不连"否则 Checks 报 not connected）；其余安全要点与双向版一致 |
 | [`tabview-swipe-switch/`](tabview-swipe-switch/) | **Tabview 隐藏 tab 栏 + 原生跟手滑动切页**（与手势版互补：跟手可弹回 vs 离散整页翻） | ★ Tabview 里必须放 Tab 控件（手册配置 1）；`tabviewSize=0` 隐藏 bar；★ Tab（页）必须保留 `SNAPPABLE`——吸附滚动模式下页是吸附点，裁掉它=零吸附点=拖不动（eez-test 同款：都只裁 SCROLLABLE） |
 | [`w1-animation-image/`](w1-animation-image/) | **手册 W1. AnimationImage 多帧动画图**：8 帧 spinner，Duration/Repeat 语义，`lv_animimg_*` 代码链 | ★ CLI 构建不产图片 .c（P-0140 图片版）——`gen_images.py` 补烘 `lv_image_dsc_t`（ARGB8888 字节序 B,G,R,A）；帧位图=内嵌 data-URI PNG（bpp32 透明） |
-| [`app-list-scroll/`](app-list-scroll/) | **可滚动 App 列表**（watch applist 同款：竖向吸附滚动容器 + CHECKABLE 行 + PRESSED 高亮）+ List 控件 vs 容器左列对照 | ★ List (LVGL) 是 wip → 用普通 Container 自建；`flagScrollDirection:"ver"`+`scrollSnapY:"center"`；行必须保留 SNAPPABLE（P-0150）；样式枚举传名字符串（"VER"）；lv_list 动态行=ui_init 后 C 补 |
+| `app-list-scroll/`（**目录未落地，仅索引**） | **可滚动 App 列表**（watch applist 同款：竖向吸附滚动容器 + CHECKABLE 行 + PRESSED 高亮）+ List 控件 vs 容器左列对照 | ★ List (LVGL) 是 wip → 用普通 Container 自建；`flagScrollDirection:"ver"`+`scrollSnapY:"center"`；行必须保留 SNAPPABLE（P-0150）；样式枚举传名字符串（"VER"）；lv_list 动态行=ui_init 后 C 补 |
 | [`w67-w3-w2-slider-arc-bar/`](w67-w3-w2-slider-arc-bar/) | **调节与指示**（W67 Slider / W3 Bar / W2 Arc）：一个 flow 全局变量 `g_val` 同时驱动 Slider/Arc（可拖双向）/Bar（跟随）/Label（表达式拼接），零 C | ★ Slider/Arc 的 value 是 assignable（双向回写）、Bar 是 input（单向）；全局变量 `native:true` 需自实现 `set_var_xxx` 桥，纯 EEZ 用 `false`；文本拼接 `"s"+int` 直接可用 |
 | [`perf-tabview-native-vs-eez/`](perf-tabview-native-vs-eez/) | **资源消耗对照**：同构 tabview，原生 LVGL vs EEZ 实测（RAM/Flash） | ★ 实测：RAM 堆 EEZ 仅多 ~1.4KB（+9%，frag 0）；flash text 多 ~1.33MB（flow 引擎+assets）——**RAM 可忽略，flash 是 MCU 主要代价**；perf 对照明细见其 README |
 | [`w14-w35-w62-chart-led-scale/`](w14-w35-w62-chart-led-scale/) | **数据可视化与状态指示**（W14 Chart / W35 Led / W62 Scale） | ★ Chart 在 EEZ 是空壳（零属性）→ ui_init 后 C 喂 series；★ Meter 仅 LVGL 8.x（9.4 没有）→ 用 Scale 替代；Led 的 color/brightness 都是 expression 可绑定；Scale 属性可选项多、只写要覆盖的键 |
@@ -90,6 +95,7 @@ EEZ_stidio_examples/
 | [`app-wifi-connect/`](app-wifi-connect/) | **WiFi 扫描/连接全流程 v2**（KB 10 号架构迷你版）：EEZ 画壳+6 状态变量，业务/列表/驱动全在 src/native（契约头+命令环+io_iface 平台分界） | ★ 动作函数体只投递；★ native_vars.h 必须包 extern "C"；★ io 层不依赖 LVGL（clock() 计时）；★ 注释里别写 `xxx_*/`（提前闭合）；hiddenFlag 键名/字体全量/textarea 单向等 v1 坑仍有效 |
 | [`app-wifi-scan-flow/`](app-wifi-scan-flow/) | **WiFi 扫描列表 v4（母工程 · Flow 在跑）**：EEZ 画静态外壳（标题/状态行/刷新 + 空 `lv_list`）+ **EEZ 零变量**，状态与列表全由 native 直驱/直读 io | ★ 控件照抄 EEZ 原生形态；★ gen_font 在 cli_build 之后；★ flow 错误守卫；★ v4 起 `gvs=[]`，数组变量已移出 EEZ（见其 `ARCHITECTURE.md`） |
 | [`app-wifi-scan-flow-no-flow/`](app-wifi-scan-flow-no-flow/) | **同上的 no-flow 变体**：只把 `flowSupport`/`generateSourceCodeForEezFramework` 关成 `false`，实测纯 LVGL 出码链路完整（生成码 548,573→13,950 字节，`eez::flow` 符号 501→0） | ★ **关 Flow 后 native 动作照样接线**：`screens.c` 直接 `lv_obj_add_event_cb(obj, action_scan_start, LV_EVENT_CLICKED, 0)`，业务零改动（纠正经验库 07 §2"事件 handler 依赖 flowSupport"）；★ 判据要反着写：`eez-flow.*` **不得**出现（preflight `check_no_flow`）；★ `BUILD_TEMPLATES` 的 `#if EEZ_FOR_LVGL/#else` 两分支都得留 |
+| [`flow-examples/flow-variables-basics/`](flow-examples/flow-variables-basics/) | **Flow 变量的使用方法**（纯 EEZ、零 native C）：读（表达式 / 模板串 / Bar 单向）· 写（Slider 回写、`SetVariable` 单条与批量、`Evaluate`→数据线→`SetVariable`）· 监听（`Watch`）· 分支（`Switch`）· 作用域（全局 `g_*` vs 页面局部 `l_step`） | ★ 变量表只有一张，**两条轴**决定用法：`flowSupport` × 变量 `native`；关 Flow 时"只能全局且必须 native"；LVGL 的 `persistent`、（未开 Flow 时的）`defaultValue` 均禁用；★ Flow 件的 JSON `type` = Studio 类名（`SetVariableActionComponent`/`WatchVariableActionComponent`…）不能猜；★ `Watch` 的输出名是 `variable`（changed 只是显示名）；★ 数据线要配自定义输入名且与时序线成对；★ 负控验证 Checks 真校验标识符（写 `l_bogus` → 2 errors，改回 0 错） |
 
 > 验证状态：**2026-10-19 那轮全量体检覆盖的是当时 9 个示例**（EEZ Studio 0.29 headless CLI
 > 构建 0 错 0 警 + 产物清单对账，且 PC_SIM 编译链接 0 错）。**索引现有 17 行 / 磁盘 16 个示例目录**

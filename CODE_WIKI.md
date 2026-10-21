@@ -118,6 +118,9 @@ EEz_stidio_examples/
 ├── 示例工程模板说明.md            ← 新建示例的目录骨架 / 逐字拷贝清单 / 五步流程
 ├── CODE_WIKI.md                  ← 本文件
 │
+├── flow-examples/                ← ★ Flow 机制类示例的容器（见 §8.6）：每个示例仍是独立子目录
+│   ├── README.md               ← 归属判据 / 命名 / 骨架 / 两栏额外要求 / 登记规则
+│   └── <flow-主题>/            ← 如 flow-variables-basics
 ├── <示例主题>/                    ← 每个示例一个独立子目录（见 §8）
 │   ├── build_example.py          ← ★ 唯一设计源（生成器）
 │   ├── <示例名>.eez-project      ← 生成物（勿手改）
@@ -500,6 +503,13 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | [app-wifi-scan-flow](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow) | WiFi 连接应用基础模板：空屏幕骨架（0 控件/字体/动作/变量）+ cli_build/audit/PC 仿真管线齐备 | ★ 控件照抄 EEZ 原生形态；★ `gen_font` 在 `cli_build` 之后；★ flow 错误守卫；含 `DESIGN.md`/`EEZ_CHECKLIST.md`/`IMPLEMENTATION.md`/`SCAN_BINDING.md`/`mockups/` 设计资料 |
 | [perf-tabview-native-vs-eez](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/perf-tabview-native-vs-eez) | 资源消耗对照：同构 tabview，原生 LVGL vs EEZ（RAM/Flash 实测 + ESP32-P4 真机 map 拆解） | ★ 结论：EEZ 核心真实代价 ≈ **259KB flash + 28KB RAM**（PC 差值里的 1.33MB 大头其实是中文字体）；见 `parse_map.py` |
 | [app-wifi-scan-flow-no-flow](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/app-wifi-scan-flow-no-flow) | 上者的 **Flow on/off A/B 变体**：仅把 `flowSupport`/`generateSourceCodeForEezFramework` 改 `false`，native 层与控件树逐字相同 | ★ 实测关 Flow 后 native 动作**仍由生成码直挂** `lv_obj_add_event_cb(..., action_scan_start, LV_EVENT_CLICKED, 0)`，业务零改动；★ 判据反写：`eez-flow.*` **不得**出现（`preflight.check_no_flow`）；★ 生成码 548,573→13,950 字节、二进制 `eez::flow` 符号 501→0 |
+| [flow-examples/flow-variables-basics](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/flow-examples/flow-variables-basics) | **Flow 变量的使用方法**（纯 EEZ、零 native C）：读=表达式/模板串/Bar 单向；写=Slider 回写、`SetVariable` 单条与批量、`Evaluate`→数据线→`SetVariable`；监听=`Watch`；分支=`Switch`；作用域=全局 `g_*` vs 页面局部 `l_step` | ★ 变量表只有一张，用法由 `flowSupport` × 变量 `native` 两条轴决定；★ Flow 件 JSON `type` 必须用 Studio 类名（`SetVariableActionComponent` 等）；★ `Watch` 输出名是 `variable`；★ 数据线要配自定义输入名并与时序线成对；★ 负控：写错变量名会被 Checks 拦（`identifier ... is neither input or local or global variable`） |
+
+### 8.6 flow-examples（Flow 机制类示例容器）
+
+| 目录 | 演示点 | 关键坑 / 要点 |
+|---|---|---|
+| [flow-examples/README.md](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/flow-examples/README.md) | 容器规则：归属判据（演示点是 Flow 机制→进这里；控件形态→根目录带 W 号；完整应用→根目录 app-*）、命名 `flow-<主题>` 不带 W 号、骨架照根模板、索引三处登记 | ★ 每个 Flow 示例的 README 要多写两栏：**手册锚点表**（页码）与**面板/运行时证据**（用到哪个动作件、属 `flow-understanding/notes/flow-actions-lvgl.md` 哪一档；**LVGL 禁用的 9 件一旦出现在示例里就是设计错误**）；★ 迁移/改名必须删该工程 `design/sim_cmake/build_rel/` 全量重配，否则假绿 |
 
 ### 8.5 公共 / 辅助目录
 

@@ -31,7 +31,7 @@ flow-understanding/
 |---|---|
 | 手册**原文事实**（规则、属性、限制） | `flow-understanding/notes/`，必须带 `P6.2 · P.40` 这类双锚点 |
 | **换个工程还成立**的踩坑结论 | 经验库 `EEZ Studio_ui_debug_kit/intake/P-01xx` |
-| **只在该示例成立**的坑 | 那个示例子目录的 `README.md` |
+| **只在该示例成立**的坑 | 那个示例子目录的 `README.md`（**Flow 机制类示例统一住 [`../flow-examples/`](../flow-examples/README.md)**） |
 | 示例**该不该做、验收怎么判** | `EXAMPLE_PLAN.md`（本目录） |
 
 ## 读手册的硬规矩（本目录内适用）
@@ -84,6 +84,7 @@ flow-understanding/
 | 15 | A43 实际有 **65** 个子动作（手册只 63，多 `objGetDisplayX/Y`），覆盖切屏/几何/样式/flag/state/**焦点组 7 项**/**动画 7 项**/控件专用 | 装机包 `registerAction`（`tools/`） |
 | 16 | 官方 traits 允许 LVGL native 变量为 `enum/integer/float/double/boolean/string`——**与本仓库"只有 int/string 稳、布尔用 integer"的口径冲突，待实测裁决** | 装机包 `LVGLProjectTypeTraits` |
 | 17 | 手册自身有缺陷可直接引用为"别照抄"：`<`/`>` 说明写反、`Array.append` 说明是 `String.split` 的复制粘贴、`Math.round(x,2)` 与函数表矛盾、`Date.getDay` 是**月内日不是星期** | raw 2893–2896、3441–3530、第 73 页 |
+| 18 | 建 `flow-variables-basics` 实测补充 8 条（无 Flow 时 `defaultValue` 也禁用、`native` 勾选框只在开 Flow 时可切、件类型名=JS 类名、`Watch` 输出名是 `variable`、拼错变量名会被 Checks 拦…） | `notes/flow-variables-expressions.md` §11 |
 
 （`notes/flow-execution-semantics.md` = 1–8 的推导；`notes/flow-variables-expressions.md` = 9–13、17；
 `notes/flow-actions-lvgl.md` = 14–16；`EXAMPLE_PLAN.md` = 这些结论该变成哪些示例。）

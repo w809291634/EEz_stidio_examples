@@ -171,3 +171,16 @@ Watch 面板同时给：全局变量值 + **当前活跃 Flow 的局部变量** 
 Flow 名后面的括号数字 = 该 Flow 状态的**内存地址**。
 → 手册**没说** LVGL 工程是否享有同一套 Debug 面板 → `手册未说明`，
    涉及"顺序/队列"的验收必须现场开 GUI 确认（见 `EXAMPLE_PLAN.md` 的 GUI-only 标注）。
+
+## 11. 建 `flow-variables-basics` 时实测到的补充（2026-10-21，可复现）
+
+| # | 事实 | 证据 |
+|---|---|---|
+| 1 | **§1 的"无 Flow 只能全局且必须 native"在装机包里能直接看到实现**：`defaultValue` 属性在 `isLVGL && !hasFlowSupport` 时**被禁用** | `app.asar` 变量属性定义（同 §1 引文处） |
+| 2 | **`persistent` 在 LVGL 工程里是禁用勾选框**（谓词 `isLVGLProject(e) \|\| isEezGuiLiteProject(e) \|\| !isGlobalVariable \|\| e.native`）——手册"仅 Dashboard"得到代码级印证 | 同上 |
+| 3 | **`native` 勾选框只在"已启用 Flow + 全局 + 类型受支持"时可选**：无 Flow 时根本没有这个开关（因为此时**所有**全局变量天然是 native，与 §1 一致） | 同上 |
+| 4 | **Flow 件在 `.eez-project` 里的 `type` = Studio 的 JS 类名**，不是手册条目名：`SetVariableActionComponent` / `WatchVariableActionComponent` / `EvalExprActionComponent` / `SwitchActionComponent` / `CompareActionComponent` / `IsTrueActionComponent`；属性键同理（`entries` / `variable` / `expression` / `tests` / `A,B,C,operator` / `value`） | 从 `app.asar` 的 `ActionComponent.classInfo` 抽；抽取法同 `tools/extract_studio_facts.py` |
+| 5 | **`Watch` 的数据输出 `name` 是 `variable`，`changed` 只是 displayName** → 连线写 `"output":"variable"`；写成 `changed` 不生效 | 同 `classInfo`：`{name:"variable", displayName:"changed", type:"any"}` |
+| 6 | **标识符拼错会被 Checks 拦下**，报错原文：`identifier 'xxx' is neither input or local or global variable`（本工程负控：把 `l_step` 改成 `l_bogus` → `2 errors`；改回 → 0 错） | `python design/cli_build.py`（`app-wifi-scan-flow` 那套 flow 错误守卫同样能捕） |
+| 7 | **`SetVariable` 支持一次多条**（`entries` 数组，每项 `variable` 是可赋值表达式 + `value` 表达式）——手册 P8.1 的说法在生成码里成立 | `flow-variables-basics/src/ui/vars.h` + `ui.c`（`Compressed size: 1210`） |
+| 8 | **双向/单向在生成码里可区分**：`Slider` 出现 `assignIntegerProperty(flowState, …, "Failed to assign Value in Slider widget")`，`Bar` **没有** → §8 那张属性方向表的机器证据 | `grep assignIntegerProperty src/ui/screens.c` |

@@ -22,9 +22,12 @@
 | Tabview 原生滑动（**绕开** Flow） | `tabview-swipe-switch` | — |
 | Flow on/off 成本与能力对照 | `app-wifi-scan-flow` / `app-wifi-scan-flow-no-flow` | P13.2、P6.2 |
 | 引擎体积优化 | `perf-tabview-native-vs-eez` + 经验库 P-0157 | P13.2 第 112 页 |
+| Flow 变量用法全家（读 3 路 / 写 4 路 / `Watch` 监听 / `Switch` 分支 / 全局 vs 页面局部） | **`flow-examples/flow-variables-basics/`（已建，2026-10-21）** —— 纯 EEZ 零 native C，含"写错变量名会被 Checks 拦"的负控证据 | P8.1 · P.58、A73/A91/A21/A81 |
 
 **结论**：绑定类（读/写/样式）已经够用了；缺的是**执行语义类**和**动作件能力类**——
-也就是"Flow 作为逻辑引擎"的那一半，几乎完全没被示例覆盖。下面 12 项按此补齐。
+也就是"Flow 作为逻辑引擎"的那一半。上面这条 `flow-variables-basics` 补的是"变量怎么用"的入门层，
+下面 14 项补的是引擎层（执行语义、动作目录、函数体检台）。
+
 
 ---
 
@@ -159,6 +162,9 @@
 ---
 
 ## 立项规矩（沿用仓库现有铁律）
+
+0. **落地位置统一：本文所有 `flow-*` 示例都建在 [`flow-examples/`](../flow-examples/README.md) 下**（Flow 机制类示例的容器，判据/命名/登记规则见该目录 README），不再是仓库根；
+
 
 1. 一个示例 = 根目录一个独立子目录，照 `示例工程模板说明.md` 五步流程；
 2. **唯一设计源** `build_example.py`，产物 `.eez-project` 勿手改；

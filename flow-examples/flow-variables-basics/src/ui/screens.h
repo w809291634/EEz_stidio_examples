@@ -23,6 +23,8 @@ typedef struct _objects_t {
     lv_obj_t *val_tpl;
     lv_obj_t *cap_status;
     lv_obj_t *val_status;
+    lv_obj_t *cap_branch;
+    lv_obj_t *val_branch;
     lv_obj_t *cap_bar;
     lv_obj_t *bar_count;
     lv_obj_t *cap_sld;

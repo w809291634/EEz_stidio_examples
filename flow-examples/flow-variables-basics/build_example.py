@@ -240,36 +240,37 @@ def build_project():
     f_many = set_var([("g_count", "0"),
                       ("g_double", "0"),
                       ("g_flag", "false"),
-                      ('g_status', '"idle"')], 128, 214,
+                      ('g_status', '"idle"'),
+                      ('g_branch', '"none"')], 240, 214,
                      description="写路径⑤'：SetVariable 批量")
     # ⑥ Evaluate 求值 → result 数据线 → SetVariable 用输入名接住
     f_eval = action_component(
-        "EvalExprActionComponent", 240, 214, 160, 60,
+        "EvalExprActionComponent", 464, 214, 160, 60,
         description="写路径⑥：Evaluate 求值",
         expression="g_count * 2")
-    f_store = set_var([("g_double", "r")], 240, 280,
+    f_store = set_var([("g_double", "r")], 464, 300,
                       description="写路径⑥'：result 线写回 g_double",
                       inputs=[data_input("r")])
     # ⑩ 局部变量用法：l_step 只在这条 Flow 内可见
-    f_local = set_var([("g_count", "g_count + l_step")], 352, 214,
+    f_local = set_var([("g_count", "g_count + l_step")], 680, 214,
                       description="作用域⑩：读页面局部变量 l_step")
     # ⑦ Watch：监听 g_count，变化即触发（启动时先必发一次）
     f_watch = action_component(
-        "WatchVariableActionComponent", 16, 280, 180, 40,
+        "WatchVariableActionComponent", 16, 300, 180, 40,
         description="监听⑦：Watch g_count",
         variable="g_count")
     f_flag = set_var([("g_flag", "v > 3"),
-                      ('g_status', '`${v} is watched`')], 214, 344,
+                      ('g_status', '`${v} is watched`')], 240, 300,
                      description="监听⑦'：变化结果写回",
                      inputs=[data_input("v")])
     # ⑧ Switch：按变量值分支（命中 FULL 写**另一个**变量 g_branch——
     #     故意不复用 g_status，否则和 Watch 链抢同一个变量，演示结论会含糊）
     f_switch = action_component(
-        "SwitchActionComponent", 16, 344, 180, 44,
+        "SwitchActionComponent", 16, 370, 180, 44,
         description="分支⑧：Switch 判 g_count",
         tests=[{"objID": oid(), "condition": "g_count >= 10",
                 "outputName": "FULL"}])
-    f_full = set_var([('g_branch', '"full (>=10)"')], 16, 404,
+    f_full = set_var([('g_branch', '"full (>=10)"')], 240, 390,
                      description="分支⑧'：命中后写 g_branch")
 
     flow_components = [f_add, f_many, f_eval, f_store, f_local,
@@ -305,6 +306,8 @@ def build_project():
          "defaultValue": "false", "persistent": False, "native": False},
         {"objID": oid(), "name": "g_status", "type": "string",
          "defaultValue": '"idle"', "persistent": False, "native": False},
+        {"objID": oid(), "name": "g_branch", "type": "string",
+         "defaultValue": '"none"', "persistent": False, "native": False},
     ]
     # 页面局部：只在定义它的那条 Flow 内可见（P8 · P.57）
     local_vars = [
@@ -391,8 +394,20 @@ BUILD_TEMPLATES = {
 }
 
 
+def _assert_flow_boxes(flow_components):
+    """流组件在画布上不许互相压着（叠在一起时 Studio 里根本看不出连线走向，
+    而且改一个件的坐标会连带看不见另一个）。屏幕件不算（它是 UI 层）。"""
+    boxes = [(c.get("description") or c["type"], c["left"], c["top"],
+              c["width"], c["height"]) for c in flow_components]
+    for i, (n, x, y, w, h) in enumerate(boxes):
+        for n2, x2, y2, w2, h2 in boxes[i + 1:]:
+            if x < x2 + w2 and x2 < x + w and y < y2 + h2 and y2 < y + h:
+                raise SystemExit("流组件画布重叠：%s × %s" % (n, n2))
+
+
 def main():
     data = build_project()
+    _assert_flow_boxes(data["userPages"][0]["components"][1:])
     with open(PROJECT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
