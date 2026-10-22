@@ -33,18 +33,37 @@
 diff -u Rxroller.c.orig Rxroller.c   →   14 hunks, +49 / -16
 ```
 
-| # | 上游位置 | 类别 | 改了什么 | 为什么 |
-|---|---|---|---|---|
-| 1 | 文件头 | 记录 | 插入生成说明横幅（指回本 PORTLOG 与 port 脚本） | 产物必须自带来源，翻到文件就知道去哪核对 |
-| 2 | `#include "Rxroller.h"` 之后 | 版本适配 | 加 `lv_mem_alloc→lv_malloc`、`lv_mem_free→lv_free` 别名宏 | LVGL 9 改了名（`src/stdlib/lv_mem.h:69/97`）；不补只报"隐式声明"，**链接期才炸**，最难查 |
-| 3 | `rx_get_ctx()` | 版本适配 | `wheel->user_data` 读 → `lv_obj_get_user_data(wheel)`（含判空那处） | v9 把 `lv_obj_t` 变不透明类型，直接摸字段编不过 |
-| 4 | `rx_cleanup_internal()` | 版本适配 | `ctx->screen->user_data = NULL` → `lv_obj_set_user_data(...)` | 同上 |
-| 5 | `rx_update_item_scale()` | **能力补丁** | 衰减窗口 `icon_distance` → `icon_distance * RX_SCALE_SPAN_PITCHES`（本工程 3） | 上游只放大中心行，相邻行直接落到 `edge_scale`；参考图要连续渐变。**取 1 即完全恢复上游行为** |
-| 6-10 | `rx_item_event_cb` / `rx_event_pressing` 等 7 处 | 版本适配 | `parent->user_data`、`icon_obj->user_data`、`item->obj->user_data=`、`e->user_data` → 对应访问器 | 同 #3，合计 12 个 `user_data` 站点 |
-| 7 | `rx_event_pressing` + `rx_event_released` + ctx 结构体 | **上游真 bug（RX-PORT-FIX）** | 新增 `ctx->drag_travel` 按拍累计位移；`is_click` 从 `offset == 0` 改成 `drag_travel <= RXROLLER_CLICK_TRAVEL_MAX(10px)` | 上游 `offset` 是**单拍增量**（`point1` 随即跟进），用它判点击 ⇒ 松手前只要停顿一拍，整段拖动被判成点击，上游自己把列表动画切到松手那一行 = 用户报的“拖完自动回弹/滑不到底” | 
+机器导出的完整 diff 已入库：**[`Rxroller_port.diff`](Rxroller_port.diff)**（178 行，含上下文）。
+下表按 `diff -u` 的 14 个 hunk 逐条对号，"上游位置"就是 hunk 头里的 `-行,数`，
+可以直接 `sed -n '490,520p' Rxroller.c.orig` 跳过去看原文。
 
-**没有改的**：滚轮布局数学、缩放曲线、动画与惯性参数、吸附算法、数据结构。
-**改过的行为**：只有 #5（缩放衰减窗口）与 #7（点击/拖动判定）两处，其余逐字保留。
+| # | 上游位置（hunk 头） | 所在函数 | 类别 | 改了什么 |
+|---|---|---|---|---|
+| 1 | `-1,5 +1,30` | 文件头 | 记录 + 常量 | 插入生成说明横幅；其后加三条宏：`RXROLLER_CLICK_TRAVEL_MAX 10`（#11 用）、`lv_mem_alloc/free → lv_malloc/free` 别名、`RX_SCALE_SPAN_PITCHES 3`（#5 用） |
+| 2 | `-16,6 +41,7` | `rxroller_ctx_t` | 上游真 bug | 结构体加 `int32_t drag_travel` |
+| 3 | `-90,11 +116,11` | `rx_get_ctx()` | 版本适配 | `wheel->user_data` 读 → `lv_obj_get_user_data()`（判空 + 返回，2 站点） |
+| 4 | `-118,7 +144,7` | `rx_cleanup_internal()` | 版本适配 | `ctx->screen->user_data = NULL` → `lv_obj_set_user_data()` |
+| 5 | `-202,15 +228,17` | `rx_update_item_scale()` | **能力补丁** | 衰减窗口 `icon_distance` → `× RX_SCALE_SPAN_PITCHES`（本工程 3）；**取 1 即逐字恢复上游行为** |
+| 6 | `-269,13 +297,13` | `rx_anim_exec_cb()` | 版本适配 | `parent->user_data`、`icon_obj->user_data` → 访问器（2 站点） |
+| 7 | `-319,8 +347,8` | `rx_dismiss_ready_cb()` | 版本适配 | `parent->user_data` 判空 + 读 → 访问器（2 站点） |
+| 8 | `-368,8 +396,8` | `rx_restore_ready_cb()` | 版本适配 | 同上（2 站点） |
+| 9 | `-469,6 +497,7` | `rx_event_pressing()` | 上游真 bug | 新手势分支里 `ctx->drag_travel = 0` |
+| 10 | `-481,6 +510,7` | `rx_event_pressing()` | 上游真 bug | 每拍 `ctx->drag_travel += LV_ABS(ctx->offset)` |
+| 11 | `-508,7 +538,10` | `rx_event_released()` | 上游真 bug | `is_click` 从 `offset == 0` 改成 `drag_travel <= 10px` |
+| 12 | `-590,7 +623,7` | `rx_init_item()` | 版本适配 | `item->obj->user_data = item` → `lv_obj_set_user_data()` |
+| 13 | `-704,7 +737,7` | `rx_event_delete()` | 版本适配 | `e->user_data` → `lv_event_get_user_data(e)` |
+| 14 | `-810,7 +843,7` | `rxroller_create()` | 版本适配 | `ctx->screen->user_data = ctx` → `lv_obj_set_user_data()` |
+
+**类别汇总**：版本适配（v8→9.4 不透明 `lv_obj_t` / 内存改名）= #3,4,6,7,8,12,13,14 共 8 个 hunk、
+12 个 `user_data` 站点 + 2 个别名宏；能力补丁 = #5 一处；上游真 bug = #2,9,10,11 四处（同一件事）；
+说明横幅 = #1。
+
+**为什么 #2/9/10/11 算 bug 而不是适配**：上游 `offset` 是**单拍增量**（`touch_point1` 随即跟进），
+`rx_event_released` 却拿它判"是不是点击" ⇒ 松手前只要停顿一拍，整段拖动就被判成点击，
+上游自己再把列表动画切回松手那一行 = 用户报的"拖完自动回弹 / 滑不到底"。
+
+**没有改的**：滚轮布局数学、弧线坐标、动画与惯性参数、吸附算法、数据结构（除新增一个字段）。
+**改过运行时行为的**：只有 #5（缩放衰减窗口）与 #2/9/10/11（点击/拖动判定）两组，其余逐字保留。
 
 ### 3.1 快滑惯性：**没有**新增上游补丁（账单仍 14 hunks）
 
@@ -69,8 +88,9 @@ if (!x || !y) return;
 *y = 0;
 ```
 
-两个出参都清零了。补丁已撤销，撤销后重跑：`10 hunks / +38 / -15` 不变、
-三条行为断言仍 3/3 PASS、两张取证图照常产出。
+两个出参都清零了。补丁已撤销，撤销当时重跑：`10 hunks / +38 / -15`（那是撤销后的账单，
+**不是现在的**——之后又为"拖完回弹"补了 #2/9/10/11 四处，才变成当前的 `14 hunks / +49 / -16`）、
+行为断言照常 PASS、两张取证图照常产出。
 
 真正的"卡死"现象来自环境：刚链接完立刻 exec 会瞬时失败（`rc=127`，日志只剩 3 行
 LVGL warning），与代码无关——重试即恢复。
@@ -83,6 +103,7 @@ LVGL warning），与代码无关——重试即恢复。
 ```bash
 # ① 看账单
 diff -u src/native/rxroller/Rxroller.c.orig src/native/rxroller/Rxroller.c
+#   同一份 diff 已导出成文件，不用自己跑：Rxroller_port.diff（178 行，含上下文）
 
 # ② 确认产物确实是脚本生成的（被手改过就会 FAIL）
 python design/port_rxroller.py && python design/preflight.py
