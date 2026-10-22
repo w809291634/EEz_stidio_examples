@@ -18,6 +18,10 @@ void watch_list_center(int index, bool anim);
 /* 当前中心行下标（未创建返回 -1） */
 int watch_list_center_index(void);
 
+/* 惯性抛出：px 带符号（正=手指向下划，看更早的行），内部换算成整行后做动画。
+ * 手指快滑由 row_released_cb 调用；夹具也可以直接调它做无头断言。 */
+void watch_list_fling(int32_t px);
+
 /* 立刻做一次屏外回收（拍屏前调，保证快照只算可见行） */
 void watch_list_cull(void);
 

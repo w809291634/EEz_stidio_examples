@@ -46,6 +46,16 @@ diff -u Rxroller.c.orig Rxroller.c   →   14 hunks, +49 / -16
 **没有改的**：滚轮布局数学、缩放曲线、动画与惯性参数、吸附算法、数据结构。
 **改过的行为**：只有 #5（缩放衰减窗口）与 #7（点击/拖动判定）两处，其余逐字保留。
 
+### 3.1 快滑惯性：**没有**新增上游补丁（账单仍 14 hunks）
+
+2026-10-22 加"快滑惯性"时先查过上游：`inertia_divisor` 只在配置兜底里被写了一次
+（`if (ctx->config.inertia_divisor <= 0) ctx->config.inertia_divisor = 20;`），
+**全文再无第二处读取** ⇒ 上游根本没有惯性，那个字段是死的；松手路径
+`rx_event_released` 也只会 `rx_set_center_internal(best, 1)` 吸附到最近行。
+所以整套惯性做在**本工程自己的** `src/native/watch_list_native.c`
+（测速 → `row_released_cb` → `watch_list_fling()`），一行上游代码都没动。
+`preflight.py` 第 4 组的"产物 == 脚本重放结果（逐字节一致）"仍然 OK，就是这条的自证。
+
 ## 4. 撤回记录（重要，别删）
 
 移植过程中我一度判定"**上游有 bug**：`rx_calc_curve_pos()` 的 `CURVE_NONE + VERTICAL`

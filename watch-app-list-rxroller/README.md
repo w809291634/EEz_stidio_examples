@@ -63,7 +63,7 @@ watch-app-list-rxroller/
 │   └── sim_cmake/                   ← main.c（含 WATCH_AUTOTEST 取证）+ lv_conf.h(SNAPSHOT=1)
 ├── src/native/
 │   ├── rxroller/{Rxroller.c.orig,Rxroller.c,Rxroller.h,LICENSE}
-│   ├── watch_list_native.{c,h}      ← 接线：配置 + 行内容 + 点击 + 屏外回收 + 自证口
+│   ├── watch_list_native.{c,h}      ← 接线：配置 + 行内容 + 点击 + 快滑惯性 + 屏外回收 + 自证口
 │   ├── app_rows.{c,h} + icons/      ← 生成的表与图标
 └── src/ui/                          ← EEZ 产物（★ 没有 eez-flow.*，这正是判据）
 ```
@@ -80,7 +80,8 @@ python design\preflight.py         && rem ★ 六组硬门禁
 ```
 
 无头自证：`set WATCH_AUTOTEST=1 && set WATCH_AUTOEXIT=1 && main.exe`
-（辅助开关：`WATCH_NOSHOT=1` 跳拍屏、`WATCH_TICKTRACE=1` 打节拍、`WATCH_ROWDEBUG=1` 打逐行坐标）
+（辅助开关：`WATCH_NOSHOT=1` 跳拍屏、`WATCH_TICKTRACE=1` 打节拍、`WATCH_ROWDEBUG=1` 打逐行坐标、
+`WATCH_ALLOWMOUSE=1` 把真鼠标接回来——默认自证模式下鼠标是被摘掉的，见 §5.1）
 
 ## 5. 实测状态（2026-10-22）
 
@@ -93,7 +94,7 @@ python design\preflight.py         && rem ★ 六组硬门禁
 | 上游件可审计 | 产物 == `port_rxroller.py` 重放结果（逐字节一致）✓ |
 | 表 × 图标 | 22 项、22 个图标、`app_rows.c` 与表同步 ✓ |
 | PC_SIM 编译链接 | `build succeeded`（含 22 个图标编译单元）✓ |
-| ★ 行为断言（无头） | `惯性收敛后中心行 = 10` **PASS**；`中心行缩放最大` **PASS**（255 vs 220）；`离中心越远单调衰减` **PASS**（220 > 185 > 150） |
+| ★ 行为断言（无头） | `惯性收敛后中心行 = 10` **PASS**；`中心行缩放最大` **PASS**（255 vs 220）；`离中心越远单调衰减` **PASS**（220 > 185 > 150）；`快滑一次跨多行并吸附到整行` **PASS**（10 → 13，抛 250px）；`末尾快滑钳在最后一行` **PASS**（21 → 21，不越界） |
 | ★ 剖面 | `[WHEEL] center10 scale: 150 185 220 255 220 185 150`（对称渐变 = 滚轮观感来源） |
 | ★ 截图 | `shots/shot_init.png` / `shot_center10.png`：竖直一列、圆角图标 + 中文名、中心最大；sysmon 读数 79 FPS / 1% CPU / 3 ms |
 
@@ -106,6 +107,33 @@ python design\preflight.py         && rem ★ 六组硬门禁
   去掉它、直接拿当前活动缓冲就正常出图。
 - 上游**不做屏外回收**：根对象撑满宿主后 22 行全部进入绘制计算 ⇒ 本工程在
   `watch_list_native.c` 里加了 `CULL_PITCHES=4` 的隐藏回收（真手表列表也是这么做的）。
+- **无头跑会被人手污染**：`WATCH_AUTOTEST` 并不挡住 SDL 真鼠标。实测一次夹定要判
+  `10 -> 13`，中途一次真实拖动把中心行改成了 11，结果量成 `11 -> 15` ⇒ FAIL。
+  现在 `hal_init()` 在自证模式下 `lv_indev_delete(mouse)` 把鼠标摘掉（`WATCH_ALLOWMOUSE=1` 可恢复）。
+  顺带这条也证明了测速链是通的：那次污染日志里就是 `[FLING] vel=-1292 px/s -> throw=-300 px`。
+
+### 5.2 快滑惯性（本工程加，上游没有）
+
+上游其实**没有惯性**：`rxroller_config_t.inertia_divisor` 是死字段——`Rxroller.c` 只在
+配置兜底里写过一次 `if (ctx->config.inertia_divisor <= 0) ... = 20;`，全文再无第二处读取
+（`grep -n inertia_divisor Rxroller.c` 只命中这一行）。松手时 `rx_event_released` 走的是
+`rx_set_center_internal(best, 1)`，`best` 就是"当前最近行" ⇒ 永远只吸附、不抛出。
+所以惯性整套做在我们自己的 `watch_list_native.c` 里，**上游补丁账单不变（仍 14 hunks）**。
+
+三段：
+
+| 环节 | 做法 | 为什么这么写 |
+|---|---|---|
+| 测速 | `LV_EVENT_PRESSING` 逐拍差分 `dy/dt`，低通 3/8；停手超过 80 ms 且 y 没变 ⇒ 速度清零 | 只看最后一拍会被抖动支配；不清零则"拖到位、停一下再松手"会按残留速度乱抛 |
+| 判抛 | `|v| < 120 px/s` 不抛 | 120×0.25s=30px，不足 1/3 行距，本来就吸附回原行，留着只会误抛 |
+| 抛出 | `v×0.25s` 投影成 px，钳在 ±3 行；换算成整行增量后 `rxroller_set_center(anim)` | 不能用 `rxroller_scroll(px)`：上游动画分支里 offset 只参与算时长（`Rxroller.c:725`），目标位置恒等于当前最近行 |
+
+★ 抛出必须 `lv_async_call` 延一拍。上游也在行上注册了 `LV_EVENT_RELEASED`
+（`Rxroller.c:638`，注册在 `create_cb` 之后 ⇒ 它的 cb 跑在我们的后面），同步调
+`set_center` 会被它随后那次"吸附"覆盖掉。
+
+符号约定：`watch_list_fling(px)` 的 px 与手指同向，**正=往下划=看更早的行=行号减小**
+（`rx_event_pressing` 是 `distance += offset`，行号小的 distance 为负，所以正向把中心往小行拉）。
 
 ## 6. 两种形态怎么选
 
@@ -121,14 +149,18 @@ python design\preflight.py         && rem ★ 六组硬门禁
 - ★ **行缩放往中线收**：上游把 transform 轴心设在 `big_w/2`（行宽一半），所以离中心越远
   的行不仅变小、图标还向水平中线漂（截图里 `呼` 比 `天` 偏右 ~100px）。参考图是"图标列
   基本对齐"。要贴平得把轴心改成行左缘（需要再打一条 `RX-PORT-FEAT`，或改用 SIZE 缩放模式）。
-- **未验**：真实鼠标拖动的惯性手感（无头只验了 `rxroller_set_center(anim=true)` 这条
-  确定路径）；真机（SiFli 面板）编译未做。
+- **半验**：真实鼠标快滑的手感（速度阈值 120 px/s、投影 0.25 s、上限 3 行这几个数）
+  只验到了"链路通"——自证模式下真鼠标被摘掉，抛距→行数的换算与落点吸附是用
+  `watch_list_fling()` 直接喂 -250 px 断言的；真手滑的**观感**轻重还得人上手调。
+  真机（SiFli 面板）编译未做。
 - **未做**：图标自身动画（自转/心跳/步态那套 66fps 参数通道，Design Watch 有）。
 
 ## 8. 相关
 
-- 值得回报给上游的只有一条：**缩放衰减窗口写死 1 个行距**（`rx_update_item_scale`），
-  想要"多行连续渐变"就得改；其余是 v8→v9 的适配，不是 bug。
-  （我曾报过第二条"`rx_calc_curve_pos` 漏初始化 `*x`"——核对原文后撤回，见 §3 末行。）
+- 值得回报给上游的有两条：**缩放衰减窗口写死 1 个行距**（`rx_update_item_scale`），
+  想要"多行连续渐变"就得改；**`inertia_divisor` 是死字段**（只被兜底赋值、从不被读），
+  配置它没有任何效果，文档却列在惯性参数里。
+  其余是 v8→v9 的适配，不是 bug。
+  （我曾报过第三条"`rx_calc_curve_pos` 漏初始化 `*x`"——核对原文后撤回，见 §3 末行。）
 - 中文字体铁律：`示例工程模板说明.md` 坑表 + `flow-examples/README.md` §3
 - no-flow 口径的由来：`app-wifi-scan-flow-no-flow/README.md`

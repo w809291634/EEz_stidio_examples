@@ -28,6 +28,10 @@ extern void ui_tick(void);
 #define SIM_W 410
 #define SIM_H 502
 
+/* 22 行列表的最后一行下标。与 src/native/app_rows.h 同源，由 preflight 对账，
+ * 这里不 include 是为了不在仿真入口里拖进图标资源声明。 */
+#define WATCH_TEST_LAST_ROW 21
+
 /* ---- WATCH_AUTOTEST=1：无头自证（合成拖动 + dump + 拍屏），不需要人点鼠标 ----
  * 判据形态是"关系"而不是绝对值：
  *   ① 同屏图标的 scale 有区间（max > min）⇒ 穹顶缩放生效（中间大两边小）；
@@ -82,7 +86,8 @@ static void autotest_hooks(void)
 {
     static int ticks = 0;
     static int c0, c2, c3, center_before;
-    static char b1[96], b2[96], b3[96];
+    static int fling_from, fling_settle, fling_center, fling_stage;
+    static char b1[96], b2[96], b3[96], b4[96];
 
     if (!getenv("WATCH_AUTOTEST")) return;
     ticks++;
@@ -117,7 +122,55 @@ static void autotest_hooks(void)
         watch_list_dump("center10");
         watch_list_cull();
         if (!getenv("WATCH_NOSHOT")) take_shot("shot_center10.bmp");
-        if (getenv("WATCH_AUTOEXIT")) exit(0);
+    }
+    /* ---- 快滑惯性：250px（=2.5 行距）应当一次跨 3 行，而不是一格一格 ---- */
+    if (ticks == 420) {
+        fling_from = watch_list_center_index();
+        watch_list_fling(-250);         /* 负=手指上滑=往后翻（行号增大） */
+    }
+    if (fling_stage == 0 && ticks > 420 && !watch_list_is_animating()) {
+        /* 动画停了就开始数稳定拍；连续 15 拍中心不变才算落定 */
+        if (watch_list_center_index() == fling_center) fling_settle++;
+        else { fling_center = watch_list_center_index(); fling_settle = 0; }
+        if (fling_settle == 15) {
+            snprintf(b4, sizeof(b4), "%d -> %d (-%d px, 期望 +3 行)",
+                     fling_from, fling_center, 250);
+            expect("快滑一次跨多行并吸附到整行",
+                   fling_center == fling_from + 3, b4);
+            watch_list_dump("fling");
+            watch_list_cull();
+            if (!getenv("WATCH_NOSHOT")) take_shot("shot_fling.bmp");
+            fling_stage = 1;
+            fling_settle = 0;
+            fling_center = -1;
+        }
+    }
+    /* ---- 边界：末尾行往前抛必须钳在最后一行，不能 OOB（上游会打 error 并拒绝）---- */
+    if (fling_stage == 1 && ticks % 5 == 0) {
+        watch_list_center(WATCH_TEST_LAST_ROW, true);
+        fling_stage = 2;
+    }
+    if (fling_stage == 2 && !watch_list_is_animating()) {
+        if (watch_list_center_index() == fling_center) fling_settle++;
+        else { fling_center = watch_list_center_index(); fling_settle = 0; }
+        if (fling_settle == 15) {
+            fling_from = fling_center;
+            watch_list_fling(-250);     /* 已经到底，再往后抛应当原地不动 */
+            fling_stage = 3;
+            fling_settle = 0;
+            fling_center = -1;
+        }
+    }
+    if (fling_stage == 3 && !watch_list_is_animating()) {
+        if (watch_list_center_index() == fling_center) fling_settle++;
+        else { fling_center = watch_list_center_index(); fling_settle = 0; }
+        if (fling_settle == 15) {
+            snprintf(b4, sizeof(b4), "%d -> %d (末行=%d)",
+                     fling_from, fling_center, WATCH_TEST_LAST_ROW);
+            expect("末尾快滑钳在最后一行（不越界）",
+                   fling_center == WATCH_TEST_LAST_ROW, b4);
+            if (getenv("WATCH_AUTOEXIT")) exit(0);
+        }
     }
 }
 
@@ -130,6 +183,15 @@ static lv_display_t * hal_init(int32_t w, int32_t h)
     lv_indev_set_group(mouse, lv_group_get_default());
     lv_indev_set_display(mouse, disp);
     lv_display_set_default(disp);
+
+    /* ★ 无头自证时把真鼠标摘掉：断言期间只要有人（或脚本外的一次手滑）在窗口里
+     *   拖动，中心行就被改了，量出来的就不是一次可复现的观测。
+     *   实测过一次污染：夹定要 10->13，真鼠标插了一脚变成 11->15 ⇒ FAIL。
+     *   要人同时上手就 set WATCH_ALLOWMOUSE=1。 */
+    if (getenv("WATCH_AUTOTEST") && !getenv("WATCH_ALLOWMOUSE")) {
+        lv_indev_delete(mouse);
+        return disp;
+    }
 
     LV_IMAGE_DECLARE(mouse_cursor_icon);   /* 仿真器自带光标位图（main/src/mouse_cursor_icon.c） */
     lv_obj_t * cursor_obj = lv_image_create(lv_screen_active());

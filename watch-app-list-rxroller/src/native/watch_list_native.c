@@ -10,7 +10,9 @@
  * 没有 widget 属性定义）。Flow 版参照工程（桌面的 Design Watch）能做到，
  * 是靠 97 个 action 写 / 15ms 堆出来的；这里一次遍历就够。
  */
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "lvgl.h"
@@ -43,6 +45,28 @@ static lv_point_t s_press_pt;
 static bool s_press_valid = false;
 static int s_press_travel = 0;
 
+/* 快滑惯性（本工程自己加，上游没有——`inertia_divisor` 是死字段：
+ * Rxroller.c 只在配置兜底里写了一次 20，之后全文再无任何读取）。
+ * 做法：PRESSING 逐拍估纵向速度（低通滤波），RELEASED 把速度投影成
+ * "还要抛多少像素"，交给 watch_list_fling() 用 rxroller_scroll 走完并吸附。
+ *
+ * 三个数是怎么定的（410x502、行距 100px）：
+ *   FLING_MIN_VEL 120 px/s —— 手指缓慢移动完松手不该抛；120px/s × 0.25s = 30px，
+ *     不足行距的 1/3，本来就吸附回原行，设成阈值正好把"没意义的小抛"滤掉。
+ *   FLING_SEC 0.25 —— 投影时长，相当于衰减常数的近似积分。0.25s 下
+ *     一次正常快滑（800~1500 px/s）抛 200~375px = 2~3 行，符合手表的观感。
+ *   FLING_MAX_PX 3 行 —— 上限，防止甩一下跨过半屏找不到位置。 */
+#define FLING_MIN_VEL     120        /* px/s，低于它当普通松手不抛 */
+#define FLING_SEC         250        /* 毫秒（用整数算，省得引浮点） */
+#define FLING_MAX_PX      (ROW_PITCH * 3)
+#define FLING_MAX_ROWS    3          /* 一次快滑最多跨几行（= FLING_MAX_PX / 行距） */
+#define FLING_VEL_SMOOTH  8          /* 低通：新样本占 3/8，历史占 5/8 */
+#define FLING_VEL_STALE_MS 80        /* 超过这么久没更新 ⇒ 手指已停，速度作废 */
+
+static lv_point_t s_last_pt;
+static uint32_t   s_last_t;
+static int        s_vel;            /* px/s，纵向；正=手指向下 */
+
 static void row_press_cb(lv_event_t *e)
 {
     lv_indev_t *in = lv_indev_get_act();
@@ -52,8 +76,19 @@ static void row_press_cb(lv_event_t *e)
     if (NULL != in) {
         lv_indev_get_point(in, &s_press_pt);
         s_press_travel = 0;
+        s_last_pt = s_press_pt;
+        s_last_t = lv_tick_get();
+        s_vel = 0;
         s_press_valid = true;
     }
+}
+
+/* 抬手但没形成快滑（或手势被系统抢走）：把速度清掉，别让下一次松手误用 */
+static void row_press_lost_cb(lv_event_t *e)
+{
+    (void)e;
+    s_press_valid = false;
+    s_vel = 0;
 }
 
 static void row_pressing_cb(lv_event_t *e)
@@ -69,6 +104,61 @@ static void row_pressing_cb(lv_event_t *e)
     dy = LV_ABS(p.y - s_press_pt.y);
     if (dx > s_press_travel) s_press_travel = dx;
     if (dy > s_press_travel) s_press_travel = dy;
+
+    /* 速度（px/s，纵向）：按拍差分 + 低通平滑，避免最后一拍抖动决定成败 */
+    {
+        uint32_t now = lv_tick_get();
+        uint32_t dt = (uint32_t)lv_tick_elaps(s_last_t);
+
+        if (dt > 0) {
+            int inst;
+
+            /* 手指停住超过 FLING_VEL_STALE_MS ⇒ 位置没变但时间变了，速度归零。
+             * 不加这条，"慢慢拖到某行、停一下再松手"会按最后一次的残留速度抛出。 */
+            if (dt > FLING_VEL_STALE_MS && p.y == s_last_pt.y) {
+                s_vel = 0;
+            } else {
+                inst = (int)((p.y - s_last_pt.y) * 1000 / (int32_t)dt);
+                s_vel = (s_vel * (FLING_VEL_SMOOTH - 3) + inst * 3) / FLING_VEL_SMOOTH;
+            }
+            s_last_pt = p;
+            s_last_t = now;
+        }
+    }
+}
+
+/* 松手：把速度投影成"再抛多少像素"，交给 fling 去做。
+ * 必须 lv_async_call 延一拍——上游也注册了 RELEASED（Rxroller.c:628）且它跑在我们之后，
+ * 直接调 scroll 会被它那次 set_center 覆盖掉。 */
+static void fling_async(void *user)
+{
+    watch_list_fling((int32_t)(intptr_t)user);
+}
+
+static void row_released_cb(lv_event_t *e)
+{
+    int32_t throw_px;
+
+    (void)e;
+    if (!s_press_valid) return;
+    s_press_valid = false;
+
+    /* 位移没超过"轻点"阈值 ⇒ 这是点击，不是快滑（哪怕瞬时速度采样偏高）。
+     * 不挡这条的话，一次 10px 的轻扫会同时触发 CLICKED 和抛出。 */
+    if (s_press_travel <= DRAG_CLICK_IGNORE_PX) { s_vel = 0; return; }
+
+    if (s_vel > -FLING_MIN_VEL && s_vel < FLING_MIN_VEL) {   /* 慢速移动不算快滑 */
+        s_vel = 0;
+        return;
+    }
+
+    /* 屏幕内容跟手指同向走 ⇒ 手指向下(+vel)是看更早的行，行号减小 */
+    throw_px = (int32_t)s_vel * FLING_SEC / 1000;
+    if (throw_px >  FLING_MAX_PX) throw_px =  FLING_MAX_PX;
+    if (throw_px < -FLING_MAX_PX) throw_px = -FLING_MAX_PX;
+    printf("[FLING] vel=%d px/s -> throw=%d px\n", s_vel, (int)throw_px);
+    s_vel = 0;
+    lv_async_call(fling_async, (void *)(intptr_t)throw_px);
 }
 
 static void row_click_cb(lv_event_t *e);
@@ -100,6 +190,8 @@ static void row_create_cb(lv_obj_t *row, int32_t index, void *user_data)
     lv_obj_remove_flag(row, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_event_cb(row, row_press_cb, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(row, row_pressing_cb, LV_EVENT_PRESSING, NULL);
+    lv_obj_add_event_cb(row, row_released_cb, LV_EVENT_RELEASED, NULL);
+    lv_obj_add_event_cb(row, row_press_lost_cb, LV_EVENT_PRESS_LOST, NULL);
     lv_obj_add_event_cb(row, row_click_cb, LV_EVENT_CLICKED, NULL);
 }
 
@@ -262,6 +354,35 @@ bool watch_list_is_animating(void)
 void watch_list_center(int index, bool anim)
 {
     if (s_wheel) rxroller_set_center(s_wheel, index, anim ? LV_ANIM_ON : LV_ANIM_OFF);
+}
+
+/* 惯性抛出。px 带符号：正=手指往下划（看更早的行，行号减小）。
+ *
+ * 为什么不直接叫 rxroller_scroll(px)：上游动画分支里 offset 只参与算动画时长
+ * （Rxroller.c:725），行的目标位置恒等于"当前最近行"——也就是永远只吸附、不位移。
+ * 所以这里自己把抛距换算成行距增量，再让上游去做那段动画（多行、ease_out、
+ * 落点严格对齐某一行），观感才和真手表一致。 */
+void watch_list_fling(int32_t px)
+{
+    int32_t center, rows, target;
+
+    if (NULL == s_wheel || 0 == px) return;
+
+    /* 四舍五入到整行（+半行距再截断） */
+    rows = (px + (px > 0 ? ROW_PITCH / 2 : -ROW_PITCH / 2)) / ROW_PITCH;
+    if (rows >  FLING_MAX_ROWS) rows =  FLING_MAX_ROWS;
+    if (rows < -FLING_MAX_ROWS) rows = -FLING_MAX_ROWS;
+    if (rows == 0) return;              /* 抛距不足半行：交给上游的吸附就够了 */
+
+    center = (int32_t)rxroller_get_center(s_wheel);
+    target = center - rows;             /* 见上：手指向下 = 行号减小 */
+    if (target < 0) target = 0;
+    if (target > WATCH_APP_ROWS_COUNT - 1) target = WATCH_APP_ROWS_COUNT - 1;
+    if (target == center) return;
+
+    printf("[FLING] throw=%dpx rows=%d center=%d -> %d\n",
+           (int)px, (int)rows, (int)center, (int)target);
+    rxroller_set_center(s_wheel, target, LV_ANIM_ON);
 }
 
 int watch_list_row_scale(int index)

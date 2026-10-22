@@ -175,9 +175,13 @@ def check_evidence():
     mainc = read(os.path.join(HERE, "sim_cmake", "main.c"))
     check("WATCH_AUTOTEST 钩子接进主循环", "autotest_hooks();" in mainc,
           "钩子没接进 while(1)")
-    check("三条行为断言在夹具里",
-          all(k in mainc for k in ("中心行 = 10", "缩放最大", "单调衰减")),
+    check("五条行为断言在夹具里",
+          all(k in mainc for k in ("中心行 = 10", "缩放最大", "单调衰减",
+                                   "快滑一次跨多行", "钳在最后一行")),
           "断言被删了")
+    check("自证模式摘掉真鼠标",
+          'WATCH_ALLOWMOUSE' in mainc and 'lv_indev_delete(mouse)' in mainc,
+          "人手一滑就把断言量歪（实测污染过一次：10->13 被改成 11->15）")
 
 
 def main():
