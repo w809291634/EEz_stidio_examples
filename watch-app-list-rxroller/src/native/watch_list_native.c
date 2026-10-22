@@ -310,23 +310,54 @@ void watch_list_create(lv_obj_t *host, lv_obj_t *status_label)
            WATCH_APP_ROWS_COUNT, ROW_PITCH, EDGE_SCALE, CURVE_RADIUS);
 }
 
-/*---- 中心图标的落点标定（横向 1/3 + 垂直正中）----*/
+/*---- 中心行的落点标定（横向 CENTER_X_PCT% + 垂直 CENTER_Y_PCT%）----*/
 
 /* 一次性闭环标定：割线法**实测** pad→图标中心 的斜率，不假设 1/2。
  * 为什么不写死 pad：见 FIXLOG FX-010 / README §5.3。 */
 
-static bool center_icon_rect(int *cx, int *cy, int *w)
+/* 上游把**整行**（图标+文字）按行自己的 (big_w/2, big_h/2) 当轴心做 transform 缩放。
+ * 图标在轴心左侧 ⇒ 放大后内容整体往轴心方向漂，`lv_obj_get_coords` 拿到的
+ * "布局中心"并不是屏幕上看到的中心（中心档 150% 时实测往轴心侧偏 42px）。
+ * 标定与断言一律换算成渲染后的坐标，缺陷史见 FIXLOG FX-024。 */
+static void row_pivot(lv_obj_t *row, int *z, int *px, int *py)
+{
+    lv_area_t ra;
+
+    lv_obj_get_coords(row, &ra);
+    *z = (int)lv_obj_get_style_transform_scale_x(row, LV_PART_MAIN);
+    if (*z <= 0) *z = 256;
+    *px = (int)ra.x1 + (int)lv_obj_get_style_transform_pivot_x(row, LV_PART_MAIN);
+    *py = (int)ra.y1 + (int)lv_obj_get_style_transform_pivot_y(row, LV_PART_MAIN);
+}
+
+static int zoom_about(int v, int pivot, int z)
+{
+    return pivot + (int)((int64_t)(v - pivot) * z / 256);
+}
+
+static lv_obj_t *center_row(void)
 {
     int idx = (int)rxroller_get_center(s_wheel);
-    lv_obj_t *row, *icon;
-    lv_area_t a;
 
-    if (NULL == s_wheel || idx < 0 || idx >= WATCH_APP_ROWS_COUNT) return false;
-    row = rxroller_get_item_obj(s_wheel, idx);
+    if (NULL == s_wheel || idx < 0 || idx >= WATCH_APP_ROWS_COUNT) return NULL;
+    return rxroller_get_item_obj(s_wheel, idx);
+}
+
+static bool center_icon_rect(int *cx, int *cy, int *w, bool on_screen)
+{
+    lv_obj_t *row = center_row(), *icon;
+    lv_area_t a;
+    int z, px, py;
+
     if (NULL == row || lv_obj_get_child_count(row) < 1) return false;
     icon = lv_obj_get_child(row, 0);          /* child 0 = row_create_cb 先建的图标 */
     if (NULL == icon) return false;
     lv_obj_get_coords(icon, &a);
+    if (on_screen) {
+        row_pivot(row, &z, &px, &py);
+        a.x1 = zoom_about(a.x1, px, z);   a.x2 = zoom_about(a.x2, px, z);
+        a.y1 = zoom_about(a.y1, py, z);   a.y2 = zoom_about(a.y2, py, z);
+    }
     if (cx) *cx = ((int)a.x1 + (int)a.x2) / 2;
     if (cy) *cy = ((int)a.y1 + (int)a.y2) / 2;
     if (w)  *w  = (int)a.x2 - (int)a.x1 + 1;
@@ -336,7 +367,7 @@ static bool center_icon_rect(int *cx, int *cy, int *w)
 static int center_axis(bool is_x)
 {
     int cx, cy;
-    return center_icon_rect(&cx, &cy, NULL) ? (is_x ? cx : cy) : -1;
+    return center_icon_rect(&cx, &cy, NULL, true) ? (is_x ? cx : cy) : -1;
 }
 
 static int pad_of(bool is_x)
@@ -385,19 +416,71 @@ static void align_center_axis(bool is_x, int target)
 
 static void watch_list_align_center(lv_obj_t *host)
 {
-    align_center_axis(true, (int)lv_obj_get_width(host) / CENTER_X_DIVISOR);
-    align_center_axis(false, (int)lv_obj_get_height(host) / CENTER_Y_DIVISOR);
+    align_center_axis(true, (int)lv_obj_get_width(host) * CENTER_X_PCT / 100);
+    align_center_axis(false, (int)lv_obj_get_height(host) * CENTER_Y_PCT / 100);
+    /* 布局中心与渲染中心差多少 = 上游整行缩放把图标往轴心拽了多少（FX-024 的量证） */
+    printf("[WHEEL] center icon: 渲染=(%d,%d) 布局=(%d,%d) 差=(%d,%d)\n",
+           center_axis(true), center_axis(false),
+           watch_list_center_icon_layout_x(), watch_list_center_icon_layout_y(),
+           center_axis(true) - watch_list_center_icon_layout_x(),
+           center_axis(false) - watch_list_center_icon_layout_y());
 }
 
 /*---- 观测量（无头夹具核对用）----*/
 
 int watch_list_center_icon_x(void) { return center_axis(true); }
 int watch_list_center_icon_y(void) { return center_axis(false); }
+int watch_list_center_icon_layout_x(void)
+{
+    int cx;
+    return center_icon_rect(&cx, NULL, NULL, false) ? cx : -1;
+}
+int watch_list_center_icon_layout_y(void)
+{
+    int cy;
+    return center_icon_rect(NULL, &cy, NULL, false) ? cy : -1;
+}
+
+/* 第 index 行"图标+文字"在屏幕上的真实包围盒（含整行 transform 缩放）。
+ * 行不存在/已被回收（HIDDEN）返回 false。胶囊边界核对夹具用它。 */
+bool watch_list_row_box(int index, int *x1, int *y1, int *x2, int *y2)
+{
+    int z, px, py, i, n;
+    lv_obj_t *row, *ch;
+    bool any = false;
+
+    if (NULL == s_wheel || index < 0 || index >= WATCH_APP_ROWS_COUNT) return false;
+    row = rxroller_get_item_obj(s_wheel, index);
+    if (NULL == row || lv_obj_has_flag(row, LV_OBJ_FLAG_HIDDEN)) return false;
+    row_pivot(row, &z, &px, &py);
+
+    n = (int)lv_obj_get_child_count(row);
+    for (i = 0; i < n; i++) {
+        int cx1, cy1, cx2, cy2;
+        lv_area_t a;
+
+        ch = lv_obj_get_child(row, i);
+        if (NULL == ch || lv_obj_has_flag(ch, LV_OBJ_FLAG_HIDDEN)) continue;
+        lv_obj_get_coords(ch, &a);
+        cx1 = zoom_about(a.x1, px, z);   cx2 = zoom_about(a.x2, px, z);
+        cy1 = zoom_about(a.y1, py, z);   cy2 = zoom_about(a.y2, py, z);
+        if (!any) {
+            *x1 = cx1;  *y1 = cy1;  *x2 = cx2;  *y2 = cy2;
+            any = true;
+        } else {
+            if (cx1 < *x1) *x1 = cx1;
+            if (cy1 < *y1) *y1 = cy1;
+            if (cx2 > *x2) *x2 = cx2;
+            if (cy2 > *y2) *y2 = cy2;
+        }
+    }
+    return any;
+}
 
 int watch_list_center_icon_w(void)
 {
     int w;
-    return center_icon_rect(NULL, NULL, &w) ? w : -1;
+    return center_icon_rect(NULL, NULL, &w, false) ? w : -1;
 }
 
 int watch_list_row_pitch(void) { return ROW_PITCH; }

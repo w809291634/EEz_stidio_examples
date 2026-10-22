@@ -34,11 +34,18 @@ int watch_list_row_scale(int index);
 /* 第 i 行当前离中心的带符号距离（px）——验"缩放随距离线性过渡"用 */
 int watch_list_row_distance(int index);
 
-/* 中心行图标的绝对中心/宽度（px）——"横向 1/3 + 垂直正中 + 选中最大"的观测量。
- * 目标值都在 watch_list_config.h，夹具用它核对。 */
+/* 中心行图标在**屏幕上**的绝对中心（含上游整行 transform 缩放的换算）
+ * + 宽度（布局值，不含缩放）。目标落点 CENTER_X_PCT/CENTER_Y_PCT 在 config 里。
+ * ★ 别拿 lv_obj_get_coords 的布局中心当"看到的位置"，中心档 150% 时实测差 42px，见 FIXLOG FX-024。 */
 int watch_list_center_icon_x(void);
 int watch_list_center_icon_y(void);
 int watch_list_center_icon_w(void);
+int watch_list_center_icon_layout_x(void);
+int watch_list_center_icon_layout_y(void);
+
+/* 第 index 行"图标+文字"的屏幕真实包围盒；行不存在或已回收返回 false。
+ * 用来核对"内容有没有越出胶囊"（胶囊是凸集，四角都在内即整体在内）。 */
+bool watch_list_row_box(int index, int *x1, int *y1, int *x2, int *y2);
 
 /* 当前行距（px）。夹具用它把"抛距"表达成"几行"，免得断言被行距耦合。 */
 int watch_list_row_pitch(void);

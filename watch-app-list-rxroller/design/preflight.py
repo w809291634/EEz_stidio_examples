@@ -321,13 +321,22 @@ def check_evidence():
     mainc = read(os.path.join(HERE, "sim_cmake", "main.c"))
     check("WATCH_AUTOTEST 钩子接进主循环", "autotest_hooks();" in mainc,
           "钩子没接进 while(1)")
-    check("十五条行为断言在夹具里",
-          all(k in mainc for k in ("中心行 = 10", "缩放最大", "SPAN 线性分档",
-                                   "快滑一次跨多行", "钳住不越界",
-                                   "横向 1/3", "垂直居中", "ICON_PX",
-                                   "SPAN 行处到底", "中心行是满档", "线性过渡",
-                                   "起步不吸在首行", "行程不限",
-                                   "弹回顶部第 n 个", "弹回底部倒数第 n 个")),
+    _names = re.findall(r'expect\("([^"]+)"', mainc)
+    check("19 条行为断言全在夹具里（按**完整断言名**点名，改名=删断言）",
+          len(_names) >= 15 and all(k in mainc for k in (
+              "惯性收敛后中心行 = 10", "中心行缩放最大（穹顶成立）",
+              "缩放按 SPAN 线性分档（0/33/66/100 那一套）",
+              "快滑一次跨多行并吸附到整行", "末尾快滑钳住不越界",
+              "中心图标落在 config 指定的横向位置", "中心图标垂直居中",
+              "图标位图布局尺寸 = config 的 ICON_PX",
+              "中心图标屏幕尺寸 = ICON_PX × SCALE_CENTER_PCT",
+              "横向落点量的是渲染坐标（不是布局坐标）",
+              "中心±1 行的图标+文字不越出胶囊",
+              "离中心 SPAN 行处到底（未选中最小）",
+              "中心行是满档（可比位图更大）", "缩放随距离线性过渡（途中采样核对）",
+              "起步不吸在首行", "首行可以拖到正中（行程不限）",
+              "末行可以拖到正中（行程不限）",
+              "松手弹回顶部第 n 个", "松手弹回底部倒数第 n 个")),
           "断言被删了/改名了（断言名要按 config 验通用公式，不许写死形状）")
     check("自证模式摘掉真鼠标",
           'WATCH_ALLOWMOUSE' in mainc and 'lv_indev_delete(mouse)' in mainc,

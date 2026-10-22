@@ -199,6 +199,15 @@ static void dragtest_hooks(void)
     }
 }
 
+/* EEZ 出的表盘是竖胶囊：410×502 上 LV_RADIUS_CIRCLE 钳到半径 = 短边一半 205
+ * ⇒ 上下各一个半圆顶、中间一段直边。点在胶囊内的判据 = 到中轴最近点的距离 ≤ R。 */
+static bool dial_inside(int x, int y)
+{
+    int r = SIM_W / 2;
+    int cy = (y < r) ? r : ((y > SIM_H - r) ? SIM_H - r : y);
+    return (x - r) * (x - r) + (y - cy) * (y - cy) <= r * r;
+}
+
 static void autotest_hooks(void)
 {
     static int ticks = 0;
@@ -248,6 +257,7 @@ static void autotest_hooks(void)
         int s0 = watch_list_row_scale(10);
         int cx = watch_list_center_icon_x();
         int cy = watch_list_center_icon_y();
+        int lx = watch_list_center_icon_layout_x();
         int iw = watch_list_center_icon_w();
         c0 = watch_list_row_scale(9);   /* 离中心 1 行 */
         c2 = watch_list_row_scale(8);   /* 离中心 2 行 */
@@ -262,15 +272,24 @@ static void autotest_hooks(void)
          * 规则 = 选中 100%、离中心 SPAN 行到底、中间线性 ⇒ 4 档就是 100/67/33/0。 */
         expect("缩放按 SPAN 线性分档（0/33/66/100 那一套）",
                c0 == SCALE_AT(1) && c2 == SCALE_AT(2) && c3 == SCALE_AT(3), b3);
-        /* ★ 三条观感判据的目标值全部来自 watch_list_config.h，不写死在这里 */
-        snprintf(b4, sizeof(b4), "图标中心 x=%d，屏宽 %d 的 1/%d = %d",
-                 cx, SIM_W, CFG(CENTER_X_DIVISOR), SIM_W / CFG(CENTER_X_DIVISOR));
-        expect("中心图标落在横向 1/3 处",
-               cx > 0 && LV_ABS(cx - SIM_W / CFG(CENTER_X_DIVISOR)) <= 2, b4);
-        snprintf(b4, sizeof(b4), "图标中心 y=%d，屏高 %d 的 1/%d = %d",
-                 cy, SIM_H, CFG(CENTER_Y_DIVISOR), SIM_H / CFG(CENTER_Y_DIVISOR));
+        /* ★ 三条观感判据的目标值全部来自 watch_list_config.h，不写死在这里。
+         *   判的是**屏幕上**的中心（含上游对整行的 transform 缩放），不是布局坐标。 */
+        snprintf(b4, sizeof(b4), "渲染中心 x=%d，屏宽 %d 的 %d%% = %d（布局中心 %d）",
+                 cx, SIM_W, CFG(CENTER_X_PCT), SIM_W * CFG(CENTER_X_PCT) / 100,
+                 watch_list_center_icon_layout_x());
+        expect("中心图标落在 config 指定的横向位置",
+               cx > 0 && LV_ABS(cx - SIM_W * CFG(CENTER_X_PCT) / 100) <= 2, b4);
+        snprintf(b4, sizeof(b4), "渲染中心 y=%d，屏高 %d 的 %d%% = %d",
+                 cy, SIM_H, CFG(CENTER_Y_PCT), SIM_H * CFG(CENTER_Y_PCT) / 100);
         expect("中心图标垂直居中",
-               cy > 0 && LV_ABS(cy - SIM_H / CFG(CENTER_Y_DIVISOR)) <= 2, b4);
+               cy > 0 && LV_ABS(cy - SIM_H * CFG(CENTER_Y_PCT) / 100) <= 2, b4);
+        /* FX-024 防再犯：中心档 ≠100% 时，布局中心必然偏离渲染中心。
+         * 光有"落在 config 指定的横向位置"那条挡不住回退——把标定改回
+         * lv_obj_get_coords（布局口径）它照样绿，只是量到的不是你看到的。 */
+        snprintf(b4, sizeof(b4), "布局=%d 渲染=%d 偏离=%d px（中心档 %d/256）",
+                 lx, cx, lx - cx, CFG(SCALE_MAX));
+        expect("横向落点量的是渲染坐标（不是布局坐标）",
+               CFG(SCALE_MAX) == 256 || LV_ABS(lx - cx) > 2, b4);
         /* ★ lv_obj_get_coords 量的是**布局**尺寸，不含 transform 缩放。
          *   屏幕上真正看到的大小 = ICON_PX × SCALE_CENTER_PCT/100，另有一条断言。 */
         snprintf(b4, sizeof(b4), "布局宽=%d，config ICON_PX=%d", iw, CFG(ICON_PX));
@@ -281,6 +300,23 @@ static void autotest_hooks(void)
                  CFG(ROW_PITCH));
         expect("中心图标屏幕尺寸 = ICON_PX × SCALE_CENTER_PCT",
                ICON_ON_SCREEN_PX <= CFG(ROW_PITCH), b4);
+        /* 横向落点右移以后，最外侧可见行的"图标+文字"会往右上/右下圆顶里钻。
+         * 只判中心 ±1 行：再往外的行本来就该被胶囊裁掉，不参与判定。
+         * 胶囊是凸集 ⇒ 四角都在内即整块都在内。 */
+        {
+            const int chk = 1;
+            int ci = watch_list_center_index(), k, bad = 0, worst = -1;
+            for (k = ci - chk; k <= ci + chk; k++) {
+                int x1, y1, x2, y2;
+                if (!watch_list_row_box(k, &x1, &y1, &x2, &y2)) continue;
+                if (x2 > worst) worst = x2;
+                if (!(dial_inside(x1, y1) && dial_inside(x2, y1)
+                      && dial_inside(x1, y2) && dial_inside(x2, y2))) bad++;
+            }
+            snprintf(b4, sizeof(b4), "越界行数=%d，最右内容 x=%d（屏宽 %d）",
+                     bad, worst, SIM_W);
+            expect("中心±1 行的图标+文字不越出胶囊", bad == 0, b4);
+        }
         /* ★ 缩放曲线口径：选中最大、离中心 SPAN 行到底、中间线性。
          *   所以"最小档"应当出现在第 SPAN 行，而不是第 1 行。 */
         snprintf(b4, sizeof(b4), "第 %d 行 scale=%d，最小档=%d",
