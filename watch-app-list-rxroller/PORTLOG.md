@@ -27,13 +27,63 @@
 ★ 为什么上游原文改名成 `.orig`：PC_SIM 的 CMake 用 `GLOB_RECURSE src/native/*.c` 收源码，
 两个 `.c` 会重复定义符号。`.orig` 不被收集，又能就地做 diff。
 
+### 2.1 本地对照库：**整个上游工程**都在 `upstream_Rxroller/`
+
+上游仓库一共 6 个文件、3 个 commit、无 tag、无 release（`git ls-remote --tags` 空 +
+`releases.atom`/`tags.atom` 各 0 条 entry，2026-10-22 查）。整仓已克隆进本工程：
+
+```
+watch-app-list-rxroller/upstream_Rxroller/     ← git clone 原件，含 .git 全历史
+├── Rxroller.c  41339 B  ← 上游是 CRLF
+├── Rxroller.h   4249 B
+├── LICENSE      1080 B
+├── README.md    6077 B   ← 未取用（上游自己的说明）
+├── CMakeLists.txt 110 B  ← 未取用
+└── .gitignore   305 B    ← 未取用
+```
+
+它**不参与编译**：CMake 只 `GLOB` `src/native/*.c`，`build.ninja` 里 `upstream_Rxroller`
+出现 0 次、Rxroller 编译单元只有 `src/native/rxroller/Rxroller.c.obj` 一个（已实测）。
+因为带 `.git` 是嵌套仓库，根 `.gitignore` 里把整个目录排除了，不入库。
+
+重新拉取：
+
+```bash
+git clone https://github.com/rxwind7/Rxroller.git watch-app-list-rxroller/upstream_Rxroller
+```
+
+### 2.2 ★ 行尾：入库原文是 LF，上游仓库是 CRLF（哈希对不上是这个原因）
+
+直接 `sha256sum` 拿我们的 `.orig` 去比 `upstream_Rxroller/Rxroller.c` **是对不上的**：
+
+```
+对照库 Rxroller.c   166b648076f665bd…   （CRLF，41339 B）
+入库 Rxroller.c.orig 3a364084ef499629…   （LF， 40135 B）
+```
+
+差的 1204 个字节正好等于行数 ⇒ 就是行尾。**把行尾归一化成 LF 之后两者逐字节一致**
+（归一化后的上游哈希同样是 `3a364084ef49…`）。`Rxroller.h`、`LICENSE` 同理。
+
+所以别用"哈希不等"当"改过"的证据，用脚本 —— 它还会做**整仓对账**
+（上游每个文件必须有归属，出现没记账的文件就 FAIL）：
+
+```bash
+python watch-app-list-rxroller/design/compare_upstream.py --diff
+```
+
+实测输出（2026-10-22）：`上游仓库共 6 个文件`、3 条取用件全 `OK 逐字节一致`、
+3 条未取用件点名、账单 `14 hunks / +49 / -16`、结论"入库原文与上游一致"。
+
 ## 3. 修改账单（补丁产物 vs 上游原文）
 
 ```
 diff -u Rxroller.c.orig Rxroller.c   →   14 hunks, +49 / -16
 ```
 
-机器导出的完整 diff 已入库：**[`Rxroller_port.diff`](Rxroller_port.diff)**（178 行，含上下文）。
+机器导出的完整 diff 已入库，**放在上游件同一个目录**：
+[`src/native/rxroller/Rxroller_port.diff`](src/native/rxroller/Rxroller_port.diff)（178 行，含上下文）。
+同目录还有一份 [`src/native/rxroller/README.md`](src/native/rxroller/README.md)——
+打开那个目录就能看到"这是谁的上游件、改了哪 14 处、怎么复核"，不用先知道本文件在哪。
 下表按 `diff -u` 的 14 个 hunk 逐条对号，"上游位置"就是 hunk 头里的 `-行,数`，
 可以直接 `sed -n '490,520p' Rxroller.c.orig` 跳过去看原文。
 
@@ -88,8 +138,8 @@ if (!x || !y) return;
 *y = 0;
 ```
 
-两个出参都清零了。补丁已撤销，撤销当时重跑：`10 hunks / +38 / -15`（那是撤销后的账单，
-**不是现在的**——之后又为"拖完回弹"补了 #2/9/10/11 四处，才变成当前的 `14 hunks / +49 / -16`）、
+两个出参都清零了。补丁已撤销，撤销当时重跑：`10 个 hunk / +38 / -15`（那是撤销后的历史数字，
+**不是现在的账单**——之后又为"拖完回弹"补了 #2/9/10/11 四处，才变成当前的 `14 hunks / +49 / -16`）、
 行为断言照常 PASS、两张取证图照常产出。
 
 真正的"卡死"现象来自环境：刚链接完立刻 exec 会瞬时失败（`rc=127`，日志只剩 3 行
@@ -98,12 +148,12 @@ LVGL warning），与代码无关——重试即恢复。
 ★ 留这条记录的理由：**"能解释现象的补丁"不等于"正确的补丁"**。当时 `*x=0` 打上之后
 卡死确实消失了，但那是重试生效，不是补丁生效；只有回头核对原文才拆得穿。
 
-## 5. 复核方法（三条命令）
+## 5. 复核方法（四条命令）
 
 ```bash
 # ① 看账单
 diff -u src/native/rxroller/Rxroller.c.orig src/native/rxroller/Rxroller.c
-#   同一份 diff 已导出成文件，不用自己跑：Rxroller_port.diff（178 行，含上下文）
+#   同一份 diff 已导出成文件，不用自己跑：src/native/rxroller/Rxroller_port.diff（178 行）
 
 # ② 确认产物确实是脚本生成的（被手改过就会 FAIL）
 python design/port_rxroller.py && python design/preflight.py
@@ -111,6 +161,9 @@ python design/port_rxroller.py && python design/preflight.py
 # ③ 确认上游原文没被动过
 sha256sum src/native/rxroller/Rxroller.c.orig
 # 期望 3a364084ef499629d97185ba800336c836187087c0337026db7af1741f97e146
+
+# ④ 越过我们自己，直接跟**上游仓库**对（整仓 6 个文件逐个核 + 查 commit 身份）
+python design/compare_upstream.py --diff
 ```
 
 ## 6. 回同步上游时怎么做

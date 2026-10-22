@@ -151,6 +151,33 @@ def check_upstream_audit():
           os.path.exists(os.path.join(HERE, "port_rxroller.py")),
           "缺 port_rxroller.py")
 
+    # ★ 改动必须"就地可见"：翻到 src/native/rxroller/ 就能看到改了什么，
+    #   不用先知道 PORTLOG 在哪。同时防文档腐化——账单数字变了而文档没跟上就 FAIL。
+    import difflib
+    # n=3 才能和 `diff -u` 的 hunk 数对齐；n=0 会把相邻改动拆成更多块（实测 19 vs 14）
+    hunks = sum(1 for l in difflib.unified_diff(
+        read(orig).replace("\r\n", "\n").splitlines(True),
+        read(ported).replace("\r\n", "\n").splitlines(True),
+        n=3) if l.startswith("@@"))
+    note = os.path.join(RX_DIR, "README.md")
+    check("目录内有就地说明件 src/native/rxroller/README.md",
+          os.path.exists(note), "打开目录看不出这里被改过")
+    dexport = os.path.join(RX_DIR, "Rxroller_port.diff")
+    check("目录内有逐字对照件 Rxroller_port.diff", os.path.exists(dexport),
+          "缺导出件（跑 python design/compare_upstream.py --diff 生成）")
+    for name, path in (("目录说明件", note),
+                       ("PORTLOG", os.path.join(ROOT, "PORTLOG.md"))):
+        if not os.path.exists(path):
+            continue
+        txt = read(path)
+        # 取文档里出现的**每一个** "<N> hunks"，全部必须等于实测。
+        # 只判"有没有 14 hunks 这个串"是假门禁：文里别处还有一个，改错一处照样绿。
+        found = [int(m) for m in re.findall(r"(\d+)\s+hunks", txt)]
+        check("%s 记的 hunk 数全等于实测 %d（文中 %d 处）" % (
+                  name, hunks, len(found)),
+              bool(found) and all(f == hunks for f in found),
+              "账单腐化：文档里出现了 %s，实测是 %d" % (sorted(set(found)), hunks))
+
 
 # ---- 5. 应用表 × 图标 ----
 def check_apps():

@@ -14,3 +14,6 @@ __pycache__/
 flow-examples/*/shots/*.bmp
 watch-app-list-no-flow/shots/*.bmp
 watch-app-list-rxroller/shots/*.bmp
+
+# 上游开源仓库的完整本地克隆（整仓对照用；含 .git，嵌套仓库不入库）
+watch-app-list-rxroller/upstream_Rxroller/

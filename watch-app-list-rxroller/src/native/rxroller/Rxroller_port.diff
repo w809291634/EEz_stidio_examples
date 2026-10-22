@@ -1,5 +1,5 @@
---- a/src/native/rxroller/Rxroller.c.orig
-+++ b/src/native/rxroller/Rxroller.c
+--- upstream/Rxroller.c.orig
++++ src/native/rxroller/Rxroller.c
 @@ -1,5 +1,30 @@
 +/*
 + * Rxroller.c —— 由 design/port_rxroller.py 从上游 Rxroller.c.orig 生成，勿手改。

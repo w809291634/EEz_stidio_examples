@@ -59,10 +59,14 @@ watch-app-list-rxroller/
 │   ├── apps.py                      ← ★ 22 行应用表的唯一事实源
 │   ├── gen_assets.py                ← 由表生成 22 个图标 .c + app_rows.{c,h}
 │   ├── port_rxroller.py             ← 上游 v8 -> 9.4 补丁（可重放，preflight 比对它）
+│   ├── compare_upstream.py          ← ★ 拿 upstream_Rxroller/ 整仓对账 + 逐字节核原文
 │   ├── cli_build.py / gen_font.py / audit_chars.py / preflight.py
 │   └── sim_cmake/                   ← main.c（含 WATCH_AUTOTEST 取证）+ lv_conf.h(SNAPSHOT=1)
+├── upstream_Rxroller/               ← ★ 上游仓库完整克隆（6 文件 + .git 全历史），不编译、不入库
 ├── src/native/
 │   ├── rxroller/{Rxroller.c.orig,Rxroller.c,Rxroller.h,LICENSE}
+│   │        ├── README.md           ← ★ 就地说明：这是谁的上游件、改了哪 14 处、怎么复核
+│   │        └── Rxroller_port.diff  ← ★ 就地对照件：.orig -> Rxroller.c 的逐字 diff
 │   ├── watch_list_native.{c,h}      ← 接线：配置 + 行内容 + 点击 + 快滑惯性 + 屏外回收 + 自证口
 │   ├── app_rows.{c,h} + icons/      ← 生成的表与图标
 └── src/ui/                          ← EEZ 产物（★ 没有 eez-flow.*，这正是判据）
@@ -76,6 +80,7 @@ python design\gen_assets.py        && rem 22 个图标 + app_rows
 python design\gen_font.py          && rem ★ 必须在 cli_build 之后（P-0140）
 python design\audit_chars.py       && rem EEZ 侧逐字审计
 python design\preflight.py         && rem ★ 六组硬门禁
+python design\compare_upstream.py --diff   && rem ★ 与 upstream_Rxroller/ 整仓对账
 双击 design\sim_cmake\run_sim.bat  && rem 起窗口，鼠标拖动/点击
 ```
 
