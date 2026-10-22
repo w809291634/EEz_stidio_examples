@@ -7,6 +7,10 @@
  */
 // Rxroller.c
 #include "Rxroller.h"
+/* RX-PORT-FIX: 累计位移 <= 该值才算点击（px）。行距 100px，轻点抖动远小于它 */
+#ifndef RXROLLER_CLICK_TRAVEL_MAX
+#  define RXROLLER_CLICK_TRAVEL_MAX 10
+#endif
 /* RX-PORT: LVGL 9 内存 API 改名（lv_mem_alloc->lv_malloc, lv_mem_free->lv_free）*/
 #ifndef lv_mem_alloc
 #  define lv_mem_alloc(sz) lv_malloc(sz)
@@ -37,6 +41,7 @@ typedef struct {
     lv_point_t      touch_point1;
     lv_point_t      touch_point2;
     int32_t         offset;
+    int32_t         drag_travel;  /* RX-PORT-FIX: 整段手势累计位移 */
 
     uint8_t         is_animating;
 
@@ -492,6 +497,7 @@ static void rx_event_pressing(lv_event_t *e)
         ctx->touched = 1;
         ctx->pending_anim_count = 0;
         ctx->offset = 0;
+        ctx->drag_travel = 0;      /* RX-PORT-FIX: 新手势清零 */
         return;
     }
 
@@ -504,6 +510,7 @@ static void rx_event_pressing(lv_event_t *e)
         ctx->offset = ctx->touch_point2.y - ctx->touch_point1.y;
         ctx->touch_point1.y = ctx->touch_point2.y;
     }
+    ctx->drag_travel += LV_ABS(ctx->offset);   /* RX-PORT-FIX: 累计位移 */
 
     rx_set_center_internal(ctx, ctx->item_count, 0);
 }
@@ -531,7 +538,10 @@ static void rx_event_released(lv_event_t *e)
     }
 
     /* 判断是否为点击 */
-    uint8_t is_click = (ctx->offset == 0 && ctx->pending_anim_count == 0 && target != ctx->screen);
+    /* RX-PORT-FIX: 原来用单拍 offset 判点击 ⇒ 松手前停一下就误判成点击，
+     *   列表被动画切回松手那一行（现象=拖完自动回弹）。改按累计位移判。 */
+    uint8_t is_click = (ctx->drag_travel <= RXROLLER_CLICK_TRAVEL_MAX
+                        && ctx->pending_anim_count == 0 && target != ctx->screen);
     ctx->touched = 0;
 
     if (is_click) {

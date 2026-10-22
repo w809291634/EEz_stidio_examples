@@ -106,6 +106,49 @@ PATCHES = [
     ("    ctx->screen->user_data = ctx;",
      "    lv_obj_set_user_data(ctx->screen, ctx);",
      1),
+    # ---- RX-PORT-FIX：上游"点击 vs 拖动"判定用错了量 ----
+    # ctx->offset 每拍被覆写成"这一拍的增量"（pressing 里 point1 随即跟进），
+    # 而 released 用 `offset == 0` 判点击 ⇒ 松手前只要停顿一拍，整段拖动就被
+    # 判成点击，上游自己 rx_set_center(click_id) 把列表切到松手那一行
+    # （现象："拖完自动回弹")。改成按整段手势累计位移判。
+    ("    int32_t         offset;\n",
+     "    int32_t         offset;\n"
+     "    int32_t         drag_travel;  /* RX-PORT-FIX: 整段手势累计位移 */\n",
+     1),
+    ("        lv_indev_get_point(lv_indev_get_act(), &ctx->touch_point1);\n"
+     "        ctx->touched = 1;\n"
+     "        ctx->pending_anim_count = 0;\n"
+     "        ctx->offset = 0;\n",
+     "        lv_indev_get_point(lv_indev_get_act(), &ctx->touch_point1);\n"
+     "        ctx->touched = 1;\n"
+     "        ctx->pending_anim_count = 0;\n"
+     "        ctx->offset = 0;\n"
+     "        ctx->drag_travel = 0;      /* RX-PORT-FIX: 新手势清零 */\n",
+     1),
+    ("    } else {\n"
+     "        ctx->offset = ctx->touch_point2.y - ctx->touch_point1.y;\n"
+     "        ctx->touch_point1.y = ctx->touch_point2.y;\n"
+     "    }\n",
+     "    } else {\n"
+     "        ctx->offset = ctx->touch_point2.y - ctx->touch_point1.y;\n"
+     "        ctx->touch_point1.y = ctx->touch_point2.y;\n"
+     "    }\n"
+     "    ctx->drag_travel += LV_ABS(ctx->offset);   /* RX-PORT-FIX: 累计位移 */\n",
+     1),
+    ("    uint8_t is_click = (ctx->offset == 0 && ctx->pending_anim_count == 0 && target != ctx->screen);",
+     "    /* RX-PORT-FIX: 原来用单拍 offset 判点击 ⇒ 松手前停一下就误判成点击，\n"
+     "     *   列表被动画切回松手那一行（现象=拖完自动回弹）。改按累计位移判。 */\n"
+     "    uint8_t is_click = (ctx->drag_travel <= RXROLLER_CLICK_TRAVEL_MAX\n"
+     "                        && ctx->pending_anim_count == 0 && target != ctx->screen);",
+     1),
+    # 阈值定义（放在文件头，便于按屏/行距调）
+    ('#include "Rxroller.h"\n',
+     '#include "Rxroller.h"\n'
+     '/* RX-PORT-FIX: 累计位移 <= 该值才算点击（px）。行距 100px，轻点抖动远小于它 */\n'
+     '#ifndef RXROLLER_CLICK_TRAVEL_MAX\n'
+     '#  define RXROLLER_CLICK_TRAVEL_MAX 10\n'
+     '#endif\n',
+     1),
 ]
 
 

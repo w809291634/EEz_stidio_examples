@@ -31,6 +31,46 @@
 static lv_obj_t *s_wheel = NULL;
 static lv_obj_t *s_status = NULL;
 
+/* 拖动判定：按拍**累计最大位移**，超过阈值就忽略随之而来的 CLICKED。
+ * ★ 为什么不能只比"按下点 vs 松手点"：LVGL 在 `scroll_obj == NULL 且没有
+ *   PRESS_LOCK` 时**每个读周期都重新搜索按下对象**（lv_indev.c:1216-1219），
+ *   换对象时把 last_point 重置成当前点并给新对象再发一次 PRESSED ⇒ 按下点会被
+ *   中途刷新，位移永远算不出来（第一版就是这么失效的）。
+ *   所以两道一起上：① 行加 PRESS_LOCK 锁住手势目标；② 自己按拍累计位移兜底。
+ * 阈值 15px：行距 100px，轻点的手指抖动远小于它，任何有效拖动都远大于它。 */
+#define DRAG_CLICK_IGNORE_PX 15
+static lv_point_t s_press_pt;
+static bool s_press_valid = false;
+static int s_press_travel = 0;
+
+static void row_press_cb(lv_event_t *e)
+{
+    lv_indev_t *in = lv_indev_get_act();
+
+    (void)e;
+    s_press_valid = false;
+    if (NULL != in) {
+        lv_indev_get_point(in, &s_press_pt);
+        s_press_travel = 0;
+        s_press_valid = true;
+    }
+}
+
+static void row_pressing_cb(lv_event_t *e)
+{
+    lv_indev_t *in = lv_indev_get_act();
+    lv_point_t p;
+    int dx, dy;
+
+    (void)e;
+    if (!s_press_valid || NULL == in) return;
+    lv_indev_get_point(in, &p);
+    dx = LV_ABS(p.x - s_press_pt.x);
+    dy = LV_ABS(p.y - s_press_pt.y);
+    if (dx > s_press_travel) s_press_travel = dx;
+    if (dy > s_press_travel) s_press_travel = dy;
+}
+
 static void row_click_cb(lv_event_t *e);
 
 /* 行内容：左圆图标 + 右中文名。★ 不能用容器 user_data 存下标——
@@ -54,7 +94,12 @@ static void row_create_cb(lv_obj_t *row, int32_t index, void *user_data)
     lv_obj_align(label, LV_ALIGN_LEFT_MID, 100, 0);
 
     lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
+    /* 锁住手势目标：不锁的话 LVGL 每拍重搜按下对象，行会从手指底下溜走，
+     * 于是一次拖动被记成"在好几行上按下"（详见上面 DRAG_CLICK_IGNORE_PX 的注释） */
+    lv_obj_add_flag(row, LV_OBJ_FLAG_PRESS_LOCK);
     lv_obj_remove_flag(row, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_event_cb(row, row_press_cb, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(row, row_pressing_cb, LV_EVENT_PRESSING, NULL);
     lv_obj_add_event_cb(row, row_click_cb, LV_EVENT_CLICKED, NULL);
 }
 
@@ -72,23 +117,42 @@ static void row_click_cb(lv_event_t *e)
 {
     lv_obj_t *row = lv_event_get_target(e);
     int idx = row_index_of(row);
-    char buf[64];
 
     if (idx < 0 || idx >= WATCH_APP_ROWS_COUNT || NULL == s_wheel) return;
 
-    /* 两段式点击（也顺手避开"拖动结束误触发打开"）：
+    /* ★ 拖动时必须忽略这次"点击"：上游把行与滚轮根对象的 SCROLLABLE 都清了
+     *   （Rxroller.c:578/835，它自己按距离做位移动画），于是 LVGL 的 indev
+     *   永远不会置 scroll_obj（lv_indev.c:1211），松手时就直接发
+     *   LV_EVENT_CLICKED（lv_indev.c:1368）——**不管拖了多远**。 */
+    {
+        int travel = s_press_travel;
+
+        s_press_valid = false;
+        s_press_travel = 0;
+        if (travel > DRAG_CLICK_IGNORE_PX) {
+            printf("[WHEEL] click ignored: travel=%dpx (>%d)\n",
+                   travel, DRAG_CLICK_IGNORE_PX);
+            return;
+        }
+    }
+
+    /* 两段式点击（本轮只加"拖动忽略"，其余逻辑保持原样）：
      * 非中心行 → 先滚到中心；中心行 → 打开。 */
     if (idx != (int)rxroller_get_center(s_wheel)) {
         printf("[WHEEL] focus row %d -> %s\n", idx, WATCH_APP_ROWS[idx].id);
-        rxroller_set_center(s_wheel, idx, LV_ANIM_ON);
+        watch_list_center(idx, true);
         return;
     }
 
-    printf("[WHEEL] open row %d -> %s\n", idx, WATCH_APP_ROWS[idx].id);
-    if (s_status) {
-        /* ★ "已打开" 三个汉字必须在字体子集内（preflight 第 3 组门禁扫这条） */
-        snprintf(buf, sizeof(buf), "已打开: %s", WATCH_APP_ROWS[idx].name);
-        lv_label_set_text(s_status, buf);
+    {
+        char buf[64];
+
+        printf("[WHEEL] open row %d -> %s\n", idx, WATCH_APP_ROWS[idx].id);
+        if (s_status) {
+            /* ★ "已打开" 三个汉字必须在字体子集内（preflight 第 3 组门禁扫这条） */
+            snprintf(buf, sizeof(buf), "已打开: %s", WATCH_APP_ROWS[idx].name);
+            lv_label_set_text(s_status, buf);
+        }
     }
 }
 

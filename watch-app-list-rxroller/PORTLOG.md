@@ -21,7 +21,7 @@
 3a364084ef499629d97185ba800336c836187087c0337026db7af1741f97e146  src/native/rxroller/Rxroller.c.orig   ← 上游原文，逐字未改
 9ffe79f8de34478791ee57c95921603287e841708765bf75a0f255e809971bd3  src/native/rxroller/Rxroller.h         ← 上游原文，未改
 5ee83fa2c52beb32c6bd27b3dc01b33be72075b514b1359667a32b16957080c9  src/native/rxroller/LICENSE            ← 上游原文
-81dc1ca31226388ff7d1a5a188f2210de5790e705131033e0e67b16d7c2355bb  src/native/rxroller/Rxroller.c         ← 补丁产物（由脚本生成）
+26732cd3eda6…（重算见 §5 命令；每次改补丁都要回来更新这一行）  src/native/rxroller/Rxroller.c         ← 补丁产物（由脚本生成）
 ```
 
 ★ 为什么上游原文改名成 `.orig`：PC_SIM 的 CMake 用 `GLOB_RECURSE src/native/*.c` 收源码，
@@ -30,7 +30,7 @@
 ## 3. 修改账单（补丁产物 vs 上游原文）
 
 ```
-diff -u Rxroller.c.orig Rxroller.c   →   10 hunks, +38 / -15
+diff -u Rxroller.c.orig Rxroller.c   →   14 hunks, +49 / -16
 ```
 
 | # | 上游位置 | 类别 | 改了什么 | 为什么 |
@@ -41,8 +41,10 @@ diff -u Rxroller.c.orig Rxroller.c   →   10 hunks, +38 / -15
 | 4 | `rx_cleanup_internal()` | 版本适配 | `ctx->screen->user_data = NULL` → `lv_obj_set_user_data(...)` | 同上 |
 | 5 | `rx_update_item_scale()` | **能力补丁** | 衰减窗口 `icon_distance` → `icon_distance * RX_SCALE_SPAN_PITCHES`（本工程 3） | 上游只放大中心行，相邻行直接落到 `edge_scale`；参考图要连续渐变。**取 1 即完全恢复上游行为** |
 | 6-10 | `rx_item_event_cb` / `rx_event_pressing` 等 7 处 | 版本适配 | `parent->user_data`、`icon_obj->user_data`、`item->obj->user_data=`、`e->user_data` → 对应访问器 | 同 #3，合计 12 个 `user_data` 站点 |
+| 7 | `rx_event_pressing` + `rx_event_released` + ctx 结构体 | **上游真 bug（RX-PORT-FIX）** | 新增 `ctx->drag_travel` 按拍累计位移；`is_click` 从 `offset == 0` 改成 `drag_travel <= RXROLLER_CLICK_TRAVEL_MAX(10px)` | 上游 `offset` 是**单拍增量**（`point1` 随即跟进），用它判点击 ⇒ 松手前只要停顿一拍，整段拖动被判成点击，上游自己把列表动画切到松手那一行 = 用户报的“拖完自动回弹/滑不到底” | 
 
-**没有改的**：滚轮布局数学、动画/惯性、吸附、事件状态机、数据结构。全部逐字保留。
+**没有改的**：滚轮布局数学、缩放曲线、动画与惯性参数、吸附算法、数据结构。
+**改过的行为**：只有 #5（缩放衰减窗口）与 #7（点击/拖动判定）两处，其余逐字保留。
 
 ## 4. 撤回记录（重要，别删）
 

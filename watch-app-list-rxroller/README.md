@@ -43,7 +43,8 @@ settings.build.generateSourceCodeForEezFramework = False
 |---|---|
 | 版本适配 | 12 处 `obj->user_data` / `e->user_data` → `lv_obj_get_user_data()` / `lv_obj_set_user_data()` / `lv_event_get_user_data()`（v9 把 `lv_obj_t` 变不透明） |
 | 版本适配 | `lv_mem_alloc` / `lv_mem_free` → `lv_malloc` / `lv_free` 别名宏（9.4 改名，`src/stdlib/lv_mem.h:69/97`；不补只报"隐式声明"，链接期才炸） |
-| **上游没有 bug**（撤回一条误判） | 中途我曾判"`rx_calc_curve_pos` 的 `NONE+VERTICAL` 分支漏赋 `*x`（未初始化）"并打了 `RX-PORT-FIX` 补丁。**核对原文后确认是错的**：上游函数开头就有 `*x = 0; *y = 0;`（`Rxroller.c.orig:172-173`）。真正的"卡死"是刚链接完立刻 exec 的瞬时失败（`rc=127`、日志只剩 3 行 warning），与代码无关。该补丁已撤销，撤销后重跑：10 hunks、+37/−15，三条断言仍 3/3 PASS、两张图照常出。**留这条撤回记录，是因为它说明"能解释现象的补丁"不等于"正确的补丁"** |
+| **上游真 bug（已修）** | `rx_event_released` 用 `ctx->offset == 0` 判点击，而 `offset` 是**单拍增量** ⇒ 松手前停顿一拍就把整段拖动判成点击并回弹。修法见 `PORTLOG.md` §3 #7。|
+| 撤回一条误判 | 中途我曾判"`rx_calc_curve_pos` 的 `NONE+VERTICAL` 分支漏赋 `*x`（未初始化）"并打了 `RX-PORT-FIX` 补丁。**核对原文后确认是错的**：上游函数开头就有 `*x = 0; *y = 0;`（`Rxroller.c.orig:172-173`）。真正的"卡死"是刚链接完立刻 exec 的瞬时失败（`rc=127`、日志只剩 3 行 warning），与代码无关。该补丁已撤销，撤销后重跑：10 hunks、+37/−15，三条断言仍 3/3 PASS、两张图照常出。**留这条撤回记录，是因为它说明"能解释现象的补丁"不等于"正确的补丁"** |
 | **能力补丁** | `rx_update_item_scale()` 的衰减窗口上游写死 **1 个行距**（只有中心行放大，相邻行直接落到 `edge_scale`）。参考图是好几行连续渐变 ⇒ 窗口参数化为 `RX_SCALE_SPAN_PITCHES`（本工程 3；取 1 即恢复上游行为）。实测剖面：`150 185 220 255 220 185 150` |
 
 其余上游代码一行未动。`preflight.py` 第 4 组用**逐字节重放比对**守住这条：
