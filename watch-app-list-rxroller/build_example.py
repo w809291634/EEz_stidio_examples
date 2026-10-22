@@ -34,6 +34,23 @@ PROJECT_FILE = os.path.join(HERE, "watch-app-list-rxroller.eez-project")
 
 SCREEN_W, SCREEN_H = 410, 502   # 与 Design Watch 参考工程同口径（滚轮件按此算行距/弧半径）
 
+# 表盘外形：完全在 EEZ 属性面做（主屏 Radius + Clip corner），生成 screens.c 自带，
+# native / 仿真器一行都不用加 —— 仿真器照旧只调 ui_init()/ui_tick()。
+# LV_RADIUS_CIRCLE = 0x7FFF，LVGL 内部会钳到短边一半 ⇒ 410x502 上是**胶囊**
+# （左右两端半圆、上下各留 502-410=92px 直边），不是正圆；正圆要方形分辨率。
+# ★ settings.general.circularDisplay 那个总开关只是编辑器预览的 CSS，不进代码生成器，
+#   所以这里用控件级 radius/clip_corner，而不是依赖它。
+SCREEN_RADIUS = 0x7FFF           # LV_RADIUS_CIRCLE
+
+# 外壳元素（标题 / 状态行）的安全区：胶囊顶端往下，可用宽度随深度增大。
+# 半宽 h 处需要的深度 d = R - sqrt(R^2 - h^2)。取 h=140（带宽 280px，够放 4 个 14px 汉字）
+# ⇒ 410x502 上 d≈56。**不这么算就会踩坑**：标题原本贴在直角上 (0,8)，加了圆角后被整个裁掉。
+DIAL_R = min(SCREEN_W, SCREEN_H) // 2
+DIAL_BAND_HALF_W = 140
+DIAL_EDGE_DEPTH = DIAL_R - int((DIAL_R ** 2 - DIAL_BAND_HALF_W ** 2) ** 0.5)
+DIAL_BAND_W = DIAL_BAND_HALF_W * 2
+DIAL_BAND_X = (SCREEN_W - DIAL_BAND_W) // 2
+
 # ---- 设计令牌（深色，与仓库其它示例一致）----
 BG = "0x0b0f1a"
 PANEL = "0x101a28"
@@ -211,7 +228,9 @@ def button(x, y, w, h, text, identifier):
 def page(children, flow_components, conns, local_vars):
     screen = widget("LVGLScreenWidget", 0, 0, SCREEN_W, SCREEN_H,
                     local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=BG,
-                                                    bg_opa=255, radius=0)}},
+                                                    bg_opa=255,
+                                                    radius=SCREEN_RADIUS,
+                                                    clip_corner=True)}},
                     children=children)
     return {
         "objID": oid(),
@@ -245,9 +264,11 @@ def build_project():
                flags="GESTURE_BUBBLE|SCROLL_CHAIN_VER",
                local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=BG,
                                                bg_opa=0, radius=0)}}),
-        label(0, 8, SCREEN_W, 20, "应用列表", TEXT1, "lbl_title"),
+        label(DIAL_BAND_X, DIAL_EDGE_DEPTH, DIAL_BAND_W, 20,
+              "应用列表", TEXT1, "lbl_title"),
         # 状态行：native 在点击图标时写它（"已打开: clock"）
-        label(0, SCREEN_H - 20, SCREEN_W, 18, "就绪", ACC, "lbl_status"),
+        label(DIAL_BAND_X, SCREEN_H - DIAL_EDGE_DEPTH - 18, DIAL_BAND_W, 18,
+              "就绪", ACC, "lbl_status"),
     ]
 
     # ============ 变量：no-flow 下留空（见模块 docstring） ============

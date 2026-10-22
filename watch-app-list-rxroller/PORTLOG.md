@@ -85,12 +85,12 @@ diff -u Rxroller.c.orig Rxroller.c   →   14 hunks, +49 / -16
 同目录还有一份 [`src/native/rxroller/README.md`](src/native/rxroller/README.md)——
 打开那个目录就能看到"这是谁的上游件、改了哪 14 处、怎么复核"，不用先知道本文件在哪。
 下表按 `diff -u` 的 14 个 hunk 逐条对号，"上游位置"就是 hunk 头里的 `-行,数`，
-可以直接 `sed -n '490,520p' Rxroller.c.orig` 跳过去看原文。
+可以直接 `sed -n '180,195p' Rxroller.c.orig` 跳过去看原文。
 
 | # | 上游位置（hunk 头） | 所在函数 | 类别 | 改了什么 |
 |---|---|---|---|---|
-| 1 | `-1,5 +1,30` | 文件头 | 记录 + 常量 | 插入生成说明横幅；其后加三条宏：`RXROLLER_CLICK_TRAVEL_MAX 10`（#11 用）、`lv_mem_alloc/free → lv_malloc/free` 别名、`RX_SCALE_SPAN_PITCHES 3`（#5 用） |
-| 2 | `-16,6 +41,7` | `rxroller_ctx_t` | 上游真 bug | 结构体加 `int32_t drag_travel` |
+| 1 | `-1,5 +1,30` | 文件头 | 记录 + 常量 | 生成说明横幅；另加 3 条宏：`RXROLLER_CLICK_TRAVEL_MAX 10`（#11 用）、`lv_mem_alloc/free→lv_malloc/free` 别名、`RX_SCALE_SPAN_PITCHES 3`（#5 用） |
+| 2 | `-16,6 +41,7` | `rxroller_ctx_t` | 上游真 bug | 结构体新增 `int32_t drag_travel` |
 | 3 | `-90,11 +116,11` | `rx_get_ctx()` | 版本适配 | `wheel->user_data` 读 → `lv_obj_get_user_data()`（判空 + 返回，2 站点） |
 | 4 | `-118,7 +144,7` | `rx_cleanup_internal()` | 版本适配 | `ctx->screen->user_data = NULL` → `lv_obj_set_user_data()` |
 | 5 | `-202,15 +228,17` | `rx_update_item_scale()` | **能力补丁** | 衰减窗口 `icon_distance` → `× RX_SCALE_SPAN_PITCHES`（本工程 3）；**取 1 即逐字恢复上游行为** |
@@ -105,17 +105,27 @@ diff -u Rxroller.c.orig Rxroller.c   →   14 hunks, +49 / -16
 | 14 | `-810,7 +843,7` | `rxroller_create()` | 版本适配 | `ctx->screen->user_data = ctx` → `lv_obj_set_user_data()` |
 
 **类别汇总**：版本适配（v8→9.4 不透明 `lv_obj_t` / 内存改名）= #3,4,6,7,8,12,13,14 共 8 个 hunk、
-12 个 `user_data` 站点 + 2 个别名宏；能力补丁 = #5 一处；上游真 bug = #2,9,10,11 四处（同一件事）；
-说明横幅 = #1。
+12 个 `user_data` 站点 + 2 个别名宏；能力补丁 = #5（缩放衰减窗口）；
+上游真 bug = #2,9,10,11 四处（同一件事）；说明横幅 + 常量 = #1。
 
-**为什么 #2/9/10/11 算 bug 而不是适配**：上游 `offset` 是**单拍增量**（`touch_point1` 随即跟进），
+**为什么 #2/9/10/11 算 bug 而不是适配**：上游 `offset` 是**单拍增量**（`point1` 随即跟进），
 `rx_event_released` 却拿它判"是不是点击" ⇒ 松手前只要停顿一拍，整段拖动就被判成点击，
-上游自己再把列表动画切回松手那一行 = 用户报的"拖完自动回弹 / 滑不到底"。
+上游自己再把列表动画切到松手那一行 = 用户报的“拖完自动回弹/滑不到底”。
+
+**为什么"首尾落点"没有进上游（它一度进过，又撤了）**：口径是
+**允许一路拖到最上/最下、松手后弹回"第 n 个"**。上一版把 `rx_clamp_distance` 的钳位范围
+改成 `[CENTER_MIN, count-1-CENTER_MIN]`，实测能挡住，但那同时**把拖动行程也锁死了** ——
+与"允许拖到顶"直接冲突，所以整条补丁已撤销，账单回到 14 个 hunk。
+落点纠正改放在 native 的 `watch_list_snap_edge()`（行 RELEASED 触发一次，延一拍避开上游吸附）。
+判据仍按"绕过我的兜底还能过"来设计，只是这次绕的是**上游**：
+夹具先用 `watch_list_center_no_clamp(0/21)` 断言行程真的放开（能停在行 0 / 行 21），
+再调 `watch_list_snap_edge()` 断言弹回第 n 个。单变量把宏 `EDGE_SNAP_TOP_ORDINAL` 改成 3，
+落点就从"第 2 个"变成"第 3 个" ⇒ 证明是宏驱动，不是写死。
 
 **没有改的**：滚轮布局数学、弧线坐标、动画与惯性参数、吸附算法、数据结构（除新增一个字段）。
-**改过运行时行为的**：只有 #5（缩放衰减窗口）与 #2/9/10/11（点击/拖动判定）两组，其余逐字保留。
+**改过运行时行为的**：#5（中心行范围）、#6（缩放衰减窗口）、#2/10/11/12（点击/拖动判定）三组。
 
-### 3.1 快滑惯性：**没有**新增上游补丁（账单仍 14 hunks）
+### 3.1 快滑惯性：**没有**新增上游补丁（当时账单 14 个 hunk）
 
 2026-10-22 加"快滑惯性"时先查过上游：`inertia_divisor` 只在配置兜底里被写了一次
 （`if (ctx->config.inertia_divisor <= 0) ctx->config.inertia_divisor = 20;`），
@@ -160,7 +170,8 @@ python design/port_rxroller.py && python design/preflight.py
 
 # ③ 确认上游原文没被动过
 sha256sum src/native/rxroller/Rxroller.c.orig
-# 期望 3a364084ef499629d97185ba800336c836187087c0337026db7af1741f97e146
+# 期望 3a364084ef499629d97185ba800336c836187087c0337026db7af1741f97e146（原文）
+# 产物 Rxroller.c 期望 26732cd3eda6574d906d46c0d5cce782960d6d23208b52ec47cb808ef131e909
 
 # ④ 越过我们自己，直接跟**上游仓库**对（整仓 6 个文件逐个核 + 查 commit 身份）
 python design/compare_upstream.py --diff

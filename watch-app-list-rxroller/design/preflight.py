@@ -81,6 +81,50 @@ def check_no_flow():
     for ident in ("list_host", "lbl_status", "lbl_title"):
         check("objects.%s 在位" % ident, ident in h, "EEZ 屏上没有这个控件")
 
+    # ---- 表盘外形：必须完全由 EEZ 属性面生成，native/仿真器不许插手 ----
+    # （settings.general.circularDisplay 只是编辑器预览的 CSS，不进代码生成器，
+    #   所以圆形靠控件级 radius + clip_corner，见 build_example.py 的 SCREEN_RADIUS）
+    sc = read(os.path.join(UI, "screens.c"))
+    main_blk = sc.split("objects.main = obj;")[-1].split("parent_obj")[0]
+    check("主屏 radius 由 EEZ 生成（LV_RADIUS_CIRCLE=32767）",
+          "lv_obj_set_style_radius(obj, 32767," in main_blk,
+          "EEZ 没生成圆角 ⇒ 表盘又是方的")
+    check("主屏 clip_corner 由 EEZ 生成",
+          "lv_obj_set_style_clip_corner(obj, true," in main_blk,
+          "只有 radius 不裁子对象 ⇒ 看着还是方的")
+    check("native 侧没有偷偷补 radius/clip_corner",
+          "clip_corner" not in read(os.path.join(NATIVE, "watch_list_native.c")),
+          "遮罩被挪到 native 了，违反 EEZ 单一口径")
+
+    # 外壳元素（标题/状态行）必须落在胶囊安全区内，否则会被圆角整个裁掉——实测踩过
+    g = json.loads(read(PROJ))["settings"]["general"]
+    W, H = int(g["displayWidth"]), int(g["displayHeight"])
+    R = min(W, H) // 2
+
+    def inside(x, y):
+        if y <= R:      return (x - W / 2) ** 2 + (y - R) ** 2 <= R ** 2
+        if y >= H - R:  return (x - W / 2) ** 2 + (y - (H - R)) ** 2 <= R ** 2
+        return True
+
+    def walk(n):
+        if isinstance(n, dict):
+            if n.get("type") == "LVGLLabelWidget" and n.get("identifier"):
+                yield n
+            for v in n.values():
+                yield from walk(v)
+        elif isinstance(n, list):
+            for v in n:
+                yield from walk(v)
+
+    labels = [w for w in walk(json.loads(read(PROJ)))
+              if w.get("identifier") in ("lbl_title", "lbl_status")]
+    for lb in labels:
+        x, y = int(lb["left"]), int(lb["top"])
+        # 查左上/右上两个角：它们离胶囊弧心最远，是会被裁的那个方向
+        check("%s 落在胶囊安全区内 (%d,%d)" % (lb["identifier"], x, y),
+              inside(x, y) and inside(x + int(lb["width"]), y),
+              "会被圆角裁掉——标题/状态行必须往里挪")
+
 
 # ---- 2. 分辨率三处对齐 ----
 def check_resolution():
@@ -97,6 +141,34 @@ def check_resolution():
 
 
 # ---- 3. native 上屏中文 ⊆ 字体子集 ----
+def font_covered_codepoints():
+    """从**实际烘出来的** ui_font_cn14.c 里解析它到底覆盖了哪些码点。
+
+    ★ 为什么不能只比 build_example.FONT_CHARS：那是"声明值"。
+      EEZ Studio 自己也会烘字体（GUI 构建会烘，CLI 不烘 —— 见 P-0140），
+      它写出的 --range 列表和我们的 --symbols 列表是两份东西。
+      拿声明比声明，字体被换掉时门禁会"因为错的理由通过"（实测踩过）。
+    lv_font_conv 会在产物头部原样回显 `Opts: ...`，那就是这份字体的真实配方。
+    """
+    src = read(os.path.join(UI, "fonts", "ui_font_cn14.c"))
+    opts = next((l for l in src.splitlines() if "Opts:" in l), "")
+    cov = set()
+    m = re.search(r"--(?:range|r)\s+(\S+)", opts)
+    if m:
+        for part in m.group(1).split(","):
+            if not part:
+                continue
+            if "-" in part:
+                a, b = part.split("-", 1)
+                cov |= set(range(int(a, 0), int(b, 0) + 1))
+            else:
+                cov.add(int(part, 0))
+    m = re.search(r"--symbols\s+(\S+)", opts)
+    if m:
+        cov |= {ord(c) for c in m.group(1)}
+    return cov, opts
+
+
 def check_native_font():
     print("\n=== [3] native 侧中文字体覆盖 ===")
     import build_example as be
@@ -116,6 +188,23 @@ def check_native_font():
     missing = sorted(used - set(be.FONT_CHARS))
     check("native 上屏用字 %d 个，全部在字体子集内" % len(used), not missing,
           "缺字 %s ⇒ 改 design/apps.py 后重跑生成链" % "".join(missing))
+
+    # ★ 关键一条：比的是**字体文件本身**，不是声明
+    cov, opts = font_covered_codepoints()
+    check("字体产物在位且头部带 Opts 配方", bool(opts),
+          "解析不到 `Opts:` 行 ⇒ 无法证明这份 .c 覆盖了哪些码点")
+    absent = sorted({ord(c) for c in used} - cov)
+    check("实际字体文件覆盖 native 用字 %d 个（解析自 ui_font_cn14.c 的 Opts）" % len(used),
+          not absent,
+          "字体缺字 %s ⇒ 这份 .c 不是按我们的字符集烘的（EEZ GUI 会自己烘，注意别被覆盖）"
+          % "".join(chr(c) for c in absent))
+    declared = {ord(c) for c in be.FONT_CHARS}
+    check("字体实际覆盖码点数(%d) == 声明字符集数(%d)" % (len(cov), len(declared)),
+          cov == declared,
+          "只被声明有、字体里没有：%s ｜ 只在字体里：%s" % (
+              "".join(chr(c) for c in sorted(declared - cov)),
+              "".join(chr(c) for c in sorted(cov - declared))))
+
 
 
 # ---- 4. 上游件可审计 ----
@@ -202,13 +291,29 @@ def check_evidence():
     mainc = read(os.path.join(HERE, "sim_cmake", "main.c"))
     check("WATCH_AUTOTEST 钩子接进主循环", "autotest_hooks();" in mainc,
           "钩子没接进 while(1)")
-    check("五条行为断言在夹具里",
+    check("十一条行为断言在夹具里",
           all(k in mainc for k in ("中心行 = 10", "缩放最大", "单调衰减",
-                                   "快滑一次跨多行", "钳在最后一行")),
+                                   "快滑一次跨多行", "钳住不越界",
+                                   "横向 1/3", "起步不吸在首行",
+                                   "行程不限", "弹回顶部第 n 个",
+                                   "弹回底部倒数第 n 个")),
           "断言被删了")
     check("自证模式摘掉真鼠标",
           'WATCH_ALLOWMOUSE' in mainc and 'lv_indev_delete(mouse)' in mainc,
           "人手一滑就把断言量歪（实测污染过一次：10->13 被改成 11->15）")
+    # ★ 手势回调必须同时挂行和滚轮根对象。屏外回收把远处行置 HIDDEN，
+    #   LVGL 跳过隐藏对象 ⇒ 按在"隐藏行/空白"上时目标是根对象，只挂行会**静默失效**
+    #   （2026-10-22 用户报"滑到最上面不返回"就是这个，行级 API 夹具测不到）。
+    nativec = read(os.path.join(NATIVE, "watch_list_native.c"))
+    check("手势回调也挂在滚轮根对象上（否则隐藏区按下时静默失效）",
+          all(("lv_obj_add_event_cb(s_wheel, %s," % fn) in nativec
+              for fn in ("row_press_cb", "row_pressing_cb",
+                         "row_released_cb", "row_press_lost_cb")),
+          "只挂在行上：按在隐藏行/空白处时快滑与松手弹回全不触发")
+    check("有走真 indev 的合成拖动夹具 WATCH_DRAGTEST",
+          'WATCH_DRAGTEST' in mainc and 'SDL_PushEvent' in mainc
+          and 'lv_sdl_window_get_window' in mainc,
+          "行级 API 夹具测不到手势链路，必须能合成 SDL 级拖动")
 
 
 def main():

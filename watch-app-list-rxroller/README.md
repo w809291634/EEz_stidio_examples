@@ -85,6 +85,7 @@ python design\compare_upstream.py --diff   && rem ★ 与 upstream_Rxroller/ 整
 ```
 
 无头自证：`set WATCH_AUTOTEST=1 && set WATCH_AUTOEXIT=1 && main.exe`
+真 indev 合成拖动（走 SDL 事件队列 → LVGL indev → 行/根回调）：`set WATCH_DRAGTEST=1 && main.exe`
 （辅助开关：`WATCH_NOSHOT=1` 跳拍屏、`WATCH_TICKTRACE=1` 打节拍、`WATCH_ROWDEBUG=1` 打逐行坐标、
 `WATCH_ALLOWMOUSE=1` 把真鼠标接回来——默认自证模式下鼠标是被摘掉的，见 §5.1）
 
@@ -99,11 +100,12 @@ python design\compare_upstream.py --diff   && rem ★ 与 upstream_Rxroller/ 整
 | 上游件可审计 | 产物 == `port_rxroller.py` 重放结果（逐字节一致）✓ |
 | 表 × 图标 | 22 项、22 个图标、`app_rows.c` 与表同步 ✓ |
 | PC_SIM 编译链接 | `build succeeded`（含 22 个图标编译单元）✓ |
-| ★ 行为断言（无头） | `惯性收敛后中心行 = 10` **PASS**；`中心行缩放最大` **PASS**（255 vs 220）；`离中心越远单调衰减` **PASS**（220 > 185 > 150）；`快滑一次跨多行并吸附到整行` **PASS**（10 → 13，抛 250px）；`末尾快滑钳在最后一行` **PASS**（21 → 21，不越界） |
+| ★ 行为断言（无头，11 条行级 + 2 条真拖动 = 13/13 PASS） | 基线：`中心行=10`、`中心行缩放最大`(255>220)、`离中心越远单调衰减`(220>185>150)；惯性：`快滑一次跨多行并吸附到整行`(10→13，抛 250px)、`末尾快滑钳住不越界`(20→20)；真 indev 合成拖动：`真拖动到顶/到底：松手弹回第 n 个`(→1、→20)；样式：`中心图标落在横向 1/3`(x=136=410/3)、`起步不吸在首行`(=1)；磁吸落点：`首行/末行可以拖到正中（行程不限）`(→0、→21)、`松手弹回顶部第 n 个`(0→1)、`松手弹回底部倒数第 n 个`(21→20) |
 | ★ 剖面 | `[WHEEL] center10 scale: 150 185 220 255 220 185 150`（对称渐变 = 滚轮观感来源） |
-| ★ 截图 | `shots/shot_init.png` / `shot_center10.png`：竖直一列、圆角图标 + 中文名、中心最大；sysmon 读数 79 FPS / 1% CPU / 3 ms |
+| ★ 截图 | `shots/shot_init.png` / `shot_center10.png` / `shot_round.png`：竖直一列、圆角图标 + 中文名、中心最大、**主屏胶囊遮罩生效**；sysmon 读数 82 FPS / 2% CPU / 2 ms |
+| ★ 表盘外形 | 主屏 `radius=LV_RADIUS_CIRCLE` + `clip_corner=true` **由 EEZ 生成**（screens.c 可反查），native 零改动；410×502 ⇒ 胶囊（左右半圆 + 上下 92px 直边），非正圆 |
 
-### 5.1 取证链上的两个坑（都实测过）
+### 5.1 取证链上的坑（都实测过）
 
 - **`lv_snapshot_take` 在这棵树上不返回**（200 s 内连计时都没打出来），而同一棵树正常渲染
   是 210 拍/秒 ⇒ 卡的是快照路径。改成读显示的活动绘制缓冲 `lv_display_get_buf_active()`。
@@ -112,9 +114,21 @@ python design\compare_upstream.py --diff   && rem ★ 与 upstream_Rxroller/ 整
   去掉它、直接拿当前活动缓冲就正常出图。
 - 上游**不做屏外回收**：根对象撑满宿主后 22 行全部进入绘制计算 ⇒ 本工程在
   `watch_list_native.c` 里加了 `CULL_PITCHES=4` 的隐藏回收（真手表列表也是这么做的）。
+- ★ **手势回调只挂子对象会被"隐藏"吞掉，而且是静默失效**（2026-10-22 用户报
+  "滑到最上面不返回"）：本工程的屏外回收把中心两侧 4 行以外的行置了 `HIDDEN`，
+  LVGL 的事件搜索会跳过隐藏对象 ⇒ 手指按在"隐藏行/空白"上时，按下目标是**滚轮根对象**，
+  行上的 `PRESSED/PRESSING/RELEASED` 一次都不触发，于是快滑与松手弹回全都不做事。
+  行级 API 夹具（`watch_list_center_no_clamp` 那一套）**完全测不到**这条链路——它绕过了 indev。
+  现在手势回调同时挂行与根对象，并加了走真 indev 的 SDL 合成拖动夹具（见下条）。
+- **合成 SDL 拖动的关键细节**：上游 `lv_sdl_mouse.c:166-168` 的 `SDL_MOUSEBUTTONDOWN`
+  分支读的是 `event->motion.x / motion.y`（**不是** `button.x / button.y`）。
+  按下事件不填 `motion` 那两个字段的话，按下点落在 (0,0)，命不中任何行 ——
+  之前那版注入夹具"发得出事件但 LVGL 收不到 PRESSED"就是这个原因。
+  跑法：`set WATCH_DRAGTEST=1 && main.exe`（两个方向各一条断言，见 §5.3）。
 - **无头跑会被人手污染**：`WATCH_AUTOTEST` 并不挡住 SDL 真鼠标。实测一次夹定要判
   `10 -> 13`，中途一次真实拖动把中心行改成了 11，结果量成 `11 -> 15` ⇒ FAIL。
-  现在 `hal_init()` 在自证模式下 `lv_indev_delete(mouse)` 把鼠标摘掉（`WATCH_ALLOWMOUSE=1` 可恢复）。
+  现在 `hal_init()` 在自证模式下 `lv_indev_delete(mouse)` 把鼠标摘掉（`WATCH_ALLOWMOUSE=1` 可恢复；
+  `WATCH_DRAGTEST` 例外——它要用 indev）。
   顺带这条也证明了测速链是通的：那次污染日志里就是 `[FLING] vel=-1292 px/s -> throw=-300 px`。
 
 ### 5.2 快滑惯性（本工程加，上游没有）
@@ -149,14 +163,80 @@ python design\compare_upstream.py --diff   && rem ★ 与 upstream_Rxroller/ 整
 | 屏 | 410×502（方形表） | 368×448（SiFli 长表） |
 | 适合 | 应用多于 ~8 个、要读名字 | 图标少、要"表盘式"密度 |
 
+### 5.3 两条样式规则（横向 1/3 + 松手弹回第 n 个）
+
+| 规则 | 落点 | 实测 |
+|---|---|---|
+| 中心行的图标放在**屏宽 1/3** 处（口径已确认是横向） | `watch_list_align_center_x()` | 图标中心 x=**136** = 410/3；`pad_left` 由 140 标定到 **48** |
+| **允许一路拖到最上/最下，松手后弹回"第 n 个"**（顶部第 n 个 / 底部倒数第 n 个，序号从 1 起） | 宏 `EDGE_SNAP_TOP_ORDINAL` / `EDGE_SNAP_BOTTOM_ORDINAL`（当前都是 2）+ `watch_list_snap_edge()` | 行程真的放开：能停在行 0 / 行 21；松手弹回 **1 / 20**（= 第 2 个 / 倒数第 2 个） |
+
+★ 1/3 定位用**一次性闭环标定**（割线法，实测斜率，最多 12 次 `lv_obj_update_layout`），
+不是写死一个 `pad_left`：行是在"扣掉左内边距后的内容框"里居中的，还叠着边框固定偏差
+（实测锚点 140 却量出行左缘 117，差 8px），写死值一改 `ROW_W` 或图标行内偏移就会飘。
+只在建轮时跑，**不是逐拍轮询**。
+
+★ 为什么"弹回第 n 个"落在 native 而不是上游钳位：口径要求**拖动行程放开**。
+上一版改过上游 `rx_clamp_distance` 的钳位范围（补丁 #15），实测确实挡得住首尾行，
+但那**同时把拖动行程也锁死了** —— 与"允许拖到顶"直接冲突，所以整条补丁已撤销，
+上游账单回到 14 hunks（见 [`PORTLOG.md` §3](PORTLOG.md) 末段）。
+现在只有松手那一次纠正：行 `RELEASED` → `lv_async_call` 延一拍，避开上游随后那次吸附。
+
+★ 手势回调**同时挂在行和滚轮根对象上**。只挂行会静默失效：屏外回收把远处行置了
+`HIDDEN`，LVGL 跳过隐藏对象 ⇒ 手指按在"隐藏行/空白"上时目标是根对象，行回调一次都不跑。
+用户报的"滑到最上面不返回"就是这个（`shot_drag_top.png` 是同一条夹具的取证图）。
+
+★ 判据仍按"绕过我的兜底还能过"来设计，只是这次绕的是**上游**：
+夹具先 `watch_list_center_no_clamp(0 / 21)` 断言行程真的放开（能停在行 0 / 行 21），
+再 `watch_list_snap_edge()` 断言弹回第 n 个。单变量把 `EDGE_SNAP_TOP_ORDINAL` 改成 3
+⇒ 落点从"第 2 个"变"第 3 个"、区间变 `[2,20]`，证明是**宏驱动**不是写死。
+
+★ 改宏后**必须 `touch` 源文件再构建**：实测 ccache + mtime 会让 ninja 只重链不重编，
+第一遍单变量测试因此读了旧二进制、假复现成"宏没生效"。
+
+### 5.4 表盘外形：胶囊圆角，**全部在 EEZ 属性面**
+
+口径：EEZ 是窗口框架，外形必须由 EEZ 生成、仿真器只靠 `ui_init()` 就生效，native 一行都不加。
+
+| 层 | 做了什么 | 证据 |
+|---|---|---|
+| EEZ 设计源 | 主屏 style `radius = LV_RADIUS_CIRCLE(32767)` + `clip_corner = true`（[build_example.py](build_example.py) 的 `SCREEN_RADIUS`） | 生成产物 `src/ui/screens.c`：`lv_obj_set_style_radius(obj, 32767, …)` + `lv_obj_set_style_clip_corner(obj, true, …)` |
+| native | **零改动** | 门禁 `native 侧没有偷偷补 radius/clip_corner` |
+| 仿真器 | 照旧 `ui_init()` / `ui_tick()` | main.c:223 / 232 |
+
+★ 两个必须记住的事实：
+
+1. **`settings.general.circularDisplay` 不生成任何代码**。在 EEZ Studio 的 `app.asar` 里这个字段
+   8 处命中全在 React 预览渲染层（给预览 DOM 加 CSS `border-radius`），代码生成器 0 处
+   ⇒ 只勾它，仿真器永远是方的。控件级 `radius` + `clip_corner` 才是真的（属性定义在
+   MISCELLANEOUS 样式组，`description: "Enable to clip the overflowed content on the rounded corner"`）。
+   只有 `radius` 没有 `clip_corner` 也不行 —— 那只会把背景画圆，子对象照样糊到角外。
+2. **410×502 上 `LV_RADIUS_CIRCLE` 出来的是胶囊，不是正圆**：半径被钳到短边一半 205，
+   左右两端成半圆、上下各留 `502-410 = 92px` 直边（用 canvas 采样验证过）。要正圆得用方形分辨率。
+
+★ 加了圆角后**标题和状态行会被整个裁掉**（它们原本贴在直角上 `(0,8)`）。外壳元素的落点
+按胶囊弧算：半宽 `h` 处需要的深度 `d = R - sqrt(R² - h²)`，取 `h=140` ⇒ `d≈56`，
+于是标题 `(65,56)`、状态行 `(65,428)`。这条算式在 `build_example.py` 里，
+preflight 第 1 组会拿它反查每个标签的左上/右上角是否真在弧内。
+
+取证：`shots/shot_round.png` —— 四角已被裁掉、标题与状态行完整可见、中心图标仍在 1/3 处。
+
+### 5.5 上一版结论的撤回
+
+我一度判定"EEZ 属性面出不了 `clip_corner`，所以圆形遮罩必须 native 补一行"。
+**那是错的**，错因是只 grep 了驼峰 `clipCorner`（0 命中）就下结论；实际属性名是
+snake_case `clip_corner`，在 MISCELLANEOUS 样式组里，生成器 144 个 `lv_obj_set_style_*`
+setter 中也有它。留这条是因为它正好演示了"判框架做不到 X"要先穷尽查证。
+
 ## 7. 已知差异 / 未做
 
-- ★ **行缩放往中线收**：上游把 transform 轴心设在 `big_w/2`（行宽一半），所以离中心越远
-  的行不仅变小、图标还向水平中线漂（截图里 `呼` 比 `天` 偏右 ~100px）。参考图是"图标列
-  基本对齐"。要贴平得把轴心改成行左缘（需要再打一条 `RX-PORT-FEAT`，或改用 SIZE 缩放模式）。
+- ★ **行缩放往中线收**（和 1/3 定位叠加后更明显）：上游把 transform 轴心设在 `big_w/2`
+  （行宽一半），所以离中心越远的行不仅变小、图标还向水平中线漂 —— 实测第 3 外的行
+  （`呼`）图标中心比中心行（`天`）偏右 ~75px。参考图是"图标列基本对齐"。
+  要贴平得把轴心改成行左缘（需要再打一条 `RX-PORT-FEAT`，或改用 SIZE 缩放模式）。
 - **半验**：真实鼠标快滑的手感（速度阈值 120 px/s、投影 0.25 s、上限 3 行这几个数）
   只验到了"链路通"——自证模式下真鼠标被摘掉，抛距→行数的换算与落点吸附是用
   `watch_list_fling()` 直接喂 -250 px 断言的；真手滑的**观感**轻重还得人上手调。
+  首尾磁吸同理：无头是"请求行 0/21 看有没有被拉回"，真正拖到头的跟手感觉要人试。
   真机（SiFli 面板）编译未做。
 - **未做**：图标自身动画（自转/心跳/步态那套 66fps 参数通道，Design Watch 有）。
 

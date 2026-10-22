@@ -31,4 +31,18 @@ bool watch_list_is_animating(void);
 /* 第 i 行当前的变换缩放（256 = 100%）；越界或未创建返回 -1 */
 int watch_list_row_scale(int index);
 
+/* 中心行图标的绝对 x 中心（px）——"横向 1/3 定位"的观测量，preflight/夹具用它核对 */
+int watch_list_center_icon_x(void);
+
+/* 允许磁吸到中心的行下标区间（首尾行不许）。夹具用它做边界断言。 */
+int watch_list_center_min(void);
+int watch_list_center_max(void);
+
+/* 探针：绕过本工程的 clamp 直接叫上游 API，用来验证"首尾不许磁吸"是上游钳位在挡 */
+void watch_list_center_no_clamp(int index, bool anim);
+
+/* 松手落点纠正：把中心弹回允许范围（顶部第 n 个 / 底部倒数第 n 个，宏在 .c 里）。
+ * 真机上由行 RELEASED 自动调；夹具也可以直接调它做无头断言。 */
+void watch_list_snap_edge(void);
+
 #endif /* WATCH_LIST_NATIVE_H */

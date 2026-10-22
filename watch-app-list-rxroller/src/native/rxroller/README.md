@@ -22,22 +22,22 @@
 | `Rxroller.h` | **上游原文，未改一个字节** | `9ffe79f8de34` |
 | `LICENSE` | 上游原文（MIT 要求随库保留） | `5ee83fa2c52b` |
 | `Rxroller.c` | ★ **补丁产物 = `.orig` + 14 hunks**，由 [`design/port_rxroller.py`](../../design/port_rxroller.py) 生成，**勿手改** | `26732cd3eda6` |
-| `Rxroller_port.diff` | 上面那条 diff 的导出件，给人眼看 | —— |
+| `Rxroller_port.diff` | 上面那条 diff 的导出件（178 行），给人眼看 | —— |
 
 ★ 为什么原文改名 `.orig`：PC_SIM 的 CMake 用 `GLOB_RECURSE src/native/*.c` 收源码，
 两个 `.c` 会重复定义符号。`.orig` 不被收集，又能就地 diff。
 
 ## 改了什么：14 个 hunk 逐条（`diff -u Rxroller.c.orig Rxroller.c` = 14 hunks / +49 / −16）
 
-"上游行"就是 hunk 头里的 `-行`，可以直接 `sed -n '490,520p' Rxroller.c.orig` 跳过去看原文。
+"上游行"就是 hunk 头里的 `-行`，可以直接 `sed -n '180,195p' Rxroller.c.orig` 跳过去看原文。
 
 | # | 上游行 → 新行 | 所在函数 | 类别 | 改了什么 |
 |---|---|---|---|---|
 | 1 | 1 → 1–30 | 文件头 | 记录+常量 | 生成说明横幅；另加 3 条宏：`RXROLLER_CLICK_TRAVEL_MAX 10`、`lv_mem_alloc/free→lv_malloc/free` 别名、`RX_SCALE_SPAN_PITCHES 3` |
-| 2 | 16 → 41 | `rxroller_ctx_t` |  上游真 bug | 结构体新增 `int32_t drag_travel` |
+| 2 | 16 → 41 | `rxroller_ctx_t` | 🐞 上游真 bug | 结构体新增 `int32_t drag_travel` |
 | 3 | 90 → 116–123 | `rx_get_ctx` | 版本适配 | `wheel->user_data` 读 → `lv_obj_get_user_data()`（2 站点） |
 | 4 | 118 → 144 | `rx_cleanup_internal` | 版本适配 | `ctx->screen->user_data = NULL` → `lv_obj_set_user_data()` |
-| 5 | 202 → 228–244 | `rx_update_item_scale` | ⭐ 能力补丁 | 缩放衰减窗口 `icon_distance` → `× RX_SCALE_SPAN_PITCHES(3)`；**改成 1 即逐字恢复上游行为** |
+| 5 | 202 → 228–244 | `rx_update_item_scale` | ⭐ 能力补丁 | 缩放衰减窗口 `icon_distance` → `× RX_SCALE_SPAN_PITCHES(3)`；**取 1 即逐字恢复上游行为** |
 | 6 | 269 → 297–306 | `rx_anim_exec_cb` | 版本适配 | `parent->user_data`、`icon_obj->user_data` → 访问器（2 站点） |
 | 7 | 319 → 347–350 | `rx_dismiss_ready_cb` | 版本适配 | `parent->user_data` 判空 + 读 → 访问器（2 站点） |
 | 8 | 368 → 396–399 | `rx_restore_ready_cb` | 版本适配 | 同上（2 站点） |
@@ -48,8 +48,8 @@
 | 13 | 704 → 737 | `rx_event_delete` | 版本适配 | `e->user_data` → `lv_event_get_user_data(e)` |
 | 14 | 810 → 843 | `rxroller_create` | 版本适配 | `ctx->screen->user_data = ctx` → `lv_obj_set_user_data()` |
 
-**分类合计**：版本适配 8 处（12 个 `user_data` 站点 + 2 个别名宏）· 能力补丁 1 处 ·
-上游真 bug 4 处（#2/9/10/11 是同一件事的 4 个落点）· 说明横幅 1 处。
+**分类合计**：版本适配 8 处（12 个 `user_data` 站点 + 2 个别名宏）· 能力补丁 1 处（#5 缩放窗口）·
+上游真 bug 4 处（#2/9/10/11 是同一件事的 4 个落点）· 说明横幅+常量 1 处。
 
 **没动的**：滚轮布局数学、弧线坐标、动画/惯性参数、吸附算法、数据结构（除新增一个字段）。
 改动占比 `49 / 1237 ≈ 4.0%`。
@@ -60,6 +60,13 @@
 "是不是点击" ⇒ 松手前只要停顿一拍，整段拖动就被判成点击，上游自己再把列表动画切回
 松手那一行 = 现象上的"拖完自动回弹 / 滑不到底"。
 
+### ⭐ 首尾行磁吸落点**没有**做成上游补丁（本目录账单因此保持 14 个 hunk）
+
+需求是"允许一路拖到最上/最下，松手后弹回第 n 个"。若照上一版去改
+`rx_clamp_distance` 的钳位范围，拖动行程就被一起锁死了 —— 与需求相反。
+所以落点纠正放在本目录之外的 `watch_list_snap_edge()`（行 RELEASED 触发一次），
+**本目录一行都没为它改**。
+
 ### ⭐ 上游没有惯性（本工程要惯性所以自己做）
 
 `rxroller_config_t.inertia_divisor` 是**死字段**：全文只有配置兜底那一次赋值
@@ -67,7 +74,7 @@
 松手路径也只 `rx_set_center_internal(best, 1)` 吸附到最近行。
 ⇒ 快滑惯性整套做在**本目录之外**的
 [`../watch_list_native.c`](../watch_list_native.c)（测速 → `row_released_cb` → `watch_list_fling()`），
-**本目录的上游账单没有因此变化，仍是 14 hunks**。
+**本目录的上游账单没有因此变化（当时仍是 14 个 hunk）**。
 
 ## 自己核对（三条，任选）
 

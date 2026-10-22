@@ -1,13 +1,21 @@
 /*******************************************************************************
  * Size: 14 px
  * Bpp: 4
- * Opts: --no-compress --bpp 4 --size 14 --font C:\Users\yjt54\Desktop\EEz_stidio_examples\watch-app-list-rxroller\fonts/simhei.ttf -r 0x20-0x7E --symbols 中二亮列动历压吸呼器天定就屏已应开式录心手打找抬拍日时机查模步气氧照率理用疗眠睡码秒算练绪维置腕血表言计训记设语运钟间闹 --format lvgl --lv-font-name ui_font_cn14 -o C:\Users\yjt54\Desktop\EEz_stidio_examples\watch-app-list-rxroller\src\ui\fonts\ui_font_cn14.c
+ * Opts: --bpp 4 --size 14 --no-compress --font fonts/simhei.ttf --range 32-126,20013,20108,20142,21015,21160,21382,21387,21560,21628,22120,22825,23450,23601,23631,24050,24212,24320,24335,24405,24515,25163,25171,25214,25260,25293,26085,26102,26426,26597,27169,27493,27668,27687,29031,29575,29702,29992,30103,30496,30561,30721,31186,31639,32451,32490,32500,32622,33109,34880,34920,35328,35745,35757,35760,35774,35821,36816,38047,38388,38393 --format lvgl
  ******************************************************************************/
 
+#ifdef __has_include
+    #if __has_include("lvgl.h")
+        #ifndef LV_LVGL_H_INCLUDE_SIMPLE
+            #define LV_LVGL_H_INCLUDE_SIMPLE
+        #endif
+    #endif
+#endif
+
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
-#include "lvgl.h"
+    #include "lvgl.h"
 #else
-#include "lvgl/lvgl.h"
+    #include "lvgl.h"
 #endif
 
 #ifndef UI_FONT_CN14
@@ -1435,7 +1443,6 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
     0xe2, 0x0, 0x8, 0x20, 0x9, 0xa6
 };
 
-
 /*---------------------
  *  GLYPH DESCRIPTION
  *--------------------*/
@@ -1627,8 +1634,6 @@ static const lv_font_fmt_txt_cmap_t cmaps[] =
     }
 };
 
-
-
 /*--------------------
  *  ALL CUSTOM DATA
  *--------------------*/
@@ -1656,8 +1661,6 @@ static lv_font_fmt_txt_dsc_t font_dsc = {
     .cache = &cache
 #endif
 };
-
-
 
 /*-----------------
  *  PUBLIC FONT
@@ -1687,7 +1690,4 @@ lv_font_t ui_font_cn14 = {
     .user_data = NULL,
 };
 
-
-
 #endif /*#if UI_FONT_CN14*/
-
