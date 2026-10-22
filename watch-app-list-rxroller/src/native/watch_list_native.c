@@ -5,10 +5,7 @@
  *   EEZ 出：410x502 屏、宿主容器 objects.list_host、标题、状态行、中文字体条目；
  *   这里出：滚轮件本体（弧线排布 + 逐行按离中心距离缩放 + 惯性 + 点击）。
  *
- * 为什么不走 EEZ Flow：scroll_snap 轴与"逐子项 transform_scale"不在 EEZ 属性面内
- * （实测 asar：scroll_snap 只出现在 WASM 符号表与 LVGL 常量字符串表里，
- * 没有 widget 属性定义）。Flow 版参照工程（桌面的 Design Watch）能做到，
- * 是靠 97 个 action 写 / 15ms 堆出来的；这里一次遍历就够。
+ * 不走 EEZ Flow 的论证见 README §2；缺陷史与修复见 FIXLOG.md。
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -30,14 +27,8 @@
                                     （参考图只要轻微弧线），放宽到 900 */
 #define ANIM_TIME        300
 
-/* 松手磁吸的落点范围。**拖动行程不受限**——可以一路拖到最上面/最下面，
- * 但松手后弹回"第 n 个"：顶部弹回从上数第 EDGE_SNAP_TOP_ORDINAL 个，
- * 底部弹回从下数第 EDGE_SNAP_BOTTOM_ORDINAL 个（序号从 1 起，跟用户口径一致）。
- * 上下各留一行的作用是告诉用户"这头还有东西"。
- * ★ 上游没有这个概念：它把 distance 钳在 [-(N-1-i)*pitch, i*pitch]，
- *   行 0 与行 N-1 都能到中心，建轮时还直接 rx_set_center_internal(ctx, 0, 0)。
- *   因为"允许拖到顶"，钳位公式不能动（动了就拖不动了），
- *   所以落点纠正放在**松手事件**上做一次性处理（见 watch_list_snap_edge）。 */
+/* 松手落点范围：拖动行程不限，松手弹回"第 n 个"（序号 1 起）。
+ * 为什么不做成上游钳位：见 FIXLOG FX-010。 */
 #define EDGE_SNAP_TOP_ORDINAL     2    /* 第 2 个 ⇒ 行下标 1 */
 #define EDGE_SNAP_BOTTOM_ORDINAL  2    /* 倒数第 2 个 ⇒ 行下标 N-2 */
 #define CENTER_MIN_INDEX          (EDGE_SNAP_TOP_ORDINAL - 1)
@@ -52,29 +43,15 @@
 static lv_obj_t *s_wheel = NULL;
 static lv_obj_t *s_status = NULL;
 
-/* 拖动判定：按拍**累计最大位移**，超过阈值就忽略随之而来的 CLICKED。
- * ★ 为什么不能只比"按下点 vs 松手点"：LVGL 在 `scroll_obj == NULL 且没有
- *   PRESS_LOCK` 时**每个读周期都重新搜索按下对象**（lv_indev.c:1216-1219），
- *   换对象时把 last_point 重置成当前点并给新对象再发一次 PRESSED ⇒ 按下点会被
- *   中途刷新，位移永远算不出来（第一版就是这么失效的）。
- *   所以两道一起上：① 行加 PRESS_LOCK 锁住手势目标；② 自己按拍累计位移兜底。
- * 阈值 15px：行距 100px，轻点的手指抖动远小于它，任何有效拖动都远大于它。 */
+/* 拖动判定：按拍累计最大位移，超阈值就忽略随之而来的 CLICKED。
+ * 必须"累计 + PRESS_LOCK"两道一起上的原因见 FIXLOG FX-003。 */
 #define DRAG_CLICK_IGNORE_PX 15
 static lv_point_t s_press_pt;
 static bool s_press_valid = false;
 static int s_press_travel = 0;
 
-/* 快滑惯性（本工程自己加，上游没有——`inertia_divisor` 是死字段：
- * Rxroller.c 只在配置兜底里写了一次 20，之后全文再无任何读取）。
- * 做法：PRESSING 逐拍估纵向速度（低通滤波），RELEASED 把速度投影成
- * "还要抛多少像素"，交给 watch_list_fling() 用 rxroller_scroll 走完并吸附。
- *
- * 三个数是怎么定的（410x502、行距 100px）：
- *   FLING_MIN_VEL 120 px/s —— 手指缓慢移动完松手不该抛；120px/s × 0.25s = 30px，
- *     不足行距的 1/3，本来就吸附回原行，设成阈值正好把"没意义的小抛"滤掉。
- *   FLING_SEC 0.25 —— 投影时长，相当于衰减常数的近似积分。0.25s 下
- *     一次正常快滑（800~1500 px/s）抛 200~375px = 2~3 行，符合手表的观感。
- *   FLING_MAX_PX 3 行 —— 上限，防止甩一下跨过半屏找不到位置。 */
+/* 快滑惯性（上游没有，见 FIXLOG FX-007）。
+ * 三个阈值的取值推导见 README §5.2。 */
 #define FLING_MIN_VEL     120        /* px/s，低于它当普通松手不抛 */
 #define FLING_SEC         250        /* 毫秒（用整数算，省得引浮点） */
 #define FLING_MAX_PX      (ROW_PITCH * 3)
@@ -137,8 +114,7 @@ static void row_pressing_cb(lv_event_t *e)
         if (dt > 0) {
             int inst;
 
-            /* 手指停住超过 FLING_VEL_STALE_MS ⇒ 位置没变但时间变了，速度归零。
-             * 不加这条，"慢慢拖到某行、停一下再松手"会按最后一次的残留速度抛出。 */
+            /* 停手超过 STALE_MS 且 y 未变 ⇒ 速度清零，否则残留速度会误抛 */
             if (dt > FLING_VEL_STALE_MS && p.y == s_last_pt.y) {
                 s_vel = 0;
             } else {
@@ -151,9 +127,8 @@ static void row_pressing_cb(lv_event_t *e)
     }
 }
 
-/* 松手：把速度投影成"再抛多少像素"，交给 fling 去做。
- * 必须 lv_async_call 延一拍——上游也注册了 RELEASED（Rxroller.c:628）且它跑在我们之后，
- * 直接调 scroll 会被它那次 set_center 覆盖掉。 */
+/* 松手：速度投影成抛距交给 fling。必须延一拍——上游的 RELEASED 跑在我们后面，
+ * 同步调会被它那次 set_center 覆盖（见 FIXLOG FX-007 补充）。 */
 static void fling_async(void *user)
 {
     watch_list_fling((int32_t)(intptr_t)user);
@@ -167,9 +142,7 @@ static void row_released_cb(lv_event_t *e)
     if (!s_press_valid) return;
     s_press_valid = false;
 
-    /* 位移没超过"轻点"阈值 ⇒ 这是点击，不是拖动（哪怕瞬时速度采样偏高）。
-     * 不挡这条的话，一次 10px 的轻扫会同时触发 CLICKED 和抛出。
-     * 点击路径由 watch_list_center() 自己夹，这里不用管。 */
+    /* 位移未超阈值 = 轻点，不是拖动：否则一次 10px 轻扫会同时触发 CLICKED 和抛出 */
     if (s_press_travel <= DRAG_CLICK_IGNORE_PX) { s_vel = 0; return; }
 
     if (s_vel <= -FLING_MIN_VEL || s_vel >= FLING_MIN_VEL) {   /* 够快才算快滑 */
@@ -182,16 +155,14 @@ static void row_released_cb(lv_event_t *e)
     }
     s_vel = 0;
 
-    /* 拖动行程不限（可以一路拖到最上/最下），松手后在这里弹回"第 n 个"。
-     * 排在 fling 之后 ⇒ 快滑落点已定，本条只会处理"拖到端点慢慢松手"的情况。 */
+    /* 松手落点纠正。排在 fling 之后 => 快滑落点已定，这里只管"拖到端点慢慢松手" */
     lv_async_call(snap_edge_async, NULL);
 }
 
 static void row_click_cb(lv_event_t *e);
 
-/* 行内容：左圆图标 + 右中文名。★ 不能用容器 user_data 存下标——
- * Rxroller 自己占用了它（rx_init_item 里 lv_obj_set_user_data(item->obj, item)），
- * 所以点击时反查 rxroller_get_item_obj()。 */
+/* 行内容：左圆图标 + 右中文名。
+ * ★ 容器 user_data 已被上游占用，行号要靠 rxroller_get_item_obj() 反查。 */
 static void row_create_cb(lv_obj_t *row, int32_t index, void *user_data)
 {
     const watch_app_row_t *r = &WATCH_APP_ROWS[index];
@@ -210,8 +181,7 @@ static void row_create_cb(lv_obj_t *row, int32_t index, void *user_data)
     lv_obj_align(label, LV_ALIGN_LEFT_MID, 100, 0);
 
     lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
-    /* 锁住手势目标：不锁的话 LVGL 每拍重搜按下对象，行会从手指底下溜走，
-     * 于是一次拖动被记成"在好几行上按下"（详见上面 DRAG_CLICK_IGNORE_PX 的注释） */
+    /* 锁住手势目标，见 FIXLOG FX-003 */
     lv_obj_add_flag(row, LV_OBJ_FLAG_PRESS_LOCK);
     lv_obj_remove_flag(row, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_event_cb(row, row_press_cb, LV_EVENT_PRESSED, NULL);
@@ -238,10 +208,8 @@ static void row_click_cb(lv_event_t *e)
 
     if (idx < 0 || idx >= WATCH_APP_ROWS_COUNT || NULL == s_wheel) return;
 
-    /* ★ 拖动时必须忽略这次"点击"：上游把行与滚轮根对象的 SCROLLABLE 都清了
-     *   （Rxroller.c:578/835，它自己按距离做位移动画），于是 LVGL 的 indev
-     *   永远不会置 scroll_obj（lv_indev.c:1211），松手时就直接发
-     *   LV_EVENT_CLICKED（lv_indev.c:1368）——**不管拖了多远**。 */
+    /* ★ 上游清了 SCROLLABLE ⇒ indev 永不置 scroll_obj ⇒ 松手无条件发 CLICKED，
+     *   不管拖了多远。必须自己按位移挡掉，见 FIXLOG FX-001。 */
     {
         int travel = s_press_travel;
 
@@ -254,8 +222,7 @@ static void row_click_cb(lv_event_t *e)
         }
     }
 
-    /* 两段式点击（本轮只加"拖动忽略"，其余逻辑保持原样）：
-     * 非中心行 → 先滚到中心；中心行 → 打开。 */
+    /* 两段式点击：非中心行先滚到中心；中心行才打开 */
     if (idx != (int)rxroller_get_center(s_wheel)) {
         printf("[WHEEL] focus row %d -> %s\n", idx, WATCH_APP_ROWS[idx].id);
         watch_list_center(idx, true);
@@ -267,7 +234,7 @@ static void row_click_cb(lv_event_t *e)
 
         printf("[WHEEL] open row %d -> %s\n", idx, WATCH_APP_ROWS[idx].id);
         if (s_status) {
-            /* ★ "已打开" 三个汉字必须在字体子集内（preflight 第 3 组门禁扫这条） */
+            /* ★ 上屏中文必须在字体子集内（preflight 第 3 组反查产物） */
             snprintf(buf, sizeof(buf), "已打开: %s", WATCH_APP_ROWS[idx].name);
             lv_label_set_text(s_status, buf);
         }
@@ -276,10 +243,8 @@ static void row_click_cb(lv_event_t *e)
 
 static void cull_timer_cb(lv_timer_t *t) { (void)t; watch_list_cull(); }
 
-/* 屏外回收：上游只在"根对象很小、子行天然被裁"的前提下工作。
- * 我们把根撑满宿主以便 5 行都可见，代价是 22 行全部进入绘制/无效计算——
- * 实测 lv_snapshot_take 一次要 ~55 秒（关掉快照后同样时长能跑 9500 拍）。
- * 这里按真实手表列表的做法做屏外回收：|distance| 超过 CULL_PITCHES 个行距就隐藏。 */
+/* 屏外回收：|distance| 超过 CULL_PITCHES 个行距就隐藏。
+ * 为什么必须做（以及它反过来引发的 FX-011）见 FIXLOG FX-005。 */
 #define CULL_PITCHES 4
 
 void watch_list_cull(void)
@@ -338,21 +303,11 @@ void watch_list_create(lv_obj_t *host, lv_obj_t *status_label)
         return;
     }
     /* 点击 cb 在 row_create_cb 里逐行挂（要的是"哪一行被点"，挂在轮上拿不到行号） */
-    /* 上游把根对象留成一个 130x130 的"锚"，行以它的内容原点为中心向正负两侧排。
-     * LVGL 9.4 里子对象一律裁到父边界——`LV_OBJ_FLAG_OVERFLOW_VISIBLE` 只是
-     * 按 ext_draw_size 放宽（src/core/lv_obj_pos.c:914），并不取消裁剪，
-     * 所以实测 5 行位置都算对了（abs y=9..492）却只画出中心那一行。
-     * 外壳级修法：把根对象撑满宿主 + 用 padding 把原锚点保住（不改它的坐标数学）。
-     * 注意要先 lv_obj_update_layout()：EEZ 的宿主在此刻还没排版，量出来是 0。 */
+    /* 根对象撑满宿主 + 用 padding 保住上游锚点（不改它的坐标数学）。
+     * 为什么必须这样做：见 FIXLOG FX-004。 */
 
-    /* ★ 手势回调必须**同时挂在行和根对象上**。只挂行是不够的：
-     *   屏外回收（CULL_PITCHES=4）把中心两侧 4 行以外的行都置了 HIDDEN，
-     *   LVGL 的事件搜索会跳过隐藏对象 ⇒ 手指按在"隐藏行/空白"上时，按下目标是
-     *   滚轮根对象，行回调一次都不触发 —— 于是快滑与松手弹回全部失效。
-     *   （这就是"滑到最上面不返回"的真因；无头夹具原来只喂行级 API，测不到。）
-     *   挂根上时我们的 cb 注册在上游之后（上游在 rxroller_create 里挂），读到的是
-     *   上游吸附后的落点；挂行上时顺序相反，靠 lv_async_call 延一拍。
-     *   两条路径最后都归到同一个 snap_edge_async，行为一致。 */
+    /* ★ 手势回调必须同时挂行与滚轮根对象，只挂行会被 HIDDEN 静默吞掉：
+     *   见 FIXLOG FX-011。两条路径都归到同一个 snap_edge_async。 */
     lv_obj_add_event_cb(s_wheel, row_press_cb, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(s_wheel, row_pressing_cb, LV_EVENT_PRESSING, NULL);
     lv_obj_add_event_cb(s_wheel, row_released_cb, LV_EVENT_RELEASED, NULL);
@@ -383,16 +338,11 @@ void watch_list_create(lv_obj_t *host, lv_obj_t *status_label)
            WATCH_APP_ROWS_COUNT, ROW_PITCH, EDGE_SCALE, CURVE_RADIUS);
 }
 
-/*---- 横向 1/3 定位（今天早上定的样式，先还原到当前基线）----*/
+/*---- 横向 1/3 定位 ----*/
 
 /* 中心行的图标中心放在屏宽 1/3 处（口径已确认是**横向**）。
- *
- * 为什么用一次性闭环标定、而不是写死一个 pad_left：
- *   行是在"扣掉左内边距后的内容框"里居中的，pad_left→行位置 的映射还叠着
- *   边框/内边距的固定偏差（实测锚点 140 却量出行左缘 117，差 8px），
- *   写死值一改 ROW_W、图标行内偏移或上游居中方式就会飘；标定跟着几何自己算。
- *   斜率不假设，用**割线法**实测两点反推 —— 所以也不依赖"pad 变 2 行变 1"这个猜测。
- * 只在建轮时跑（最多 CENTER_X_ITERS 次 lv_obj_update_layout），不是逐拍轮询。 */
+ * 一次性闭环标定（割线法实测斜率，不假设 1/2），只在建轮时跑。
+ * 为什么不写死 pad_left：见 FIXLOG FX-010 / README §5.3。 */
 
 /* 中心行里图标（child 0，row_create_cb 第一个建的）的绝对 x 中心 */
 static int center_icon_cx(void)
@@ -514,12 +464,8 @@ void watch_list_center_no_clamp(int index, bool anim)
 int watch_list_center_min(void) { return CENTER_MIN_INDEX; }
 int watch_list_center_max(void) { return CENTER_MAX_INDEX; }
 
-/* 惯性抛出。px 带符号：正=手指往下划（看更早的行，行号减小）。
- *
- * 为什么不直接叫 rxroller_scroll(px)：上游动画分支里 offset 只参与算动画时长
- * （Rxroller.c:725），行的目标位置恒等于"当前最近行"——也就是永远只吸附、不位移。
- * 所以这里自己把抛距换算成行距增量，再让上游去做那段动画（多行、ease_out、
- * 落点严格对齐某一行），观感才和真手表一致。 */
+/* 惯性抛出。px 带符号：正=手指往下划（行号减小）。
+ * 不能用 rxroller_scroll(px)：上游动画分支里 offset 只参与算时长，见 FIXLOG FX-007。 */
 void watch_list_fling(int32_t px)
 {
     int32_t center, rows, target;

@@ -54,6 +54,8 @@ settings.build.generateSourceCodeForEezFramework = False
 
 ```
 watch-app-list-rxroller/
+├── FIXLOG.md                        ← ★ 错误修复记录（19 条：现象/根因/修复/证据/防再犯）
+├── PORTLOG.md                       ← ★ 上游件改动账单
 ├── build_example.py                 ← EEZ 外壳设计源（410x502 + 字体条目 + 覆盖自检）
 ├── design/
 │   ├── apps.py                      ← ★ 22 行应用表的唯一事实源
@@ -84,6 +86,11 @@ python design\compare_upstream.py --diff   && rem ★ 与 upstream_Rxroller/ 整
 双击 design\sim_cmake\run_sim.bat  && rem 起窗口，鼠标拖动/点击
 ```
 
+★ **在 EEZ Studio GUI 里点 Build 也算一步生成链**：GUI 会**自己烘字体**（CLI 不会，见 P-0140），
+所以 GUI 构建后 `src/ui/fonts/ui_font_cn14.c` 会变成 EEZ 那份 `--range` 配方的产物。
+两份配方目前覆盖完全相同（155 码点），但**别靠记忆认定它们一致** ——
+preflight 第 3 组会解析字体文件头部的 `Opts:` 行反查真实覆盖，被换掉时会当场 FAIL。
+
 无头自证：`set WATCH_AUTOTEST=1 && set WATCH_AUTOEXIT=1 && main.exe`
 真 indev 合成拖动（走 SDL 事件队列 → LVGL indev → 行/根回调）：`set WATCH_DRAGTEST=1 && main.exe`
 （辅助开关：`WATCH_NOSHOT=1` 跳拍屏、`WATCH_TICKTRACE=1` 打节拍、`WATCH_ROWDEBUG=1` 打逐行坐标、
@@ -104,32 +111,19 @@ python design\compare_upstream.py --diff   && rem ★ 与 upstream_Rxroller/ 整
 | ★ 剖面 | `[WHEEL] center10 scale: 150 185 220 255 220 185 150`（对称渐变 = 滚轮观感来源） |
 | ★ 截图 | `shots/shot_init.png` / `shot_center10.png` / `shot_round.png`：竖直一列、圆角图标 + 中文名、中心最大、**主屏胶囊遮罩生效**；sysmon 读数 82 FPS / 2% CPU / 2 ms |
 | ★ 表盘外形 | 主屏 `radius=LV_RADIUS_CIRCLE` + `clip_corner=true` **由 EEZ 生成**（screens.c 可反查），native 零改动；410×502 ⇒ 胶囊（左右半圆 + 上下 92px 直边），非正圆 |
+### 5.1 踩过的坑
 
-### 5.1 取证链上的坑（都实测过）
+**全部挪到 [`FIXLOG.md`](FIXLOG.md)** —— 那才是记这个的地方，源码注释里只留
+`见 FIXLOG FX-###` 一行指路。取证链相关的几条：
 
-- **`lv_snapshot_take` 在这棵树上不返回**（200 s 内连计时都没打出来），而同一棵树正常渲染
-  是 210 拍/秒 ⇒ 卡的是快照路径。改成读显示的活动绘制缓冲 `lv_display_get_buf_active()`。
-- **不要在拍屏前调 `lv_refr_now()`**：它强制整屏重绘，实测带着它取帧同样在 200 s 窗口内
-  没出图（未单独计时，不下"多少秒"的结论）；正常循环只刷无效区，所以是 210 拍/秒。
-  去掉它、直接拿当前活动缓冲就正常出图。
-- 上游**不做屏外回收**：根对象撑满宿主后 22 行全部进入绘制计算 ⇒ 本工程在
-  `watch_list_native.c` 里加了 `CULL_PITCHES=4` 的隐藏回收（真手表列表也是这么做的）。
-- ★ **手势回调只挂子对象会被"隐藏"吞掉，而且是静默失效**（2026-10-22 用户报
-  "滑到最上面不返回"）：本工程的屏外回收把中心两侧 4 行以外的行置了 `HIDDEN`，
-  LVGL 的事件搜索会跳过隐藏对象 ⇒ 手指按在"隐藏行/空白"上时，按下目标是**滚轮根对象**，
-  行上的 `PRESSED/PRESSING/RELEASED` 一次都不触发，于是快滑与松手弹回全都不做事。
-  行级 API 夹具（`watch_list_center_no_clamp` 那一套）**完全测不到**这条链路——它绕过了 indev。
-  现在手势回调同时挂行与根对象，并加了走真 indev 的 SDL 合成拖动夹具（见下条）。
-- **合成 SDL 拖动的关键细节**：上游 `lv_sdl_mouse.c:166-168` 的 `SDL_MOUSEBUTTONDOWN`
-  分支读的是 `event->motion.x / motion.y`（**不是** `button.x / button.y`）。
-  按下事件不填 `motion` 那两个字段的话，按下点落在 (0,0)，命不中任何行 ——
-  之前那版注入夹具"发得出事件但 LVGL 收不到 PRESSED"就是这个原因。
-  跑法：`set WATCH_DRAGTEST=1 && main.exe`（两个方向各一条断言，见 §5.3）。
-- **无头跑会被人手污染**：`WATCH_AUTOTEST` 并不挡住 SDL 真鼠标。实测一次夹定要判
-  `10 -> 13`，中途一次真实拖动把中心行改成了 11，结果量成 `11 -> 15` ⇒ FAIL。
-  现在 `hal_init()` 在自证模式下 `lv_indev_delete(mouse)` 把鼠标摘掉（`WATCH_ALLOWMOUSE=1` 可恢复；
-  `WATCH_DRAGTEST` 例外——它要用 indev）。
-  顺带这条也证明了测速链是通的：那次污染日志里就是 `[FLING] vel=-1292 px/s -> throw=-300 px`。
+| 编号 | 一句话 |
+|---|---|
+| FX-005 | 快照不返回 → 改读活动绘制缓冲；且禁止先调 `lv_refr_now()` |
+| FX-012 | 合成 SDL 拖动：上游 `SDL_MOUSEBUTTONDOWN` 读的是 `motion.x/y` 不是 `button.x/y` |
+| FX-013 | 无头自证必须摘掉真鼠标，否则一次手滑就把观测量歪 |
+| FX-016 | 字体覆盖门禁要比产物、不比声明（EEZ GUI 会自己烘字体） |
+| FX-017 | 改宏后必须 `touch` 源文件，否则 ccache 让 ninja 只重链不重编 |
+| FX-018 | `.orig` 与上游哈希对不上是 CRLF/LF，不是被改过 |
 
 ### 5.2 快滑惯性（本工程加，上游没有）
 
@@ -153,15 +147,6 @@ python design\compare_upstream.py --diff   && rem ★ 与 upstream_Rxroller/ 整
 
 符号约定：`watch_list_fling(px)` 的 px 与手指同向，**正=往下划=看更早的行=行号减小**
 （`rx_event_pressing` 是 `distance += offset`，行号小的 distance 为负，所以正向把中心往小行拉）。
-
-## 6. 两种形态怎么选
-
-| | 本工程（纵向滚轮） | `watch-app-list-no-flow/`（蜂窝穹顶） |
-|---|---|---|
-| 观感 | 一列图标+名称，中心放大 | 六边形蜂窝，穹顶挤压 |
-| 来源 | rxwind7/Rxroller（MIT，有源码） | SiFli SDK `watch_v9/app_mainmenu.c`（Apache-2.0） |
-| 屏 | 410×502（方形表） | 368×448（SiFli 长表） |
-| 适合 | 应用多于 ~8 个、要读名字 | 图标少、要"表盘式"密度 |
 
 ### 5.3 两条样式规则（横向 1/3 + 松手弹回第 n 个）
 
@@ -220,12 +205,23 @@ preflight 第 1 组会拿它反查每个标签的左上/右上角是否真在弧
 
 取证：`shots/shot_round.png` —— 四角已被裁掉、标题与状态行完整可见、中心图标仍在 1/3 处。
 
-### 5.5 上一版结论的撤回
+### 5.5 结论撤回记录
 
-我一度判定"EEZ 属性面出不了 `clip_corner`，所以圆形遮罩必须 native 补一行"。
-**那是错的**，错因是只 grep 了驼峰 `clipCorner`（0 命中）就下结论；实际属性名是
-snake_case `clip_corner`，在 MISCELLANEOUS 样式组里，生成器 144 个 `lv_obj_set_style_*`
-setter 中也有它。留这条是因为它正好演示了"判框架做不到 X"要先穷尽查证。
+本工程有两条"先下结论、后被推翻"的记录，都已归档：
+
+- **误判上游 `rx_calc_curve_pos` 漏初始化 `*x`** → 见 [`FIXLOG.md`](FIXLOG.md) FX-006
+  与 [`PORTLOG.md` §4](PORTLOG.md)（含"为什么当时看起来修好了"）。
+- **误判"EEZ 属性面出不了 `clip_corner`"** → 见 FX-014 / §5.4；
+  错因是只 grep 了驼峰 `clipCorner`，实际属性名是 snake_case。
+
+## 6. 两种形态怎么选
+
+| | 本工程（纵向滚轮） | `watch-app-list-no-flow/`（蜂窝穹顶） |
+|---|---|---|
+| 观感 | 一列图标+名称，中心放大 | 六边形蜂窝，穹顶挤压 |
+| 来源 | rxwind7/Rxroller（MIT，有源码） | SiFli SDK `watch_v9/app_mainmenu.c`（Apache-2.0） |
+| 屏 | 410×502（方形表） | 368×448（SiFli 长表） |
+| 适合 | 应用多于 ~8 个、要读名字 | 图标少、要"表盘式"密度 |
 
 ## 7. 已知差异 / 未做
 

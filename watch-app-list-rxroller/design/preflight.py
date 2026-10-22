@@ -301,6 +301,26 @@ def check_evidence():
     check("自证模式摘掉真鼠标",
           'WATCH_ALLOWMOUSE' in mainc and 'lv_indev_delete(mouse)' in mainc,
           "人手一滑就把断言量歪（实测污染过一次：10->13 被改成 11->15）")
+    # ---- 缺陷史只准写在 FIXLOG.md，源码注释只留指路 ----
+    fixlog = os.path.join(ROOT, "FIXLOG.md")
+    check("FIXLOG.md 在位（错误修复记录的唯一去处）", os.path.exists(fixlog),
+          "缺陷史散落在源码注释里，改一处忘一处")
+    if os.path.exists(fixlog):
+        fx = set(re.findall(r"^## (FX-\d{3})", read(fixlog), re.M))
+        check("FIXLOG 条目 >= 15 且编号连续无重复",
+              len(fx) >= 15 and len(fx) == len(re.findall(r"^## FX-", read(fixlog), re.M)),
+              "条目数 %d，或有重号" % len(fx))
+        refs = set()
+        for sub, _d, files in os.walk(os.path.join(ROOT, "src", "native")):
+            for fn in files:
+                if fn.endswith((".c", ".h")):
+                    refs |= set(re.findall(r"FX-(\d{3})",
+                                           read(os.path.join(sub, fn))))
+        for fn in ("sim_cmake/main.c", "preflight.py", "port_rxroller.py"):
+            refs |= set(re.findall(r"FX-(\d{3})", read(os.path.join(HERE, fn))))
+        dangling = sorted(r for r in refs if "FX-%s" % r not in fx)
+        check("源码里的 %d 个 FX- 引用都能在 FIXLOG 里查到" % len(refs),
+              not dangling, "悬空引用 %s" % ", ".join("FX-" + x for x in dangling))
     # ★ 手势回调必须同时挂行和滚轮根对象。屏外回收把远处行置 HIDDEN，
     #   LVGL 跳过隐藏对象 ⇒ 按在"隐藏行/空白"上时目标是根对象，只挂行会**静默失效**
     #   （2026-10-22 用户报"滑到最上面不返回"就是这个，行级 API 夹具测不到）。
