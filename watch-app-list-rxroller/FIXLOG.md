@@ -192,6 +192,42 @@
 - **防再犯**：`preflight` 第 6 组按名字核对 16 条断言在位，并提示
   "断言名要按 config 验通用公式，不许写死形状"。
 
+## FX-022 · G · 账单只核对 hunk 数，`+A / −B` 和产物哈希腐化了却照样绿灯
+
+- **现象**：给上游 `rx_update_item_scale` 加第二条能力补丁（`RXROLLER_SCALE_MAX`）之后，
+  `PORTLOG §3` 与 `src/native/rxroller/README.md` 仍写着 `14 hunks / +50 / −16`，
+  实测已经是 `+61 / −18`（后来说明横幅又加两行 → `+61`；产物哈希也从 `26732cd3eda6` 变成 `48a297ccd7f2`）。
+  而那期间 `preflight` 一直是 rc=0。
+- **复现**：`python design/preflight.py`（旧版门禁）→ 全绿；
+  `python design/compare_upstream.py --diff` → 明晃晃打印 `14 hunks / +61 / -18`。两个数不一致。
+- **根因**：文档一致性门禁只提取 `(\d+)\s+hunks` 一个量。hunk **块数**没变（两半补丁落在同一个函数里），
+  变的是**行数**和**产物哈希**，两者都不在判据内 ⇒ 典型的"半覆盖门禁"：
+  它证明的是"我没新增/合并 hunk"，不是"账单没过期"。
+- **修复**：`preflight.check_upstream_audit()` 在同一处再加两条 ——
+  ① 提取文档里**每一个** `hunks / +A / −B`（`−` 兼容 U+2212 和 ASCII `-`），全部等于 difflib 实测；
+  ② 文档里出现的每个 12/40~64 位十六进制串必须落在"四类件当前实算哈希 + 钉住 commit"的集合内。
+  集合值**现算不写死** —— 写死就等于再造一份会腐化的文档。
+- **证据**：新门禁先跑旧文档 → `FAIL … 账单腐化：文档里出现了 [(50, 16)]，实测是 (+61, -18)`、
+  `FAIL … 过期哈希：['26732cd3eda6']`；把两份文档改对后 → 全绿 rc=0。
+- **防再犯**：这两条与 hunk 数门禁同组，改补丁后必须重跑 `compare_upstream.py --diff` 再跑 `preflight`；
+  任一处文档漏改就 FAIL。判据本身也是"取每一个匹配"，不允许只查第一处。
+
+## FX-023 · U · 中心档写死 255 ⇒ "中心比位图原图还大"无论怎么调参数都调不出来
+
+- **现象**：`SCALE_SPAN_PITCHES`、`SCALE_EDGE_PCT` 都参数化以后，中心那一行仍然最大只能等于位图原尺寸，
+  用户反馈"中心放大还不够"。
+- **复现**：把 `ICON_PX` 调小、`SCALE_EDGE_PCT` 调大，剖面 `... 255 ...` 的峰值一动不动。
+- **根因**：上游 `rx_update_item_scale()` 里 `scale = 255` 是**字面量**（256 才是 LVGL `transform_zoom` 的 100%），
+  线性式末尾也写着 `(255 - ctx->config.edge_scale)`。`rxroller_config_t` 根本没有"中心档"这个字段，
+  所以这不是配置没配对，是上游没开口子。
+- **修复**：上游补丁 #5 的第二半 —— 两处 `255` 换成 `RXROLLER_SCALE_MAX`，值从
+  `watch_list_config.h` 的 `SCALE_CENTER_PCT`（当前 150 ⇒ 384）经 `wconfig.py` 读入生成器；
+  **取 255 即逐字恢复上游行为**。同时把 `ROW_H`/`ROW_PITCH` 从 100 提到 120 给放大留出空间。
+- **证据**：`[WHEEL] center10 scale: 226 278 331 384 331 278 226`；断言"中心行是满档"
+  `PASS 中心=384，满档=384（config SCALE_CENTER_PCT=150%）`；17/17 PASS。
+- **防再犯**：`preflight` 加几何约束门禁 `ICON_PX × SCALE_CENTER_PCT/100 <= ROW_PITCH`
+  （实测 `114 <= 120`）——放大率和行距是联动的，只调一头会顶行，现在当场 FAIL 而不是等肉眼。
+
 
 ## 还没解决的
 

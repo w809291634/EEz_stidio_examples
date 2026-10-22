@@ -1,13 +1,15 @@
 /*
  * Rxroller.c —— 由 design/port_rxroller.py 从上游 Rxroller.c.orig 生成，勿手改。
  * 上游 https://github.com/rxwind7/Rxroller (MIT)；改动 = LVGL v8 -> 9.4 的
- * user_data 访问器化（12 处，逐条见 diff）+ 内存 API 别名 + 一条缩放窗口参数化。
+ * user_data 访问器化（12 处，逐条见 diff）+ 内存 API 别名 + 两条缩放能力补丁
+ *（衰减窗口 RX_SCALE_SPAN_PITCHES、中心满档 RXROLLER_SCALE_MAX，值均取自
+ *  watch_list_config.h；各取 1 / 255 即逐字恢复上游行为）。
  * 完整账单与复核方法见工程根目录 PORTLOG.md。
  * 与上游的 diff 就是移植账单：diff Rxroller.c.orig Rxroller.c
  */
 // Rxroller.c
 #include "Rxroller.h"
-/* RX-PORT-FIX: 累计位移 <= 该值才算点击（px）。行距 100px，轻点抖动远小于它 */
+/* RX-PORT-FIX: 累计位移 <= 该值才算点击（px）。行距 120px，轻点抖动远小于它 */
 #ifndef RXROLLER_CLICK_TRAVEL_MAX
 #  define RXROLLER_CLICK_TRAVEL_MAX 10
 #endif
@@ -25,6 +27,12 @@
  *  这是**能力补丁**不是版本适配，diff 里单列一条。 */
 #ifndef RX_SCALE_SPAN_PITCHES
 #  define RX_SCALE_SPAN_PITCHES 3
+#endif
+/* RX-PORT-FEAT: 中心档（满档）缩放。上游写死 255 ⇒ 中心最多只到位图原尺寸，
+ *  再想大就得放开它。256 = LVGL transform_zoom 的 100%，值来自
+ *  watch_list_config.h 的 SCALE_CENTER_PCT。取 255 即恢复上游行为。 */
+#ifndef RXROLLER_SCALE_MAX
+#  define RXROLLER_SCALE_MAX 384
 #endif
 #include "string.h"
 #include "limits.h"
@@ -234,13 +242,14 @@ static void rx_update_item_scale(rxroller_ctx_t *ctx, rxroller_item_t *item)
     uint16_t scale;
 
     if (distance == 0) {
-        scale = 255;
+        scale = RXROLLER_SCALE_MAX;   /* RX-PORT-FEAT: 上游写死 255=位图原尺寸，
+                                       *  想「中心比原图还大」必须放开它 */
     } else if (distance >= span) {
         scale = ctx->config.edge_scale;
     } else {
         int32_t v_data = (int32_t)((float)(span - distance)
                          / (float)span
-                         * (float)(255 - ctx->config.edge_scale));
+                         * (float)(RXROLLER_SCALE_MAX - ctx->config.edge_scale));
         scale = (uint16_t)(ctx->config.edge_scale + v_data);
     }
 

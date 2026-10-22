@@ -1,6 +1,7 @@
 # AGENTS.md — LVGL / EEZ UI 开发默认流程
 
 **适用范围：本工程内所有 LVGL / EEZ Studio UI 开发任务，默认生效，无需每次点名。**
+**任意 AI 快速起步的提示词卡**：`...\EEZ Studio_ui_debug_kit\QUICKSTART_PROMPTS.md`（不自动读本文件的 AI 贴卡 A 开场）。
 
 ## 流程唯一真值
 

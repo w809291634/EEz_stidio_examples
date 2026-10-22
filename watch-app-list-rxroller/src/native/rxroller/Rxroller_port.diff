@@ -1,16 +1,18 @@
 --- upstream/Rxroller.c.orig
 +++ src/native/rxroller/Rxroller.c
-@@ -1,5 +1,31 @@
+@@ -1,5 +1,39 @@
 +/*
 + * Rxroller.c —— 由 design/port_rxroller.py 从上游 Rxroller.c.orig 生成，勿手改。
 + * 上游 https://github.com/rxwind7/Rxroller (MIT)；改动 = LVGL v8 -> 9.4 的
-+ * user_data 访问器化（12 处，逐条见 diff）+ 内存 API 别名 + 一条缩放窗口参数化。
++ * user_data 访问器化（12 处，逐条见 diff）+ 内存 API 别名 + 两条缩放能力补丁
++ *（衰减窗口 RX_SCALE_SPAN_PITCHES、中心满档 RXROLLER_SCALE_MAX，值均取自
++ *  watch_list_config.h；各取 1 / 255 即逐字恢复上游行为）。
 + * 完整账单与复核方法见工程根目录 PORTLOG.md。
 + * 与上游的 diff 就是移植账单：diff Rxroller.c.orig Rxroller.c
 + */
  // Rxroller.c
  #include "Rxroller.h"
-+/* RX-PORT-FIX: 累计位移 <= 该值才算点击（px）。行距 100px，轻点抖动远小于它 */
++/* RX-PORT-FIX: 累计位移 <= 该值才算点击（px）。行距 120px，轻点抖动远小于它 */
 +#ifndef RXROLLER_CLICK_TRAVEL_MAX
 +#  define RXROLLER_CLICK_TRAVEL_MAX 10
 +#endif
@@ -29,10 +31,16 @@
 +#ifndef RX_SCALE_SPAN_PITCHES
 +#  define RX_SCALE_SPAN_PITCHES 3
 +#endif
++/* RX-PORT-FEAT: 中心档（满档）缩放。上游写死 255 ⇒ 中心最多只到位图原尺寸，
++ *  再想大就得放开它。256 = LVGL transform_zoom 的 100%，值来自
++ *  watch_list_config.h 的 SCALE_CENTER_PCT。取 255 即恢复上游行为。 */
++#ifndef RXROLLER_SCALE_MAX
++#  define RXROLLER_SCALE_MAX 384
++#endif
  #include "string.h"
  #include "limits.h"
  #include "math.h"
-@@ -16,6 +42,7 @@
+@@ -16,6 +50,7 @@
      lv_point_t      touch_point1;
      lv_point_t      touch_point2;
      int32_t         offset;
@@ -40,7 +48,7 @@
  
      uint8_t         is_animating;
  
-@@ -90,11 +117,11 @@
+@@ -90,11 +125,11 @@
          SW_LOG_ERROR("wheel is NULL or invalid");
          return NULL;
      }
@@ -54,7 +62,7 @@
  }
  
  /* ==================== 清理内部资源 ==================== */
-@@ -118,7 +145,7 @@
+@@ -118,7 +153,7 @@
          lv_obj_remove_event_cb(ctx->screen, rx_event_screen_unload);
  
          if (delete_screen) {
@@ -63,7 +71,7 @@
              lv_obj_del_async(ctx->screen);
          }
          ctx->screen = NULL;
-@@ -202,15 +229,17 @@
+@@ -202,16 +237,19 @@
      if (!ctx || !item) return;
  
      int32_t distance = LV_ABS(item->distance);
@@ -72,19 +80,23 @@
      uint16_t scale;
  
      if (distance == 0) {
-         scale = 255;
+-        scale = 255;
 -    } else if (distance >= (int32_t)ctx->config.icon_distance) {
++        scale = RXROLLER_SCALE_MAX;   /* RX-PORT-FEAT: 上游写死 255=位图原尺寸，
++                                       *  想「中心比原图还大」必须放开它 */
 +    } else if (distance >= span) {
          scale = ctx->config.edge_scale;
      } else {
 -        int32_t v_data = (int32_t)((float)((int32_t)ctx->config.icon_distance - distance)
 -                         / (float)ctx->config.icon_distance
+-                         * (float)(255 - ctx->config.edge_scale));
 +        int32_t v_data = (int32_t)((float)(span - distance)
 +                         / (float)span
-                          * (float)(255 - ctx->config.edge_scale));
++                         * (float)(RXROLLER_SCALE_MAX - ctx->config.edge_scale));
          scale = (uint16_t)(ctx->config.edge_scale + v_data);
      }
-@@ -269,13 +298,13 @@
+ 
+@@ -269,13 +307,13 @@
          return;
      }
  
@@ -100,7 +112,7 @@
      if (!item) {
          SW_LOG_ERROR("anim exec: item is NULL");
          return;
-@@ -319,8 +348,8 @@
+@@ -319,8 +357,8 @@
  
      /* 根据 scale_mode 选择 fade-out 的缩放方式 */
      lv_obj_t *parent = lv_obj_get_parent(obj);
@@ -111,7 +123,7 @@
          if (ctx->config.scale_mode == RXROLLER_SCALE_TRANSFORM) {
              lv_obj_set_style_transform_zoom(obj, (uint16_t)opa, LV_PART_MAIN);
          } else {
-@@ -368,8 +397,8 @@
+@@ -368,8 +406,8 @@
  
      /* 根据 scale_mode 选择 restore 的缩放方式 */
      lv_obj_t *parent = lv_obj_get_parent(obj);
@@ -122,7 +134,7 @@
          if (ctx->config.scale_mode == RXROLLER_SCALE_TRANSFORM) {
              lv_obj_set_style_transform_zoom(obj, (uint16_t)opa, LV_PART_MAIN);
          } else {
-@@ -469,6 +498,7 @@
+@@ -469,6 +507,7 @@
          ctx->touched = 1;
          ctx->pending_anim_count = 0;
          ctx->offset = 0;
@@ -130,7 +142,7 @@
          return;
      }
  
-@@ -481,6 +511,7 @@
+@@ -481,6 +520,7 @@
          ctx->offset = ctx->touch_point2.y - ctx->touch_point1.y;
          ctx->touch_point1.y = ctx->touch_point2.y;
      }
@@ -138,7 +150,7 @@
  
      rx_set_center_internal(ctx, ctx->item_count, 0);
  }
-@@ -508,7 +539,10 @@
+@@ -508,7 +548,10 @@
      }
  
      /* 判断是否为点击 */
@@ -150,7 +162,7 @@
      ctx->touched = 0;
  
      if (is_click) {
-@@ -590,7 +624,7 @@
+@@ -590,7 +633,7 @@
              lv_obj_set_size(item->obj, ctx->config.big_w, ctx->config.big_h);
          }
          lv_obj_center(item->obj);
@@ -159,7 +171,7 @@
      }
  
      int32_t pos_x, pos_y;
-@@ -704,7 +738,7 @@
+@@ -704,7 +747,7 @@
  /* ==================== LV_EVENT_DELETE 事件处理 ==================== */
  static void rx_event_delete(lv_event_t *e)
  {
@@ -168,7 +180,7 @@
      if (!ctx) {
          SW_LOG_ERROR("delete event: ctx is NULL");
          return;
-@@ -810,7 +844,7 @@
+@@ -810,7 +853,7 @@
      lv_obj_set_style_border_width(ctx->screen, 0, LV_PART_MAIN);
      lv_obj_set_style_clip_corner(ctx->screen, false, LV_PART_MAIN);
      lv_obj_clear_flag(ctx->screen, LV_OBJ_FLAG_SCROLLABLE);

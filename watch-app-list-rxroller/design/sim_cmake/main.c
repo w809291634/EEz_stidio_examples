@@ -27,19 +27,22 @@
 /* 断言里的目标值一律写 CFG(...)，一眼看得出不是夹具自己编的数 */
 #define CFG(n) (n)
 
+/* 中心图标在屏幕上真正占用的边长（含缩放） */
+#define ICON_ON_SCREEN_PX  (CFG(ICON_PX) * CFG(SCALE_CENTER_PCT) / 100)
+
 /* 缩放分档公式（与上游 rx_update_item_scale 同式）：
  * 离中心 d 个行距时 = 最小档 + 剩余比例 ×(满档-最小档)。
  * SPAN=3 时 d=0/1/2/3 → 100 / 67 / 33 / 0 % —— 就是用户要的"0 33 66 100"。 */
 #define SCALE_AT(d) (CFG(EDGE_SCALE) + \
                      ((d) >= CFG(SCALE_SPAN_PITCHES) ? 0 : \
-                      (CFG(SCALE_SPAN_PITCHES) - (d)) * (255 - CFG(EDGE_SCALE)) \
+                      (CFG(SCALE_SPAN_PITCHES) - (d)) * (CFG(SCALE_MAX) - CFG(EDGE_SCALE)) \
                       / CFG(SCALE_SPAN_PITCHES)))
 
 /* 任意带符号距离 d（px）上的连续缩放值，用来验"过程线性" */
 #define SCALE_CONT(d) (CFG(EDGE_SCALE) + \
                        (LV_ABS(d) >= CFG(ROW_PITCH) * CFG(SCALE_SPAN_PITCHES) ? 0 : \
                         (CFG(ROW_PITCH) * CFG(SCALE_SPAN_PITCHES) - LV_ABS(d)) \
-                        * (255 - CFG(EDGE_SCALE)) \
+                        * (CFG(SCALE_MAX) - CFG(EDGE_SCALE)) \
                         / (CFG(ROW_PITCH) * CFG(SCALE_SPAN_PITCHES))))
 
 extern void ui_init(void);
@@ -234,7 +237,7 @@ static void autotest_hooks(void)
     if (lin_n < 2 && watch_list_is_animating()) {
         int d = watch_list_row_distance(10);
         int s = watch_list_row_scale(10);
-        if (d != 0 && s > CFG(EDGE_SCALE) && s < 255
+        if (d != 0 && s > CFG(EDGE_SCALE) && s < CFG(SCALE_MAX)
             && (lin_n == 0 || d != lin_d[lin_n - 1])) {
             printf("[LIN] d=%d scale=%d 线性期望=%d\n", d, s,
                    SCALE_CONT(d));
@@ -268,10 +271,16 @@ static void autotest_hooks(void)
                  cy, SIM_H, CFG(CENTER_Y_DIVISOR), SIM_H / CFG(CENTER_Y_DIVISOR));
         expect("中心图标垂直居中",
                cy > 0 && LV_ABS(cy - SIM_H / CFG(CENTER_Y_DIVISOR)) <= 2, b4);
-        snprintf(b4, sizeof(b4), "图标宽=%d，目标=%d（config ICON_PX）",
-                 iw, CFG(ICON_PX));
-        expect("中心图标尺寸 = config 的 ICON_PX",
+        /* ★ lv_obj_get_coords 量的是**布局**尺寸，不含 transform 缩放。
+         *   屏幕上真正看到的大小 = ICON_PX × SCALE_CENTER_PCT/100，另有一条断言。 */
+        snprintf(b4, sizeof(b4), "布局宽=%d，config ICON_PX=%d", iw, CFG(ICON_PX));
+        expect("图标位图布局尺寸 = config 的 ICON_PX",
                iw > 0 && LV_ABS(iw - CFG(ICON_PX)) <= 2, b4);
+        snprintf(b4, sizeof(b4), "屏幕上应为 %d px（%d × %d%%），行距 %d",
+                 ICON_ON_SCREEN_PX, CFG(ICON_PX), CFG(SCALE_CENTER_PCT),
+                 CFG(ROW_PITCH));
+        expect("中心图标屏幕尺寸 = ICON_PX × SCALE_CENTER_PCT",
+               ICON_ON_SCREEN_PX <= CFG(ROW_PITCH), b4);
         /* ★ 缩放曲线口径：选中最大、离中心 SPAN 行到底、中间线性。
          *   所以"最小档"应当出现在第 SPAN 行，而不是第 1 行。 */
         snprintf(b4, sizeof(b4), "第 %d 行 scale=%d，最小档=%d",
@@ -280,10 +289,11 @@ static void autotest_hooks(void)
         expect("离中心 SPAN 行处到底（未选中最小）",
                watch_list_row_scale(10 + CFG(SCALE_SPAN_PITCHES)) == CFG(EDGE_SCALE),
                b4);
-        snprintf(b4, sizeof(b4), "中心=%d，满档=255", s0);
-        expect("中心行是满档 255", s0 == 255, b4);
+        snprintf(b4, sizeof(b4), "中心=%d，满档=%d（config SCALE_CENTER_PCT=%d%%）",
+                 s0, CFG(SCALE_MAX), CFG(SCALE_CENTER_PCT));
+        expect("中心行是满档（可比位图更大）", s0 == CFG(SCALE_MAX), b4);
         /* ★ "过程中是线性的"：拿途中采到的 (distance, scale) 反代公式核对。
-         *   线性式 = 255 - (255-EDGE) * |d| / 行距，容差 4/255。 */
+         *   线性式见 SCALE_CONT()：全部由 config 反推，不写死形状。 */
         {
             int k, bad = 0, want, got;
             for (k = 0; k < lin_n; k++) {

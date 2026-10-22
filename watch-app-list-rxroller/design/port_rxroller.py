@@ -29,12 +29,16 @@ from wconfig import wcfg  # noqa: E402
 
 SPAN = wcfg("SCALE_SPAN_PITCHES")
 CLICK_MAX = wcfg("CLICK_TRAVEL_MAX_PX")
+SCALE_MAX = wcfg("SCALE_MAX")
+ROW_PITCH = wcfg("ROW_PITCH")
 
 BANNER = (
     "/*\n"
     " * Rxroller.c —— 由 design/port_rxroller.py 从上游 Rxroller.c.orig 生成，勿手改。\n"
     " * 上游 https://github.com/rxwind7/Rxroller (MIT)；改动 = LVGL v8 -> 9.4 的\n"
-    " * user_data 访问器化（12 处，逐条见 diff）+ 内存 API 别名 + 一条缩放窗口参数化。\n"
+    " * user_data 访问器化（12 处，逐条见 diff）+ 内存 API 别名 + 两条缩放能力补丁\n"
+    " *（衰减窗口 RX_SCALE_SPAN_PITCHES、中心满档 RXROLLER_SCALE_MAX，值均取自\n"
+    " *  watch_list_config.h；各取 1 / 255 即逐字恢复上游行为）。\n"
     " * 完整账单与复核方法见工程根目录 PORTLOG.md。\n"
     " * 与上游的 diff 就是移植账单：diff Rxroller.c.orig Rxroller.c\n"
     " */\n"
@@ -55,7 +59,12 @@ PATCHES = [
      ' *  调大它才有"上下几行连续渐变"。值来自 watch_list_config.h 的\n'
      ' *  SCALE_SPAN_PITCHES，取 1 时与上游行为完全一致。\n'
      ' *  这是**能力补丁**不是版本适配，diff 里单列一条。 */\n'
-     '#ifndef RX_SCALE_SPAN_PITCHES\n#  define RX_SCALE_SPAN_PITCHES %d\n#endif\n' % SPAN,
+     '#ifndef RX_SCALE_SPAN_PITCHES\n#  define RX_SCALE_SPAN_PITCHES %d\n#endif\n'
+     '/* RX-PORT-FEAT: 中心档（满档）缩放。上游写死 255 ⇒ 中心最多只到位图原尺寸，\n'
+     ' *  再想大就得放开它。256 = LVGL transform_zoom 的 100%%，值来自\n'
+     ' *  watch_list_config.h 的 SCALE_CENTER_PCT。取 255 即恢复上游行为。 */\n'
+     '#ifndef RXROLLER_SCALE_MAX\n#  define RXROLLER_SCALE_MAX %d\n#endif\n'
+     % (SPAN, SCALE_MAX),
      1),
     # 衰减窗口参数化：三处 icon_distance 换成 span
     ("    int32_t distance = LV_ABS(item->distance);\n"
@@ -77,13 +86,14 @@ PATCHES = [
      "    uint16_t scale;\n"
      "\n"
      "    if (distance == 0) {\n"
-     "        scale = 255;\n"
+     "        scale = RXROLLER_SCALE_MAX;   /* RX-PORT-FEAT: 上游写死 255=位图原尺寸，\n"
+     "                                       *  想「中心比原图还大」必须放开它 */\n"
      "    } else if (distance >= span) {\n"
      "        scale = ctx->config.edge_scale;\n"
      "    } else {\n"
      "        int32_t v_data = (int32_t)((float)(span - distance)\n"
      "                         / (float)span\n"
-     "                         * (float)(255 - ctx->config.edge_scale));\n"
+     "                         * (float)(RXROLLER_SCALE_MAX - ctx->config.edge_scale));\n"
      "        scale = (uint16_t)(ctx->config.edge_scale + v_data);\n"
      "    }\n",
      1),
@@ -152,10 +162,10 @@ PATCHES = [
     # 阈值定义（放在文件头，便于按屏/行距调）
     ('#include "Rxroller.h"\n',
      '#include "Rxroller.h"\n'
-     '/* RX-PORT-FIX: 累计位移 <= 该值才算点击（px）。行距 100px，轻点抖动远小于它 */\n'
+     '/* RX-PORT-FIX: 累计位移 <= 该值才算点击（px）。行距 %dpx，轻点抖动远小于它 */\n'
      '#ifndef RXROLLER_CLICK_TRAVEL_MAX\n'
      '#  define RXROLLER_CLICK_TRAVEL_MAX %d\n'
-     '#endif\n' % CLICK_MAX,
+     '#endif\n' % (ROW_PITCH, CLICK_MAX),
      1),
 ]
 

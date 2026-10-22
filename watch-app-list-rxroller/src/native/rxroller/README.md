@@ -21,38 +21,38 @@
 | `Rxroller.c.orig` | **上游原文，逐字未改**（行尾归一成 LF，见下） | `3a364084ef49` |
 | `Rxroller.h` | **上游原文，未改一个字节** | `9ffe79f8de34` |
 | `LICENSE` | 上游原文（MIT 要求随库保留） | `5ee83fa2c52b` |
-| `Rxroller.c` | ★ **补丁产物 = `.orig` + 14 hunks**，由 [`design/port_rxroller.py`](../../design/port_rxroller.py) 生成，**勿手改** | `26732cd3eda6` |
-| `Rxroller_port.diff` | 上面那条 diff 的导出件（178 行），给人眼看 | —— |
+| `Rxroller.c` | ★ **补丁产物 = `.orig` + 14 hunks**，由 [`design/port_rxroller.py`](../../design/port_rxroller.py) 生成，**勿手改** | `48a297ccd7f2` |
+| `Rxroller_port.diff` | 上面那条 diff 的导出件（191 行），给人眼看 | —— |
 
 ★ 为什么原文改名 `.orig`：PC_SIM 的 CMake 用 `GLOB_RECURSE src/native/*.c` 收源码，
 两个 `.c` 会重复定义符号。`.orig` 不被收集，又能就地 diff。
 
-## 改了什么：14 个 hunk 逐条（`diff -u Rxroller.c.orig Rxroller.c` = 14 hunks / +50 / −16）
+## 改了什么：14 个 hunk 逐条（`diff -u Rxroller.c.orig Rxroller.c` = 14 hunks / +61 / −18）
 
 "上游行"就是 hunk 头里的 `-行`，可以直接 `sed -n '180,195p' Rxroller.c.orig` 跳过去看原文。
 
 | # | 上游行 → 新行 | 所在函数 | 类别 | 改了什么 |
 |---|---|---|---|---|
-| 1 | 1 → 1–30 | 文件头 | 记录+常量 | 生成说明横幅；另加 3 条宏：`RXROLLER_CLICK_TRAVEL_MAX 10`、`lv_mem_alloc/free→lv_malloc/free` 别名、`RX_SCALE_SPAN_PITCHES 3` |
-| 2 | 16 → 41 | `rxroller_ctx_t` | 🐞 上游真 bug | 结构体新增 `int32_t drag_travel` |
-| 3 | 90 → 116–123 | `rx_get_ctx` | 版本适配 | `wheel->user_data` 读 → `lv_obj_get_user_data()`（2 站点） |
-| 4 | 118 → 144 | `rx_cleanup_internal` | 版本适配 | `ctx->screen->user_data = NULL` → `lv_obj_set_user_data()` |
-| 5 | 202 → 228–244 | `rx_update_item_scale` | ⭐ 能力补丁 | 缩放衰减窗口 `icon_distance` → `× RX_SCALE_SPAN_PITCHES(3)`；**取 1 即逐字恢复上游行为** |
-| 6 | 269 → 297–306 | `rx_anim_exec_cb` | 版本适配 | `parent->user_data`、`icon_obj->user_data` → 访问器（2 站点） |
-| 7 | 319 → 347–350 | `rx_dismiss_ready_cb` | 版本适配 | `parent->user_data` 判空 + 读 → 访问器（2 站点） |
-| 8 | 368 → 396–399 | `rx_restore_ready_cb` | 版本适配 | 同上（2 站点） |
-| 9 | 469 → 497 | `rx_event_pressing` | 🐞 上游真 bug | 新手势分支里 `ctx->drag_travel = 0` |
-| 10 | 481 → 510–513 | `rx_event_pressing` | 🐞 上游真 bug | 每拍 `ctx->drag_travel += LV_ABS(ctx->offset)` |
-| 11 | 508 → 538–541 | `rx_event_released` | 🐞 上游真 bug | `is_click` 从 `offset == 0` 改成 `drag_travel <= 10px` |
-| 12 | 590 → 623 | `rx_init_item` | 版本适配 | `item->obj->user_data = item` → `lv_obj_set_user_data()` |
-| 13 | 704 → 737 | `rx_event_delete` | 版本适配 | `e->user_data` → `lv_event_get_user_data(e)` |
-| 14 | 810 → 843 | `rxroller_create` | 版本适配 | `ctx->screen->user_data = ctx` → `lv_obj_set_user_data()` |
+| 1 | 1 → 1–39 | 文件头 | 记录+常量 | 生成说明横幅；另加 4 条宏：`RXROLLER_CLICK_TRAVEL_MAX 10`、`lv_mem_alloc/free→lv_malloc/free` 别名、`RX_SCALE_SPAN_PITCHES 3`、`RXROLLER_SCALE_MAX 384` |
+| 2 | 16 → 50 | `rxroller_ctx_t` | 🐞 上游真 bug | 结构体新增 `int32_t drag_travel` |
+| 3 | 90 → 125 | `rx_get_ctx` | 版本适配 | `wheel->user_data` 读 → `lv_obj_get_user_data()`（2 站点） |
+| 4 | 118 → 153 | `rx_cleanup_internal` | 版本适配 | `ctx->screen->user_data = NULL` → `lv_obj_set_user_data()` |
+| 5 | 202 → 237–255 | `rx_update_item_scale` | ⭐ 能力补丁 | ① 衰减窗口 `icon_distance` → `× RX_SCALE_SPAN_PITCHES(3)`；② 两处写死的 `255` → `RXROLLER_SCALE_MAX(384)`。**取 1 / 255 即逐字恢复上游行为**，两半的值都来自 `watch_list_config.h` |
+| 6 | 269 → 307 | `rx_anim_exec_cb` | 版本适配 | `parent->user_data`、`icon_obj->user_data` → 访问器（2 站点） |
+| 7 | 319 → 357 | `rx_dismiss_ready_cb` | 版本适配 | `parent->user_data` 判空 + 读 → 访问器（2 站点） |
+| 8 | 368 → 406 | `rx_restore_ready_cb` | 版本适配 | 同上（2 站点） |
+| 9 | 469 → 507 | `rx_event_pressing` | 🐞 上游真 bug | 新手势分支里 `ctx->drag_travel = 0` |
+| 10 | 481 → 520 | `rx_event_pressing` | 🐞 上游真 bug | 每拍 `ctx->drag_travel += LV_ABS(ctx->offset)` |
+| 11 | 508 → 548–557 | `rx_event_released` | 🐞 上游真 bug | `is_click` 从 `offset == 0` 改成 `drag_travel <= 10px` |
+| 12 | 590 → 633 | `rx_init_item` | 版本适配 | `item->obj->user_data = item` → `lv_obj_set_user_data()` |
+| 13 | 704 → 747 | `rx_event_delete` | 版本适配 | `e->user_data` → `lv_event_get_user_data(e)` |
+| 14 | 810 → 853 | `rxroller_create` | 版本适配 | `ctx->screen->user_data = ctx` → `lv_obj_set_user_data()` |
 
-**分类合计**：版本适配 8 处（12 个 `user_data` 站点 + 2 个别名宏）· 能力补丁 1 处（#5 缩放窗口）·
+**分类合计**：版本适配 8 处（12 个 `user_data` 站点 + 2 个别名宏）· 能力补丁 1 处（#5，两半都在同一个函数）·
 上游真 bug 4 处（#2/9/10/11 是同一件事的 4 个落点）· 说明横幅+常量 1 处。
 
 **没动的**：滚轮布局数学、弧线坐标、动画/惯性参数、吸附算法、数据结构（除新增一个字段）。
-改动占比 `50 / 1238 ≈ 4.0%`。
+改动占比 `61 / 1247 ≈ 4.9%`。
 
 ### 🐞 #2/9/10/11 为什么算上游 bug 而不是适配
 

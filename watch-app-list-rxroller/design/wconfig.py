@@ -25,13 +25,38 @@ def _text():
     return _CACHE["t"]
 
 
+_RAW = {}
+
+
+def _raw_all():
+    """把 config 里所有 `#define NAME 值` 收进字典（值原样保留）。"""
+    if not _RAW:
+        for n, v in re.findall(r"^#define\s+([A-Z_][A-Z0-9_]*)\s+(\S.*?)\s*$",
+                               _text(), re.M):
+            _RAW[n] = re.sub(r"/\*.*$", "", v).strip()   # 行尾注释切掉
+    return _RAW
+
+
+def _resolve(name, seen=()):
+    """把值里的标识符换成同文件里的其它 #define，最后只剩数字和运算符。
+    只认数字与 + - * / ( )，其它字符一律拒绝——不把 config 当代码执行。"""
+    if name in seen:
+        raise ValueError("config 里 %s 循环引用" % name)
+    raw = _raw_all()[name].rstrip("\\").strip()
+    def sub(m):
+        return str(_resolve(m.group(1), seen + (name,)))
+    expr = re.sub(r"\b([A-Z_][A-Z0-9_]*)\b", sub, raw)
+    if not re.match(r"^[\d\s\(\)\+\-\*/]+$", expr):
+        raise ValueError("%s 的值不是纯整数/纯算术式：%r" % (name, raw))
+    return int(eval(expr, {"__builtins__": {}}, {}))
+
+
 def wcfg(name):
-    """取一个整型 #define。取不到就抛异常——宁可炸，也不要悄悄用默认值。"""
-    m = re.search(r"^#define\s+%s\s+(\d+)\b" % re.escape(name),
-                  _text(), re.M)
-    if not m:
-        raise KeyError("%s 不在 %s 里（或不是纯整数）" % (name, CFG_PATH))
-    return int(m.group(1))
+    """取一个整型 #define（允许 (256 * PCT / 100) 这种算式）。
+    取不到就抛异常——宁可炸，也不要悄悄用默认值。"""
+    if name not in _raw_all():
+        raise KeyError("%s 不在 %s 里" % (name, CFG_PATH))
+    return _resolve(name)
 
 
 def names():

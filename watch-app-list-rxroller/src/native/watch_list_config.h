@@ -22,8 +22,10 @@
 #define ICON_PX              76
 
 #define ROW_W               300     /* 行容器宽（上游 big_w） */
-#define ROW_H               100     /* 行容器高（上游 big_h），要装得下 ICON_PX */
-#define ROW_PITCH           100     /* 相邻行中心距（上游 icon_distance） */
+#define ROW_H               120     /* 行容器高（上游 big_h）。★ 必须 >= ICON_PX ×
+                                       SCALE_CENTER_PCT/100，否则中心图标会顶到上下行
+                                       （preflight 有这条几何门禁） */
+#define ROW_PITCH           120     /* 相邻行中心距（上游 icon_distance）。同上约束 */
 #define ROW_ICON_X           12     /* 图标在行内的左偏移 */
 #define ROW_LABEL_X         100     /* 名称在行内的左偏移（要让开图标） */
 
@@ -46,9 +48,17 @@
  *   SPAN=4 → 67/50/33… 依此类推，公式就是线性
  */
 #define SCALE_SPAN_PITCHES     3    /* 从最大降到最小要跨几个行距 */
-#define SCALE_EDGE_PCT        59    /* ★ 最小档占满档的百分比（150/255）。
-                                       对比要更强就调小，例如 40 ⇒ 102/255 */
-#define EDGE_SCALE          (255 * SCALE_EDGE_PCT / 100)   /* 换算成 0..255 */
+
+/* ★ 中心档（满档）= 位图原尺寸的百分之几。
+ *   上游把中心档写死成 255 ⇒ 中心最多只等于 ICON_PX，**永远不可能比原图更大**。
+ *   要"中心更突出"就调这个（由 port_rxroller.py 烘进上游补丁 RXROLLER_SCALE_MAX）。
+ *   256 = LVGL transform_zoom 的 100%。 */
+#define SCALE_CENTER_PCT     150    /* 150 ⇒ 中心图标 76×1.5 = 114px */
+#define SCALE_MAX            (256 * SCALE_CENTER_PCT / 100)
+
+#define SCALE_EDGE_PCT        59    /* ★ 最小档占**满档**的百分比（不是占 255）。
+                                       对比要更强就调小。 */
+#define EDGE_SCALE          (SCALE_MAX * SCALE_EDGE_PCT / 100)   /* 换算 */
 
 /*---- 排布形状：一条竖线 还是 一条曲线 ----*/
 

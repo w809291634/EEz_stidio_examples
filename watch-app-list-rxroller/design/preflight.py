@@ -244,16 +244,31 @@ def check_upstream_audit():
     #   不用先知道 PORTLOG 在哪。同时防文档腐化——账单数字变了而文档没跟上就 FAIL。
     import difflib
     # n=3 才能和 `diff -u` 的 hunk 数对齐；n=0 会把相邻改动拆成更多块（实测 19 vs 14）
-    hunks = sum(1 for l in difflib.unified_diff(
+    _bill = list(difflib.unified_diff(
         read(orig).replace("\r\n", "\n").splitlines(True),
         read(ported).replace("\r\n", "\n").splitlines(True),
-        n=3) if l.startswith("@@"))
+        n=3))
+    hunks = sum(1 for l in _bill if l.startswith("@@"))
+    bill_add = sum(1 for l in _bill if l.startswith("+") and not l.startswith("+++"))
+    bill_del = sum(1 for l in _bill if l.startswith("-") and not l.startswith("---"))
     note = os.path.join(RX_DIR, "README.md")
     check("目录内有就地说明件 src/native/rxroller/README.md",
           os.path.exists(note), "打开目录看不出这里被改过")
     dexport = os.path.join(RX_DIR, "Rxroller_port.diff")
     check("目录内有逐字对照件 Rxroller_port.diff", os.path.exists(dexport),
           "缺导出件（跑 python design/compare_upstream.py --diff 生成）")
+    # 已知哈希集合：四类件的**当前实算值** + 钉住的上游 commit。全量与 12 位前缀都收。
+    # 值不写死在门禁里——写死就等于再造一份会腐化的文档。
+    import hashlib
+    from compare_upstream import PINNED_COMMIT
+    KNOWN_HASHES = set()
+    for _p in (orig, ported,
+               os.path.join(RX_DIR, "Rxroller.h"), os.path.join(RX_DIR, "LICENSE")):
+        if os.path.exists(_p):
+            with open(_p, "rb") as _f:
+                _d = hashlib.sha256(_f.read()).hexdigest()
+            KNOWN_HASHES |= {_d, _d[:12]}
+    KNOWN_HASHES |= {PINNED_COMMIT, PINNED_COMMIT[:12]}
     for name, path in (("目录说明件", note),
                        ("PORTLOG", os.path.join(ROOT, "PORTLOG.md"))):
         if not os.path.exists(path):
@@ -266,6 +281,21 @@ def check_upstream_audit():
                   name, hunks, len(found)),
               bool(found) and all(f == hunks for f in found),
               "账单腐化：文档里出现了 %s，实测是 %d" % (sorted(set(found)), hunks))
+        # ★ 只核对 hunk 数还不够：#1 说明横幅多加两行、+A/-B 就变了而 hunk 数不动，
+        #   文档照样绿。见 FIXLOG FX-022。
+        pairs = [(int(a), int(b)) for _h, a, b in
+                 re.findall(r"(\d+)\s+hunks[^\n]*?\+(\d+)\s*/\s*[−-](\d+)", txt)]
+        check("%s 记的增删行数全等于实测 +%d / -%d（文中 %d 处）" % (
+                  name, bill_add, bill_del, len(pairs)),
+              bool(pairs) and all(p == (bill_add, bill_del) for p in pairs),
+              "账单腐化：文档里出现了 %s，实测是 (+%d, -%d)"
+              % (sorted(set(pairs)), bill_add, bill_del))
+        # ★ 文档里的哈希必须在"已知四类件 + 上游 commit"这个集合里，
+        #   否则就是产物变了而某个哈希没重算（截断 12 位的也一样查）。
+        bad = [t for t in re.findall(r"\b[0-9a-f]{12}\b|\b[0-9a-f]{40,64}\b", txt)
+               if t not in KNOWN_HASHES]
+        check("%s 记的哈希全在已知集合内（产物一改就该重算）" % name,
+              not bad, "过期哈希：%s" % sorted(set(x[:12] for x in bad)))
 
 
 # ---- 5. 应用表 × 图标 ----
@@ -366,6 +396,16 @@ def check_evidence():
           % wconfig.wcfg("SCALE_SPAN_PITCHES"),
           m is not None and int(m.group(1)) == wconfig.wcfg("SCALE_SPAN_PITCHES"),
           "产物是 %s ⇒ 忘了重跑 port_rxroller.py" % (m.group(1) if m else "缺失"))
+    # 几何自洽：中心图标放大后不能顶到上下行
+    ipx = wconfig.wcfg("ICON_PX")
+    pct = wconfig.wcfg("SCALE_CENTER_PCT")
+    tall = ipx * pct // 100
+    check("中心图标放大后不顶行：ICON_PX×PCT=%d <= ROW_PITCH=%d"
+          % (tall, wconfig.wcfg("ROW_PITCH")),
+          tall <= wconfig.wcfg("ROW_PITCH")
+          and tall <= wconfig.wcfg("ROW_H"),
+          "中心图标 %d px 会压到上下行 ⇒ 调大 ROW_PITCH/ROW_H 或调小 SCALE_CENTER_PCT"
+          % tall)
     ic = read(os.path.join(NATIVE, "icons", "img_ic_weather.c"))
     m = re.search(r"\.w = (\d+),", ic)
     check("图标位图 == config 的 ICON_PX(%d)" % wconfig.wcfg("ICON_PX"),

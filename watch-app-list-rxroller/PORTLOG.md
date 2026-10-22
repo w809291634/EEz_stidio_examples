@@ -21,7 +21,7 @@
 3a364084ef499629d97185ba800336c836187087c0337026db7af1741f97e146  src/native/rxroller/Rxroller.c.orig   ← 上游原文，逐字未改
 9ffe79f8de34478791ee57c95921603287e841708765bf75a0f255e809971bd3  src/native/rxroller/Rxroller.h         ← 上游原文，未改
 5ee83fa2c52beb32c6bd27b3dc01b33be72075b514b1359667a32b16957080c9  src/native/rxroller/LICENSE            ← 上游原文
-26732cd3eda6…（重算见 §5 命令；每次改补丁都要回来更新这一行）  src/native/rxroller/Rxroller.c         ← 补丁产物（由脚本生成）
+48a297ccd7f2…（重算见 §5 命令；每次改补丁都要回来更新这一行）  src/native/rxroller/Rxroller.c         ← 补丁产物（由脚本生成）
 ```
 
 ★ 为什么上游原文改名成 `.orig`：PC_SIM 的 CMake 用 `GLOB_RECURSE src/native/*.c` 收源码，
@@ -72,16 +72,16 @@ python watch-app-list-rxroller/design/compare_upstream.py --diff
 ```
 
 实测输出（2026-10-22）：`上游仓库共 6 个文件`、3 条取用件全 `OK 逐字节一致`、
-3 条未取用件点名、账单 `14 hunks / +50 / -16`、结论"入库原文与上游一致"。
+3 条未取用件点名、账单 `14 hunks / +61 / -18`、结论"入库原文与上游一致"。
 
 ## 3. 修改账单（补丁产物 vs 上游原文）
 
 ```
-diff -u Rxroller.c.orig Rxroller.c   →   14 hunks, +50 / -16
+diff -u Rxroller.c.orig Rxroller.c   →   14 hunks, +61 / -18   （1204 行 → 1247 行）
 ```
 
 机器导出的完整 diff 已入库，**放在上游件同一个目录**：
-[`src/native/rxroller/Rxroller_port.diff`](src/native/rxroller/Rxroller_port.diff)（178 行，含上下文）。
+[`src/native/rxroller/Rxroller_port.diff`](src/native/rxroller/Rxroller_port.diff)（191 行，含上下文）。
 同目录还有一份 [`src/native/rxroller/README.md`](src/native/rxroller/README.md)——
 打开那个目录就能看到"这是谁的上游件、改了哪 14 处、怎么复核"，不用先知道本文件在哪。
 下表按 `diff -u` 的 14 个 hunk 逐条对号，"上游位置"就是 hunk 头里的 `-行,数`，
@@ -89,24 +89,24 @@ diff -u Rxroller.c.orig Rxroller.c   →   14 hunks, +50 / -16
 
 | # | 上游位置（hunk 头） | 所在函数 | 类别 | 改了什么 |
 |---|---|---|---|---|
-| 1 | `-1,5 +1,30` | 文件头 | 记录 + 常量 | 生成说明横幅；另加 3 条宏：`RXROLLER_CLICK_TRAVEL_MAX 10`（#11 用）、`lv_mem_alloc/free→lv_malloc/free` 别名、`RX_SCALE_SPAN_PITCHES 3`（#5 用） |
-| 2 | `-16,6 +41,7` | `rxroller_ctx_t` | 上游真 bug | 结构体新增 `int32_t drag_travel` |
-| 3 | `-90,11 +116,11` | `rx_get_ctx()` | 版本适配 | `wheel->user_data` 读 → `lv_obj_get_user_data()`（判空 + 返回，2 站点） |
-| 4 | `-118,7 +144,7` | `rx_cleanup_internal()` | 版本适配 | `ctx->screen->user_data = NULL` → `lv_obj_set_user_data()` |
-| 5 | `-202,15 +228,17` | `rx_update_item_scale()` | **能力补丁** | 衰减窗口 `icon_distance` → `× RX_SCALE_SPAN_PITCHES`（本工程 3）；**取 1 即逐字恢复上游行为** |
-| 6 | `-269,13 +297,13` | `rx_anim_exec_cb()` | 版本适配 | `parent->user_data`、`icon_obj->user_data` → 访问器（2 站点） |
-| 7 | `-319,8 +347,8` | `rx_dismiss_ready_cb()` | 版本适配 | `parent->user_data` 判空 + 读 → 访问器（2 站点） |
-| 8 | `-368,8 +396,8` | `rx_restore_ready_cb()` | 版本适配 | 同上（2 站点） |
-| 9 | `-469,6 +497,7` | `rx_event_pressing()` | 上游真 bug | 新手势分支里 `ctx->drag_travel = 0` |
-| 10 | `-481,6 +510,7` | `rx_event_pressing()` | 上游真 bug | 每拍 `ctx->drag_travel += LV_ABS(ctx->offset)` |
-| 11 | `-508,7 +538,10` | `rx_event_released()` | 上游真 bug | `is_click` 从 `offset == 0` 改成 `drag_travel <= 10px` |
-| 12 | `-590,7 +623,7` | `rx_init_item()` | 版本适配 | `item->obj->user_data = item` → `lv_obj_set_user_data()` |
-| 13 | `-704,7 +737,7` | `rx_event_delete()` | 版本适配 | `e->user_data` → `lv_event_get_user_data(e)` |
-| 14 | `-810,7 +843,7` | `rxroller_create()` | 版本适配 | `ctx->screen->user_data = ctx` → `lv_obj_set_user_data()` |
+| 1 | `-1,5 +1,39` | 文件头 | 记录 + 常量 | 生成说明横幅；另加 4 条宏：`RXROLLER_CLICK_TRAVEL_MAX 10`（#11 用）、`lv_mem_alloc/free→lv_malloc/free` 别名、`RX_SCALE_SPAN_PITCHES 3`（#5 用）、`RXROLLER_SCALE_MAX 384`（#5 用，中心满档） |
+| 2 | `-16,6 +50,7` | `rxroller_ctx_t` | 上游真 bug | 结构体新增 `int32_t drag_travel` |
+| 3 | `-90,11 +125,11` | `rx_get_ctx()` | 版本适配 | `wheel->user_data` 读 → `lv_obj_get_user_data()`（判空 + 返回，2 站点） |
+| 4 | `-118,7 +153,7` | `rx_cleanup_internal()` | 版本适配 | `ctx->screen->user_data = NULL` → `lv_obj_set_user_data()` |
+| 5 | `-202,16 +237,19` | `rx_update_item_scale()` | **能力补丁** | 衰减窗口 `icon_distance` → `× RX_SCALE_SPAN_PITCHES`（本工程 3），并把两处写死的 `255` → `RXROLLER_SCALE_MAX`（本工程 384 = 位图 150%）；**取 1 / 255 即逐字恢复上游行为** |
+| 6 | `-269,13 +307,13` | `rx_anim_exec_cb()` | 版本适配 | `parent->user_data`、`icon_obj->user_data` → 访问器（2 站点） |
+| 7 | `-319,8 +357,8` | `rx_dismiss_ready_cb()` | 版本适配 | `parent->user_data` 判空 + 读 → 访问器（2 站点） |
+| 8 | `-368,8 +406,8` | `rx_restore_ready_cb()` | 版本适配 | 同上（2 站点） |
+| 9 | `-469,6 +507,7` | `rx_event_pressing()` | 上游真 bug | 新手势分支里 `ctx->drag_travel = 0` |
+| 10 | `-481,6 +520,7` | `rx_event_pressing()` | 上游真 bug | 每拍 `ctx->drag_travel += LV_ABS(ctx->offset)` |
+| 11 | `-508,7 +548,10` | `rx_event_released()` | 上游真 bug | `is_click` 从 `offset == 0` 改成 `drag_travel <= 10px` |
+| 12 | `-590,7 +633,7` | `rx_init_item()` | 版本适配 | `item->obj->user_data = item` → `lv_obj_set_user_data()` |
+| 13 | `-704,7 +747,7` | `rx_event_delete()` | 版本适配 | `e->user_data` → `lv_event_get_user_data(e)` |
+| 14 | `-810,7 +853,7` | `rxroller_create()` | 版本适配 | `ctx->screen->user_data = ctx` → `lv_obj_set_user_data()` |
 
 **类别汇总**：版本适配（v8→9.4 不透明 `lv_obj_t` / 内存改名）= #3,4,6,7,8,12,13,14 共 8 个 hunk、
-12 个 `user_data` 站点 + 2 个别名宏；能力补丁 = #5（缩放衰减窗口）；
-上游真 bug = #2,9,10,11 四处（同一件事）；说明横幅 + 常量 = #1。
+12 个 `user_data` 站点 + 2 个别名宏；能力补丁 = #5（缩放衰减窗口 + 中心满档，两件事都在同一个函数里，
+所以仍是 1 个 hunk）；上游真 bug = #2,9,10,11 四处（同一件事）；说明横幅 + 常量 = #1。
 
 **为什么 #2/9/10/11 算 bug 而不是适配**：上游 `offset` 是**单拍增量**（`point1` 随即跟进），
 `rx_event_released` 却拿它判"是不是点击" ⇒ 松手前只要停顿一拍，整段拖动就被判成点击，
@@ -149,7 +149,8 @@ if (!x || !y) return;
 ```
 
 两个出参都清零了。补丁已撤销，撤销当时重跑：`10 个 hunk / +38 / -15`（那是撤销后的历史数字，
-**不是现在的账单**——之后又为"拖完回弹"补了 #2/9/10/11 四处，才变成当前的 `14 hunks / +50 / -16`）、
+**不是现在的账单**——之后又为"拖完回弹"补了 #2/9/10/11 四处，为"中心满档可调"补了 #5 的第二半，
+才变成当前的 `14 hunks / +61 / -18`）、
 行为断言照常 PASS、两张取证图照常产出。
 
 真正的"卡死"现象来自环境：刚链接完立刻 exec 会瞬时失败（`rc=127`，日志只剩 3 行
@@ -163,7 +164,7 @@ LVGL warning），与代码无关——重试即恢复。
 ```bash
 # ① 看账单
 diff -u src/native/rxroller/Rxroller.c.orig src/native/rxroller/Rxroller.c
-#   同一份 diff 已导出成文件，不用自己跑：src/native/rxroller/Rxroller_port.diff（178 行）
+#   同一份 diff 已导出成文件，不用自己跑：src/native/rxroller/Rxroller_port.diff（191 行）
 
 # ② 确认产物确实是脚本生成的（被手改过就会 FAIL）
 python design/port_rxroller.py && python design/preflight.py
@@ -171,7 +172,7 @@ python design/port_rxroller.py && python design/preflight.py
 # ③ 确认上游原文没被动过
 sha256sum src/native/rxroller/Rxroller.c.orig
 # 期望 3a364084ef499629d97185ba800336c836187087c0337026db7af1741f97e146（原文）
-# 产物 Rxroller.c 期望 26732cd3eda6574d906d46c0d5cce782960d6d23208b52ec47cb808ef131e909
+# 产物 Rxroller.c 期望 48a297ccd7f225c22bd0033fdcd7d677fcfedd538d082d6f7a9bdfb4bfdcef27
 
 # ④ 越过我们自己，直接跟**上游仓库**对（整仓 6 个文件逐个核 + 查 commit 身份）
 python design/compare_upstream.py --diff
