@@ -259,6 +259,33 @@
 - **一般化**：**观感类断言的测量口径必须与用户看到的口径同一个**。`lv_obj_get_coords` 是布局值，
   带 `transform_*` 的界面上它不等于屏幕像素；这类地方要么换算，要么改用读帧缓冲取证，别默认相等。
 
+## FX-025 · T · 工程目录改名打断三条链，而门禁全绿
+
+- **现象**：用户把工程目录改名后要求"重新建立索引"。此前 `preflight` rc=0、行为断言 19/19 PASS
+  —— 改名打断的东西一条都没被门禁抓到。
+- **复现**：改名之后 `git status` 冒出 `?? upstream_Rxroller/`（上游整仓克隆裸露）；
+  `run_sim.bat build` 在配置阶段报
+  `The current CMakeCache.txt directory … is different than the directory … where CMakeCache.txt was created`。
+- **根因**：三处**按目录名硬编码**的东西不会跟着改名走 ——
+  ① 仓库 `.gitignore` 里的 `watch-app-list-rxroller/shots/*.bmp` 与 `…/upstream_Rxroller/` 两条，
+  改名即**静默失效**（不报错，只是不再匹配）；② `design/sim_cmake/build_rel/CMakeCache.txt` 里 6 处
+  绝对路径，CMake 缓存本来就不可搬迁；③ 根 README / CODE_WIKI 索引行与工程内文档的路径文字。
+  脚本自身反而没事：路径全从 `__file__` 推 ⇒ 这正是它们没暴露问题的原因，也是"能跑"不等于"索引对"。
+- **修复**：目录名与工程文件名统一（`git mv` 两个 `.eez-project*`，`build_example.py`、
+  `cli_build.py`、`preflight.py`、`sim_cmake/main.c`、`compare_upstream.py`、PORTLOG/README 同步）；
+  `.gitignore` 按新名重写并补上同级变体目录；删掉两个失效的 `build_rel/`（gitignore 内的可再生物）重新配置。
+- **证据**：全量重建 562 个目标 `build succeeded`；19/19 PASS、`渲染=(172,251) 布局=(214,251)`；
+  `preflight` rc=0（含新第 7 组）；`git status` 不再出现 `?? upstream_Rxroller/`。
+- **防再犯**：新增门禁第 7 组「路径活性」—— 扫文档与脚本里所有"工程目录名形状"的 token，
+  凡既不等于当前实际目录名、又不是仓库里真实存在的**同级 EEZ 工程** ⇒ FAIL；同时核对 `.gitignore` 里
+  `shots/*.bmp` 与 `upstream_Rxroller/` 两条**确实按当前目录名**在位。
+  正则写成 `watch-app[-]list…` 以免门禁源码把自己匹配成过期引用。
+- **反向测试又抓出一层**：第一版豁免条件是"同级有这个目录就放过"，投毒后门禁**照样绿**——
+  因为改名在磁盘上留下了一个空壳 `watch-app-list-rxroller/design/sim_cmake/build_rel/apl_lvgl_build/`
+  （0 个文件，纯空目录链，也是"目录删不掉/搬不走"的元凶），`isdir` 为真就把过期引用放过去了。
+  ⇒ 豁免条件改成"同级目录里真的有 `*.eez-project`"才算合法引用另一个示例；空壳已清。
+  另：`FIXLOG.md` 不参与这条检查——缺陷史按定义要点名"当时那个后来被改掉的目录名"。
+
 
 ## 还没解决的
 
@@ -266,5 +293,6 @@
 |---|---|
 | 远处行绕**自己**的行中点缩放 ⇒ 相对中心线仍有横摆（越远倍率越小，摆幅越小） | 中心行那一档已由渲染坐标标定补偿掉（FX-024）；远处行要贴平得再打一条 `RX-PORT-FEAT` 把轴心改成图标中心，或换 `RXROLLER_SCALE_SIZE` 模式 |
 | 真手快滑的回弹观感（阈值 120 px/s、投影 0.25 s、上限 3 行） | 半验：合成拖动的 tick 粒度粗，日志出现过 `vel=89250 px/s` 失真值 |
+| 同级副本 `../watch-app-list-rxroller_no_flow_2/` 的收尾 | 用户留作"更换 applist 图标"方案的起点，目前与本目录 `diff -rq` 零差异。**两处待处理**：它的 `upstream_Rxroller/` 被 git 记成了 gitlink（`160000` submodule 指针，等于把上游仓库以悬空 submodule 的形式入了库），以及它的工程文件仍叫 `watch-app-list-rxroller.eez-project`（自洽，但和目录名不一致） |
 | 真机（SiFli 面板）编译 | 未做 |
 | 图标自身动画（自转/心跳/步态） | 未做 |

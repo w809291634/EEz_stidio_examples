@@ -33,7 +33,7 @@
 `releases.atom`/`tags.atom` 各 0 条 entry，2026-10-22 查）。整仓已克隆进本工程：
 
 ```
-watch-app-list-rxroller/upstream_Rxroller/     ← git clone 原件，含 .git 全历史
+watch-app-list-rxroller_no_flow/upstream_Rxroller/     ← git clone 原件，含 .git 全历史
 ├── Rxroller.c  41339 B  ← 上游是 CRLF
 ├── Rxroller.h   4249 B
 ├── LICENSE      1080 B
@@ -49,7 +49,7 @@ watch-app-list-rxroller/upstream_Rxroller/     ← git clone 原件，含 .git �
 重新拉取：
 
 ```bash
-git clone https://github.com/rxwind7/Rxroller.git watch-app-list-rxroller/upstream_Rxroller
+git clone https://github.com/rxwind7/Rxroller.git watch-app-list-rxroller_no_flow/upstream_Rxroller
 ```
 
 ### 2.2 ★ 行尾：入库原文是 LF，上游仓库是 CRLF（哈希对不上是这个原因）
@@ -68,7 +68,7 @@ git clone https://github.com/rxwind7/Rxroller.git watch-app-list-rxroller/upstre
 （上游每个文件必须有归属，出现没记账的文件就 FAIL）：
 
 ```bash
-python watch-app-list-rxroller/design/compare_upstream.py --diff
+python watch-app-list-rxroller_no_flow/design/compare_upstream.py --diff
 ```
 
 实测输出（2026-10-22）：`上游仓库共 6 个文件`、3 条取用件全 `OK 逐字节一致`、

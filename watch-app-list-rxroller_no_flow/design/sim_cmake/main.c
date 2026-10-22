@@ -1,5 +1,5 @@
 /*
- * watch-app-list-rxroller 的 PC 仿真入口
+ * watch-app-list-rxroller_no_flow 的 PC 仿真入口
  * ---------------------------------------------------------------------------
  * 本工程是 no-flow + native 移植件（上游 rxwind7/Rxroller，MIT）：
  *  - 分辨率 410x502，与 EEZ 工程 displayWidth/Height 一致（preflight 第 2 组硬判）。

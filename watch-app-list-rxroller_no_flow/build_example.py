@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""watch-app-list-rxroller —— 手表纵向滚轮应用列表（移植 rxwind7/Rxroller）
+"""watch-app-list-rxroller_no_flow —— 手表纵向滚轮应用列表（移植 rxwind7/Rxroller）
 
 本文件是工程唯一设计源：由它生成 .eez-project，请勿手改产物。
 
-    python build_example.py        -> watch-app-list-rxroller.eez-project
+    python build_example.py        -> watch-app-list-rxroller_no_flow.eez-project
     python design/cli_build.py     -> src/ui/（EEZ CLI 生成，勿手改）
     python design/port_rxroller.py -> src/native/rxroller/Rxroller.c（上游 v8 -> 9.4）
     python design/gen_assets.py    -> 22 个图标 + app_rows.{c,h}（事实源 design/apps.py）
@@ -30,7 +30,7 @@ import sys
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PROJECT_FILE = os.path.join(HERE, "watch-app-list-rxroller.eez-project")
+PROJECT_FILE = os.path.join(HERE, "watch-app-list-rxroller_no_flow.eez-project")
 
 SCREEN_W, SCREEN_H = 410, 502   # 与 Design Watch 参考工程同口径（滚轮件按此算行距/弧半径）
 

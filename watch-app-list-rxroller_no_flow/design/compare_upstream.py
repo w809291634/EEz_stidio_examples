@@ -3,9 +3,9 @@
 compare_upstream.py —— 拿本地克隆的上游仓库，逐字节核对"入库原文 == 上游原文"
 
 对照库是**整个上游工程**（6 个文件 + .git 全历史），不是只挑出来的那 3 个：
-    watch-app-list-rxroller/upstream_Rxroller/
+    watch-app-list-rxroller_no_flow/upstream_Rxroller/
 重新拉取：
-    git clone https://github.com/rxwind7/Rxroller.git watch-app-list-rxroller/upstream_Rxroller
+    git clone https://github.com/rxwind7/Rxroller.git watch-app-list-rxroller_no_flow/upstream_Rxroller
 
 为什么需要它：入库的 Rxroller.c.orig 是**行尾归一化成 LF** 的（上游仓库里是 CRLF），
 所以直接 sha256sum 两边对不上（166b6480… vs 3a364084…），看着像"改过"其实没有。

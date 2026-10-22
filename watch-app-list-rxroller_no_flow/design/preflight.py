@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""preflight.py —— watch-app-list-rxroller 交付前的硬门禁
+"""preflight.py —— watch-app-list-rxroller_no_flow 交付前的硬门禁
 
 跑法：python design/preflight.py     （任一 FAIL 即退出码 1）
 
@@ -21,7 +21,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-PROJ = os.path.join(ROOT, "watch-app-list-rxroller.eez-project")
+PROJ = os.path.join(ROOT, "watch-app-list-rxroller_no_flow.eez-project")
 NATIVE = os.path.join(ROOT, "src", "native")
 UI = os.path.join(ROOT, "src", "ui")
 RX_DIR = os.path.join(NATIVE, "rxroller")
@@ -350,6 +350,19 @@ def check_evidence():
         check("FIXLOG 条目 >= 15 且编号连续无重复",
               len(fx) >= 15 and len(fx) == len(re.findall(r"^## FX-", read(fixlog), re.M)),
               "条目数 %d，或有重号" % len(fx))
+        # ★ 条目数被别处当"事实"引用（根 README / CODE_WIKI 写"FIXLOG.md（N 条）"）。
+        #   只核对 FIXLOG 自己 = 半覆盖门禁：加一条而忘改索引，索引会永远差一（FX-022 同类）。
+        claimed = []
+        for p in (os.path.join(os.path.dirname(ROOT), "README.md"),
+                  os.path.join(os.path.dirname(ROOT), "CODE_WIKI.md"),
+                  os.path.join(ROOT, "README.md")):
+            if os.path.exists(p):
+                claimed += [int(m) for m in
+                            re.findall(r"FIXLOG\.md`?\s*（\s*(\d+)\s*条", read(p))]
+        check("索引里引用的 FIXLOG 条目数全等于实测 %d（文中 %d 处）"
+              % (len(fx), len(claimed)),
+              bool(claimed) and all(c == len(fx) for c in claimed),
+              "条目数漂移：文档里是 %s，实测 %d" % (sorted(set(claimed)), len(fx)))
         refs = set()
         for sub, _d, files in os.walk(os.path.join(ROOT, "src", "native")):
             for fn in files:
@@ -422,6 +435,54 @@ def check_evidence():
           "位图是 %s px ⇒ 忘了重跑 gen_assets.py" % (m.group(1) if m else "?"))
 
 
+# ---- 7. 路径活性：改名/挪目录以后，文档与脚本里写的 `<工程目录>/xxx` 必须还指得到本工程 ----
+# 踩过一次（FIXLOG FX-025）：目录改名后 .gitignore 的两条规则静默失效，
+# 上游克隆裸露进 git status，仿真构建缓存里的绝对路径也全断，而门禁一路绿灯。
+def check_paths_alive():
+    print("\n=== [7] 路径活性（工程目录名与文档/脚本里的引用一致）===")
+    real = os.path.basename(ROOT)
+    # 只盯"工程目录名形状"的 token，不碰 src/ design/ 这类
+    # 工程内相对子路径——那些本来就不该带目录名前缀，抓它们是假门禁。
+    # 正则里写成 [-] 是为了让它匹配不到**本行自己**（否则门禁源码会把自己判成过期引用）。
+    pat = re.compile(r"\bwatch-app[-]list[a-z0-9_-]*")
+    # 不含 FIXLOG.md：缺陷史按定义要点名"当时那个后来被改掉的目录名"，
+    # 拿活性规则要求它等于逼历史撒谎。
+    targets = ["README.md", "PORTLOG.md", "build_example.py",
+               os.path.join("design", "preflight.py"),
+               os.path.join("design", "compare_upstream.py"),
+               os.path.join("design", "cli_build.py"),
+               os.path.join("design", "sim_cmake", "main.c"),
+               os.path.join("src", "native", "rxroller", "README.md")]
+    def sibling_is_example(tok):
+        """同级目录里真的躺着一个 EEZ 工程才算"合法引用另一个示例"。
+        ★ 只判 isdir 挡不住改名后残留的**空壳**（实测踩过：
+        旧目录名残留了一串空目录（`…/design/sim_cmake/build_rel/`），
+        isdir 为真就把过期引用放过去了 —— 反向测试当场抓到）。"""
+        d = os.path.join(os.path.dirname(ROOT), tok)
+        try:
+            return any(f.endswith(".eez-project") for f in os.listdir(d))
+        except OSError:
+            return False
+
+    bad = []
+    for rel in targets:
+        p = os.path.join(ROOT, rel)
+        if not os.path.exists(p):
+            bad.append("%s 本身就不在位" % rel)
+            continue
+        bad += ["%s 里写着 %s" % (rel, t)
+                for t in sorted(set(pat.findall(read(p))) - {real})
+                if not sibling_is_example(t)]
+    check("文档/脚本里的工程目录名全等于实际目录名 %s" % real,
+          not bad, "目录改过名而引用没跟着改：%s" % bad[:6])
+    gi = os.path.join(os.path.dirname(ROOT), ".gitignore")
+    if os.path.exists(gi):
+        g = read(gi)
+        check("仓库 .gitignore 仍按当前目录名忽略 shots/*.bmp 与 upstream_Rxroller/",
+              "%s/shots/*.bmp" % real in g and "%s/upstream_Rxroller/" % real in g,
+              "改名后这两条会静默失效 ⇒ 上游克隆会裸露进 git status")
+
+
 def main():
     if not os.path.exists(PROJ):
         sys.exit("先跑 build_example.py + design/cli_build.py，再跑 preflight")
@@ -431,6 +492,7 @@ def main():
     check_upstream_audit()
     check_apps()
     check_evidence()
+    check_paths_alive()
     print("\n=== 结论 ===")
     if FAILS:
         print("%d 条 FAIL：%s" % (len(FAILS), " | ".join(FAILS)))

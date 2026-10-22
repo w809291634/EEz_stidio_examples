@@ -1,4 +1,4 @@
-# watch-app-list-rxroller —— 手表纵向滚轮应用列表（移植 rxwind7/Rxroller）
+# watch-app-list-rxroller_no_flow —— 手表纵向滚轮应用列表（移植 rxwind7/Rxroller）
 
 一句话：把开源 LVGL 滚轮件 **Rxroller** 搬到本仓库的 LVGL 9.4 上，做出参考图
 （桌面 Design Watch 工程的 AppList）那种**纵向一列、中心行最大、上下按距离渐变、
@@ -53,7 +53,7 @@ settings.build.generateSourceCodeForEezFramework = False
 ## 4. 工程结构 / 怎么跑
 
 ```
-watch-app-list-rxroller/
+watch-app-list-rxroller_no_flow/
 ├── FIXLOG.md                        ← ★ 错误修复记录（19 条：现象/根因/修复/证据/防再犯）
 ├── PORTLOG.md                       ← ★ 上游件改动账单
 ├── build_example.py                 ← EEZ 外壳设计源（410x502 + 字体条目 + 覆盖自检）
