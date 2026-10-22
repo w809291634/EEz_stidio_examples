@@ -14,57 +14,31 @@
 
 #include "lvgl.h"
 #include "watch_list_native.h"
+#include "watch_list_config.h"   /* ★ 所有可调参数都在这一份头文件里 */
 #include "app_rows.h"
 #include "rxroller/Rxroller.h"
 #include "fonts.h"          /* EEZ 生成：ui_font_cn14 */
 
-/*---- 观感参数（对齐 Design Watch 参考图：行距 100、图标 76、边缘缩到 ~59%）----*/
-#define ROW_PITCH        100     /* rxroller_config_t.icon_distance：相邻行中心距 */
-#define ROW_W            300     /* 行容器宽（big_w） */
-#define ROW_H            100     /* 行容器高（big_h） */
-#define EDGE_SCALE       150     /* 0..255，边缘行缩放；150/255 ≈ 59% */
-#define CURVE_RADIUS     900     /* 弧线半径 px。420 时第 3 行横向漂 ~150px 太夸张
-                                    （参考图只要轻微弧线），放宽到 900 */
-#define ANIM_TIME        300
-
-/* 松手落点范围：拖动行程不限，松手弹回"第 n 个"（序号 1 起）。
- * 为什么不做成上游钳位：见 FIXLOG FX-010。 */
-#define EDGE_SNAP_TOP_ORDINAL     2    /* 第 2 个 ⇒ 行下标 1 */
-#define EDGE_SNAP_BOTTOM_ORDINAL  2    /* 倒数第 2 个 ⇒ 行下标 N-2 */
-#define CENTER_MIN_INDEX          (EDGE_SNAP_TOP_ORDINAL - 1)
-#define CENTER_MAX_INDEX          (WATCH_APP_ROWS_COUNT - EDGE_SNAP_BOTTOM_ORDINAL)
-
-/* 中心行的图标中心放在屏宽的 1/3 处（口径已确认是**横向**） */
-#define CENTER_X_DIVISOR  3
-#define CENTER_X_TOL_PX   1
-#define CENTER_X_ITERS    12
-#define CENTER_X_PROBE_PX 24     /* 标定第一步的试探幅度 */
+/* 由 config 派生的量（口径见 watch_list_config.h） */
+#define CENTER_MIN_INDEX   (EDGE_SNAP_TOP_ORDINAL - 1)
+#define CENTER_MAX_INDEX   (WATCH_APP_ROWS_COUNT - EDGE_SNAP_BOTTOM_ORDINAL)
 
 static lv_obj_t *s_wheel = NULL;
 static lv_obj_t *s_status = NULL;
 
 /* 拖动判定：按拍累计最大位移，超阈值就忽略随之而来的 CLICKED。
  * 必须"累计 + PRESS_LOCK"两道一起上的原因见 FIXLOG FX-003。 */
-#define DRAG_CLICK_IGNORE_PX 15
 static lv_point_t s_press_pt;
 static bool s_press_valid = false;
 static int s_press_travel = 0;
 
-/* 快滑惯性（上游没有，见 FIXLOG FX-007）。
- * 三个阈值的取值推导见 README §5.2。 */
-#define FLING_MIN_VEL     120        /* px/s，低于它当普通松手不抛 */
-#define FLING_SEC         250        /* 毫秒（用整数算，省得引浮点） */
-#define FLING_MAX_PX      (ROW_PITCH * 3)
-#define FLING_MAX_ROWS    3          /* 一次快滑最多跨几行（= FLING_MAX_PX / 行距） */
-#define FLING_VEL_SMOOTH  8          /* 低通：新样本占 3/8，历史占 5/8 */
-#define FLING_VEL_STALE_MS 80        /* 超过这么久没更新 ⇒ 手指已停，速度作废 */
-
+/* 快滑惯性（上游没有，见 FIXLOG FX-007）。阈值推导见 README §5.2。 */
 static lv_point_t s_last_pt;
 static uint32_t   s_last_t;
 static int        s_vel;            /* px/s，纵向；正=手指向下 */
 
 /* 定义在本文件后半段，这里先声明给事件回调用 */
-static void watch_list_align_center_x(lv_obj_t *host);
+static void watch_list_align_center(lv_obj_t *host);
 static int  center_clamp(int idx);
 static void snap_edge_async(void *user);
 
@@ -172,13 +146,13 @@ static void row_create_cb(lv_obj_t *row, int32_t index, void *user_data)
 
     icon = lv_image_create(row);
     lv_image_set_src(icon, r->icon);
-    lv_obj_align(icon, LV_ALIGN_LEFT_MID, 12, 0);
+    lv_obj_align(icon, LV_ALIGN_LEFT_MID, ROW_ICON_X, 0);
 
     label = lv_label_create(row);
     lv_label_set_text(label, r->name);
     lv_obj_set_style_text_font(label, &ui_font_cn14, LV_PART_MAIN);
     lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
-    lv_obj_align(label, LV_ALIGN_LEFT_MID, 100, 0);
+    lv_obj_align(label, LV_ALIGN_LEFT_MID, ROW_LABEL_X, 0);
 
     lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
     /* 锁住手势目标，见 FIXLOG FX-003 */
@@ -245,7 +219,6 @@ static void cull_timer_cb(lv_timer_t *t) { (void)t; watch_list_cull(); }
 
 /* 屏外回收：|distance| 超过 CULL_PITCHES 个行距就隐藏。
  * 为什么必须做（以及它反过来引发的 FX-011）见 FIXLOG FX-005。 */
-#define CULL_PITCHES 4
 
 void watch_list_cull(void)
 {
@@ -282,10 +255,9 @@ void watch_list_create(lv_obj_t *host, lv_obj_t *status_label)
     cfg.big_h = ROW_H;
     cfg.edge_scale = EDGE_SCALE;
     cfg.arrange = RXROLLER_ARRANGE_VERTICAL;
-    /* 参考图（Design Watch 的 AppList）是**竖直一列**、只按距离缩放；
-     * 上游的 ARC 模式让上下两侧都往 +x 漂（x=r*(1-cos)），观感偏"斜"。
-     * 所以默认走 NONE（直列）。要看弧线把 curve_mode 改回 ARC 并调 CURVE_RADIUS。 */
-    cfg.curve_mode = RXROLLER_CURVE_NONE;
+    /* 排布形状由 config 的 CURVE_ENABLE 决定（0=竖列，1=弧线，半径 CURVE_RADIUS）。
+     * 弧线下上下两侧同向鼓出（x 是 |d| 的偶函数），中心行 d=0 不受影响。 */
+    cfg.curve_mode = CURVE_ENABLE ? RXROLLER_CURVE_ARC : RXROLLER_CURVE_NONE;
     cfg.curve_radius = CURVE_RADIUS;
     cfg.curve_reverse = 0;
     cfg.anim_time = ANIM_TIME;
@@ -327,7 +299,7 @@ void watch_list_create(lv_obj_t *host, lv_obj_t *status_label)
         lv_obj_set_style_pad_top(s_wheel, ay, LV_PART_MAIN);
         printf("[WHEEL] anchor(%d,%d) kept, root=%dx%d\n", ax, ay, hw, hh);
     }
-    watch_list_align_center_x(host);
+    watch_list_align_center(host);
     /* 上游建轮时直接把中心摆成行 0，那是"不允许磁吸"的范围外 ⇒ 起步就落到行 1。
      * 用 ANIM_OFF：这是初始态，不该有一段开场动画。 */
     watch_list_center(CENTER_MIN_INDEX, false);
@@ -338,71 +310,106 @@ void watch_list_create(lv_obj_t *host, lv_obj_t *status_label)
            WATCH_APP_ROWS_COUNT, ROW_PITCH, EDGE_SCALE, CURVE_RADIUS);
 }
 
-/*---- 横向 1/3 定位 ----*/
+/*---- 中心图标的落点标定（横向 1/3 + 垂直正中）----*/
 
-/* 中心行的图标中心放在屏宽 1/3 处（口径已确认是**横向**）。
- * 一次性闭环标定（割线法实测斜率，不假设 1/2），只在建轮时跑。
- * 为什么不写死 pad_left：见 FIXLOG FX-010 / README §5.3。 */
+/* 一次性闭环标定：割线法**实测** pad→图标中心 的斜率，不假设 1/2。
+ * 为什么不写死 pad：见 FIXLOG FX-010 / README §5.3。 */
 
-/* 中心行里图标（child 0，row_create_cb 第一个建的）的绝对 x 中心 */
-static int center_icon_cx(void)
+static bool center_icon_rect(int *cx, int *cy, int *w)
 {
     int idx = (int)rxroller_get_center(s_wheel);
     lv_obj_t *row, *icon;
     lv_area_t a;
 
-    if (NULL == s_wheel || idx < 0 || idx >= WATCH_APP_ROWS_COUNT) return -1;
+    if (NULL == s_wheel || idx < 0 || idx >= WATCH_APP_ROWS_COUNT) return false;
     row = rxroller_get_item_obj(s_wheel, idx);
-    if (NULL == row || lv_obj_get_child_count(row) < 1) return -1;
-    icon = lv_obj_get_child(row, 0);
-    if (NULL == icon) return -1;
+    if (NULL == row || lv_obj_get_child_count(row) < 1) return false;
+    icon = lv_obj_get_child(row, 0);          /* child 0 = row_create_cb 先建的图标 */
+    if (NULL == icon) return false;
     lv_obj_get_coords(icon, &a);
-    return ((int)a.x1 + (int)a.x2) / 2;
+    if (cx) *cx = ((int)a.x1 + (int)a.x2) / 2;
+    if (cy) *cy = ((int)a.y1 + (int)a.y2) / 2;
+    if (w)  *w  = (int)a.x2 - (int)a.x1 + 1;
+    return true;
 }
 
-static void watch_list_align_center_x(lv_obj_t *host)
+static int center_axis(bool is_x)
 {
-    const int target = (int)lv_obj_get_width(host) / CENTER_X_DIVISOR;
-    int p0, c0, p1, c1, i, next;
+    int cx, cy;
+    return center_icon_rect(&cx, &cy, NULL) ? (is_x ? cx : cy) : -1;
+}
 
-    lv_obj_update_layout(s_wheel);
-    p0 = (int)lv_obj_get_style_pad_left(s_wheel, LV_PART_MAIN);
-    c0 = center_icon_cx();
+static int pad_of(bool is_x)
+{
+    return (int)(is_x ? lv_obj_get_style_pad_left(s_wheel, LV_PART_MAIN)
+                      : lv_obj_get_style_pad_top(s_wheel, LV_PART_MAIN));
+}
+
+static void pad_set(bool is_x, int v)
+{
+    if (is_x) lv_obj_set_style_pad_left(s_wheel, v, LV_PART_MAIN);
+    else      lv_obj_set_style_pad_top(s_wheel, v, LV_PART_MAIN);
+}
+
+static void align_center_axis(bool is_x, int target)
+{
+    int p0 = pad_of(is_x), c0 = center_axis(is_x);
+    int p1, c1, i, next;
+
     if (c0 < 0) return;
-    if (LV_ABS(c0 - target) <= CENTER_X_TOL_PX) {
-        printf("[WHEEL] center-x: 已达标 target=%d got=%d\n", target, c0);
+    if (LV_ABS(c0 - target) <= CENTER_TOL_PX) {
+        printf("[WHEEL] align-%c: 已达标 target=%d got=%d\n",
+               is_x ? 'x' : 'y', target, c0);
         return;
     }
-
-    /* 试探点：拿它实测 pad -> 图标中心 的斜率，不预设"1/2" */
-    p1 = p0 + CENTER_X_PROBE_PX;
-    lv_obj_set_style_pad_left(s_wheel, p1, LV_PART_MAIN);
+    p1 = p0 + CENTER_PROBE_PX;                /* 试探点：实测斜率 */
+    pad_set(is_x, p1);
     lv_obj_update_layout(s_wheel);
-    c1 = center_icon_cx();
-    if (c1 < 0) {
-        lv_obj_set_style_pad_left(s_wheel, p0, LV_PART_MAIN);
-        return;
-    }
+    c1 = center_axis(is_x);
+    if (c1 < 0) { pad_set(is_x, p0); return; }
 
-    for (i = 0; i < CENTER_X_ITERS; i++) {
-        if (LV_ABS(c1 - target) <= CENTER_X_TOL_PX) break;
+    for (i = 0; i < CENTER_ITERS_MAX; i++) {
+        if (LV_ABS(c1 - target) <= CENTER_TOL_PX) break;
         next = (c1 == c0) ? (p1 - (c1 - target))
                           : (p1 + (int)((int64_t)(target - c1) * (p1 - p0) / (c1 - c0)));
-        p0 = p1; c0 = c1;                /* 割线往前滚一格 */
+        p0 = p1; c0 = c1;                     /* 割线往前滚一格 */
         p1 = next;
-        lv_obj_set_style_pad_left(s_wheel, p1, LV_PART_MAIN);
+        pad_set(is_x, p1);
         lv_obj_update_layout(s_wheel);
-        c1 = center_icon_cx();
+        c1 = center_axis(is_x);
         if (c1 < 0) break;
     }
-    printf("[WHEEL] center-x: target=%d(=%d/%d) got=%d pad_left %d->%d 步数=%d\n",
-           target, (int)lv_obj_get_width(host), CENTER_X_DIVISOR, c1,
-           (int)lv_obj_get_style_pad_left(s_wheel, LV_PART_MAIN), p1, i + 2);
+    printf("[WHEEL] align-%c: target=%d got=%d pad %d->%d 步数=%d\n",
+           is_x ? 'x' : 'y', target, c1, pad_of(is_x), p1, i + 2);
 }
 
-int watch_list_center_icon_x(void)
+static void watch_list_align_center(lv_obj_t *host)
 {
-    return s_wheel ? center_icon_cx() : -1;
+    align_center_axis(true, (int)lv_obj_get_width(host) / CENTER_X_DIVISOR);
+    align_center_axis(false, (int)lv_obj_get_height(host) / CENTER_Y_DIVISOR);
+}
+
+/*---- 观测量（无头夹具核对用）----*/
+
+int watch_list_center_icon_x(void) { return center_axis(true); }
+int watch_list_center_icon_y(void) { return center_axis(false); }
+
+int watch_list_center_icon_w(void)
+{
+    int w;
+    return center_icon_rect(NULL, NULL, &w) ? w : -1;
+}
+
+int watch_list_row_pitch(void) { return ROW_PITCH; }
+
+/* 第 i 行当前离中心的带符号距离（px）。夹具用它验"过程线性"。 */
+int watch_list_row_distance(int index)
+{
+    rxroller_item_t *items;
+
+    if (NULL == s_wheel || index < 0 || index >= WATCH_APP_ROWS_COUNT) return -99999;
+    items = rxroller_get_icons(s_wheel);
+    return items ? (int)items[index].distance : -99999;
 }
 
 /*---- 自证接口 ----*/

@@ -18,9 +18,10 @@
 #ifndef lv_mem_free
 #  define lv_mem_free(p)   lv_free(p)
 #endif
-/* RX-PORT-FEAT: 缩放衰减窗口，单位=行距。上游写死 1（只有中心行放大，
- *  相邻行直接落到 edge_scale），参考图（桌面 Design Watch 的 AppList）是
- *  好几行连续渐变，所以把窗口放宽到 3 个行距。取 1 即恢复上游行为。
+/* RX-PORT-FEAT: 缩放衰减窗口，单位=行距。上游写死 1 ⇒ 只有正中那行是大的，
+ *  紧邻行立刻落到 edge_scale（= "未选中就是最小"的口径）。
+ *  调大它才有"上下几行连续渐变"。值来自 watch_list_config.h 的
+ *  SCALE_SPAN_PITCHES，取 1 时与上游行为完全一致。
  *  这是**能力补丁**不是版本适配，diff 里单列一条。 */
 #ifndef RX_SCALE_SPAN_PITCHES
 #  define RX_SCALE_SPAN_PITCHES 3

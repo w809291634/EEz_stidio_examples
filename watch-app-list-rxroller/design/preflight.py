@@ -291,13 +291,14 @@ def check_evidence():
     mainc = read(os.path.join(HERE, "sim_cmake", "main.c"))
     check("WATCH_AUTOTEST 钩子接进主循环", "autotest_hooks();" in mainc,
           "钩子没接进 while(1)")
-    check("十一条行为断言在夹具里",
-          all(k in mainc for k in ("中心行 = 10", "缩放最大", "单调衰减",
+    check("十五条行为断言在夹具里",
+          all(k in mainc for k in ("中心行 = 10", "缩放最大", "SPAN 线性分档",
                                    "快滑一次跨多行", "钳住不越界",
-                                   "横向 1/3", "起步不吸在首行",
-                                   "行程不限", "弹回顶部第 n 个",
-                                   "弹回底部倒数第 n 个")),
-          "断言被删了")
+                                   "横向 1/3", "垂直居中", "ICON_PX",
+                                   "SPAN 行处到底", "中心行是满档", "线性过渡",
+                                   "起步不吸在首行", "行程不限",
+                                   "弹回顶部第 n 个", "弹回底部倒数第 n 个")),
+          "断言被删了/改名了（断言名要按 config 验通用公式，不许写死形状）")
     check("自证模式摘掉真鼠标",
           'WATCH_ALLOWMOUSE' in mainc and 'lv_indev_delete(mouse)' in mainc,
           "人手一滑就把断言量歪（实测污染过一次：10->13 被改成 11->15）")
@@ -334,6 +335,42 @@ def check_evidence():
           'WATCH_DRAGTEST' in mainc and 'SDL_PushEvent' in mainc
           and 'lv_sdl_window_get_window' in mainc,
           "行级 API 夹具测不到手势链路，必须能合成 SDL 级拖动")
+
+    # ---- 参数集中管理：watch_list_config.h 是唯一出处 ----
+    import wconfig
+    cfg_names = wconfig.names()
+    check("watch_list_config.h 在位且定义了 >= 20 个参数",
+          len(cfg_names) >= 20, "只有 %d 个" % len(cfg_names))
+    # 这些名字不许在别处再 #define 一遍（否则改了 config 不生效）
+    dup = []
+    for sub, _d, files in os.walk(NATIVE):
+        for fn in files:
+            if not fn.endswith((".c", ".h")) or fn == "watch_list_config.h":
+                continue
+            body = read(os.path.join(sub, fn))
+            for n in cfg_names:
+                if re.search(r"^\s*#define\s+%s\b" % n, body, re.M):
+                    dup.append("%s:%s" % (fn, n))
+    check("config 里的参数没有在其它文件重复 #define（单一出处）",
+          not dup, "重复定义 %s" % ", ".join(dup))
+    gen = read(os.path.join(HERE, "gen_assets.py"))
+    port = read(os.path.join(HERE, "port_rxroller.py"))
+    check("gen_assets.py 从 config 读图标尺寸",
+          "wcfg(" in gen and "ICON_PX" in gen, "图标尺寸还写死在生成器里")
+    check("port_rxroller.py 从 config 读上游侧常数",
+          "wcfg(" in port and "SCALE_SPAN_PITCHES" in port,
+          "缩放窗口/点击阈值仍写死，改 config 不会生效")
+    rx = read(os.path.join(RX_DIR, "Rxroller.c"))
+    m = re.search(r"#\s*define RX_SCALE_SPAN_PITCHES\s+(\d+)", rx)
+    check("产物里的缩放窗口 == config 的 SCALE_SPAN_PITCHES(%d)"
+          % wconfig.wcfg("SCALE_SPAN_PITCHES"),
+          m is not None and int(m.group(1)) == wconfig.wcfg("SCALE_SPAN_PITCHES"),
+          "产物是 %s ⇒ 忘了重跑 port_rxroller.py" % (m.group(1) if m else "缺失"))
+    ic = read(os.path.join(NATIVE, "icons", "img_ic_weather.c"))
+    m = re.search(r"\.w = (\d+),", ic)
+    check("图标位图 == config 的 ICON_PX(%d)" % wconfig.wcfg("ICON_PX"),
+          m is not None and int(m.group(1)) == wconfig.wcfg("ICON_PX"),
+          "位图是 %s px ⇒ 忘了重跑 gen_assets.py" % (m.group(1) if m else "?"))
 
 
 def main():

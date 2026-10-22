@@ -21,7 +21,26 @@
 #include "ui.h"              /* EEZ 生成：ui_init / ui_tick（C 安全，不引入额外 C++ 头） */
 #include "screens.h"         /* objects_t：EEZ 生成的控件句柄（no-flow 下 ui.h 不带出来） */
 #include "watch_list_native.h"  /* 滚轮列表入口：create / dump / center / scale */
+#include "watch_list_config.h"  /* ★ 观感目标值的唯一出处，断言从这里取 */
 #include "src/others/snapshot/lv_snapshot.h"
+
+/* 断言里的目标值一律写 CFG(...)，一眼看得出不是夹具自己编的数 */
+#define CFG(n) (n)
+
+/* 缩放分档公式（与上游 rx_update_item_scale 同式）：
+ * 离中心 d 个行距时 = 最小档 + 剩余比例 ×(满档-最小档)。
+ * SPAN=3 时 d=0/1/2/3 → 100 / 67 / 33 / 0 % —— 就是用户要的"0 33 66 100"。 */
+#define SCALE_AT(d) (CFG(EDGE_SCALE) + \
+                     ((d) >= CFG(SCALE_SPAN_PITCHES) ? 0 : \
+                      (CFG(SCALE_SPAN_PITCHES) - (d)) * (255 - CFG(EDGE_SCALE)) \
+                      / CFG(SCALE_SPAN_PITCHES)))
+
+/* 任意带符号距离 d（px）上的连续缩放值，用来验"过程线性" */
+#define SCALE_CONT(d) (CFG(EDGE_SCALE) + \
+                       (LV_ABS(d) >= CFG(ROW_PITCH) * CFG(SCALE_SPAN_PITCHES) ? 0 : \
+                        (CFG(ROW_PITCH) * CFG(SCALE_SPAN_PITCHES) - LV_ABS(d)) \
+                        * (255 - CFG(EDGE_SCALE)) \
+                        / (CFG(ROW_PITCH) * CFG(SCALE_SPAN_PITCHES))))
 
 extern void ui_init(void);
 extern void ui_tick(void);
@@ -182,6 +201,8 @@ static void autotest_hooks(void)
     static int ticks = 0;
     static int c0, c2, c3, center_before;
     static int fling_from, fling_settle, fling_center, fling_stage, fling_expect;
+    static int lin_d[2], lin_s[2], lin_n = 0;
+    static int fling_throw;
     static char b1[96], b2[96], b3[96], b4[96];
 
     if (!getenv("WATCH_AUTOTEST")) return;
@@ -207,9 +228,24 @@ static void autotest_hooks(void)
         /* 把第 10 行滚到中心（走动画/惯性路径，不是直接摆位） */
         watch_list_center(10, true);
     }
+    /* "过程线性"的证据只能在**飞行途中**采：静止时行都对齐在整行距上。
+     * 又因为 span=1 ⇒ 线性带只有最后 1 个行距那么宽（|d|<100px），
+     * 固定拍数采不到，所以动画期间逐拍采、命中带内就记两帧。 */
+    if (lin_n < 2 && watch_list_is_animating()) {
+        int d = watch_list_row_distance(10);
+        int s = watch_list_row_scale(10);
+        if (d != 0 && s > CFG(EDGE_SCALE) && s < 255
+            && (lin_n == 0 || d != lin_d[lin_n - 1])) {
+            printf("[LIN] d=%d scale=%d 线性期望=%d\n", d, s,
+                   SCALE_CONT(d));
+            lin_d[lin_n] = d; lin_s[lin_n] = s; lin_n++;
+        }
+    }
     if (ticks == 400) {
         int s0 = watch_list_row_scale(10);
         int cx = watch_list_center_icon_x();
+        int cy = watch_list_center_icon_y();
+        int iw = watch_list_center_icon_w();
         c0 = watch_list_row_scale(9);   /* 离中心 1 行 */
         c2 = watch_list_row_scale(8);   /* 离中心 2 行 */
         c3 = watch_list_row_scale(7);   /* 离中心 3 行 */
@@ -217,13 +253,51 @@ static void autotest_hooks(void)
         expect("惯性收敛后中心行 = 10", watch_list_center_index() == 10, b1);
         snprintf(b2, sizeof(b2), "scale 10=%d > 9=%d", s0, c0);
         expect("中心行缩放最大（穹顶成立）", s0 > c0, b2);
-        snprintf(b3, sizeof(b3), "%d > %d > %d", c0, c2, c3);
-        expect("离中心越远缩放单调衰减", c0 > c2 && c2 > c3, b3);
-        /* 样式①：中心行的图标中心 = 屏宽 1/3（410/3 = 137），容差 ±2px */
+        snprintf(b3, sizeof(b3), "行9=%d 行8=%d 行7=%d（SPAN=%d 的 67/33/0%%）",
+                 c0, c2, c3, CFG(SCALE_SPAN_PITCHES));
+        /* 不写死形状：按 config 的 SPAN/EDGE 反推每一档应有的缩放，逐行核对。
+         * 规则 = 选中 100%、离中心 SPAN 行到底、中间线性 ⇒ 4 档就是 100/67/33/0。 */
+        expect("缩放按 SPAN 线性分档（0/33/66/100 那一套）",
+               c0 == SCALE_AT(1) && c2 == SCALE_AT(2) && c3 == SCALE_AT(3), b3);
+        /* ★ 三条观感判据的目标值全部来自 watch_list_config.h，不写死在这里 */
         snprintf(b4, sizeof(b4), "图标中心 x=%d，屏宽 %d 的 1/%d = %d",
-                 cx, SIM_W, 3, SIM_W / 3);
+                 cx, SIM_W, CFG(CENTER_X_DIVISOR), SIM_W / CFG(CENTER_X_DIVISOR));
         expect("中心图标落在横向 1/3 处",
-               cx > 0 && LV_ABS(cx - SIM_W / 3) <= 2, b4);
+               cx > 0 && LV_ABS(cx - SIM_W / CFG(CENTER_X_DIVISOR)) <= 2, b4);
+        snprintf(b4, sizeof(b4), "图标中心 y=%d，屏高 %d 的 1/%d = %d",
+                 cy, SIM_H, CFG(CENTER_Y_DIVISOR), SIM_H / CFG(CENTER_Y_DIVISOR));
+        expect("中心图标垂直居中",
+               cy > 0 && LV_ABS(cy - SIM_H / CFG(CENTER_Y_DIVISOR)) <= 2, b4);
+        snprintf(b4, sizeof(b4), "图标宽=%d，目标=%d（config ICON_PX）",
+                 iw, CFG(ICON_PX));
+        expect("中心图标尺寸 = config 的 ICON_PX",
+               iw > 0 && LV_ABS(iw - CFG(ICON_PX)) <= 2, b4);
+        /* ★ 缩放曲线口径：选中最大、离中心 SPAN 行到底、中间线性。
+         *   所以"最小档"应当出现在第 SPAN 行，而不是第 1 行。 */
+        snprintf(b4, sizeof(b4), "第 %d 行 scale=%d，最小档=%d",
+                 CFG(SCALE_SPAN_PITCHES),
+                 watch_list_row_scale(10 + CFG(SCALE_SPAN_PITCHES)), CFG(EDGE_SCALE));
+        expect("离中心 SPAN 行处到底（未选中最小）",
+               watch_list_row_scale(10 + CFG(SCALE_SPAN_PITCHES)) == CFG(EDGE_SCALE),
+               b4);
+        snprintf(b4, sizeof(b4), "中心=%d，满档=255", s0);
+        expect("中心行是满档 255", s0 == 255, b4);
+        /* ★ "过程中是线性的"：拿途中采到的 (distance, scale) 反代公式核对。
+         *   线性式 = 255 - (255-EDGE) * |d| / 行距，容差 4/255。 */
+        {
+            int k, bad = 0, want, got;
+            for (k = 0; k < lin_n; k++) {
+                want = SCALE_CONT(lin_d[k]);
+                if (LV_ABS(lin_s[k] - want) > 4) { bad = 1; got = lin_s[k]; }
+            }
+            snprintf(b4, sizeof(b4), "采到 %d 帧：d=%d→s=%d、d=%d→s=%d",
+                     lin_n,
+                     lin_n > 0 ? lin_d[0] : 0, lin_n > 0 ? lin_s[0] : 0,
+                     lin_n > 1 ? lin_d[1] : 0, lin_n > 1 ? lin_s[1] : 0);
+            expect("缩放随距离线性过渡（途中采样核对）",
+                   lin_n == 2 && !bad, b4);
+            (void)got;
+        }
         watch_list_dump("center10");
         watch_list_cull();
         if (!getenv("WATCH_NOSHOT")) take_shot("shot_center10.bmp");
@@ -231,7 +305,9 @@ static void autotest_hooks(void)
     /* ---- 快滑惯性：250px（=2.5 行距）应当一次跨 3 行，而不是一格一格 ---- */
     if (ticks == 420) {
         fling_from = watch_list_center_index();
-        watch_list_fling(-250);         /* 负=手指上滑=往后翻（行号增大） */
+        /* 抛 2.5 个行距 => 四舍五入应当正好跨 3 行。用行距表达，行距改了不失效 */
+        fling_throw = -(watch_list_row_pitch() * 5 / 2);
+        watch_list_fling(fling_throw);  /* 负=手指上滑=往后翻（行号增大） */
         fling_expect = fling_from + 3;
         fling_stage = 1;
     }

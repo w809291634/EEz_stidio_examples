@@ -27,7 +27,7 @@
 ★ 为什么原文改名 `.orig`：PC_SIM 的 CMake 用 `GLOB_RECURSE src/native/*.c` 收源码，
 两个 `.c` 会重复定义符号。`.orig` 不被收集，又能就地 diff。
 
-## 改了什么：14 个 hunk 逐条（`diff -u Rxroller.c.orig Rxroller.c` = 14 hunks / +49 / −16）
+## 改了什么：14 个 hunk 逐条（`diff -u Rxroller.c.orig Rxroller.c` = 14 hunks / +50 / −16）
 
 "上游行"就是 hunk 头里的 `-行`，可以直接 `sed -n '180,195p' Rxroller.c.orig` 跳过去看原文。
 
@@ -52,7 +52,7 @@
 上游真 bug 4 处（#2/9/10/11 是同一件事的 4 个落点）· 说明横幅+常量 1 处。
 
 **没动的**：滚轮布局数学、弧线坐标、动画/惯性参数、吸附算法、数据结构（除新增一个字段）。
-改动占比 `49 / 1237 ≈ 4.0%`。
+改动占比 `50 / 1238 ≈ 4.0%`。
 
 ### 🐞 #2/9/10/11 为什么算上游 bug 而不是适配
 

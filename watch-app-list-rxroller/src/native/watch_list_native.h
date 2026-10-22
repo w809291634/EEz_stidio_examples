@@ -31,8 +31,17 @@ bool watch_list_is_animating(void);
 /* 第 i 行当前的变换缩放（256 = 100%）；越界或未创建返回 -1 */
 int watch_list_row_scale(int index);
 
-/* 中心行图标的绝对 x 中心（px）——"横向 1/3 定位"的观测量，preflight/夹具用它核对 */
+/* 第 i 行当前离中心的带符号距离（px）——验"缩放随距离线性过渡"用 */
+int watch_list_row_distance(int index);
+
+/* 中心行图标的绝对中心/宽度（px）——"横向 1/3 + 垂直正中 + 选中最大"的观测量。
+ * 目标值都在 watch_list_config.h，夹具用它核对。 */
 int watch_list_center_icon_x(void);
+int watch_list_center_icon_y(void);
+int watch_list_center_icon_w(void);
+
+/* 当前行距（px）。夹具用它把"抛距"表达成"几行"，免得断言被行距耦合。 */
+int watch_list_row_pitch(void);
 
 /* 允许磁吸到中心的行下标区间（首尾行不许）。夹具用它做边界断言。 */
 int watch_list_center_min(void);

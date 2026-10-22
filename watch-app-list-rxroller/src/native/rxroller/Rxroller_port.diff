@@ -1,6 +1,6 @@
 --- upstream/Rxroller.c.orig
 +++ src/native/rxroller/Rxroller.c
-@@ -1,5 +1,30 @@
+@@ -1,5 +1,31 @@
 +/*
 + * Rxroller.c —— 由 design/port_rxroller.py 从上游 Rxroller.c.orig 生成，勿手改。
 + * 上游 https://github.com/rxwind7/Rxroller (MIT)；改动 = LVGL v8 -> 9.4 的
@@ -21,9 +21,10 @@
 +#ifndef lv_mem_free
 +#  define lv_mem_free(p)   lv_free(p)
 +#endif
-+/* RX-PORT-FEAT: 缩放衰减窗口，单位=行距。上游写死 1（只有中心行放大，
-+ *  相邻行直接落到 edge_scale），参考图（桌面 Design Watch 的 AppList）是
-+ *  好几行连续渐变，所以把窗口放宽到 3 个行距。取 1 即恢复上游行为。
++/* RX-PORT-FEAT: 缩放衰减窗口，单位=行距。上游写死 1 ⇒ 只有正中那行是大的，
++ *  紧邻行立刻落到 edge_scale（= "未选中就是最小"的口径）。
++ *  调大它才有"上下几行连续渐变"。值来自 watch_list_config.h 的
++ *  SCALE_SPAN_PITCHES，取 1 时与上游行为完全一致。
 + *  这是**能力补丁**不是版本适配，diff 里单列一条。 */
 +#ifndef RX_SCALE_SPAN_PITCHES
 +#  define RX_SCALE_SPAN_PITCHES 3
@@ -31,7 +32,7 @@
  #include "string.h"
  #include "limits.h"
  #include "math.h"
-@@ -16,6 +41,7 @@
+@@ -16,6 +42,7 @@
      lv_point_t      touch_point1;
      lv_point_t      touch_point2;
      int32_t         offset;
@@ -39,7 +40,7 @@
  
      uint8_t         is_animating;
  
-@@ -90,11 +116,11 @@
+@@ -90,11 +117,11 @@
          SW_LOG_ERROR("wheel is NULL or invalid");
          return NULL;
      }
@@ -53,7 +54,7 @@
  }
  
  /* ==================== 清理内部资源 ==================== */
-@@ -118,7 +144,7 @@
+@@ -118,7 +145,7 @@
          lv_obj_remove_event_cb(ctx->screen, rx_event_screen_unload);
  
          if (delete_screen) {
@@ -62,7 +63,7 @@
              lv_obj_del_async(ctx->screen);
          }
          ctx->screen = NULL;
-@@ -202,15 +228,17 @@
+@@ -202,15 +229,17 @@
      if (!ctx || !item) return;
  
      int32_t distance = LV_ABS(item->distance);
@@ -83,7 +84,7 @@
                           * (float)(255 - ctx->config.edge_scale));
          scale = (uint16_t)(ctx->config.edge_scale + v_data);
      }
-@@ -269,13 +297,13 @@
+@@ -269,13 +298,13 @@
          return;
      }
  
@@ -99,7 +100,7 @@
      if (!item) {
          SW_LOG_ERROR("anim exec: item is NULL");
          return;
-@@ -319,8 +347,8 @@
+@@ -319,8 +348,8 @@
  
      /* 根据 scale_mode 选择 fade-out 的缩放方式 */
      lv_obj_t *parent = lv_obj_get_parent(obj);
@@ -110,7 +111,7 @@
          if (ctx->config.scale_mode == RXROLLER_SCALE_TRANSFORM) {
              lv_obj_set_style_transform_zoom(obj, (uint16_t)opa, LV_PART_MAIN);
          } else {
-@@ -368,8 +396,8 @@
+@@ -368,8 +397,8 @@
  
      /* 根据 scale_mode 选择 restore 的缩放方式 */
      lv_obj_t *parent = lv_obj_get_parent(obj);
@@ -121,7 +122,7 @@
          if (ctx->config.scale_mode == RXROLLER_SCALE_TRANSFORM) {
              lv_obj_set_style_transform_zoom(obj, (uint16_t)opa, LV_PART_MAIN);
          } else {
-@@ -469,6 +497,7 @@
+@@ -469,6 +498,7 @@
          ctx->touched = 1;
          ctx->pending_anim_count = 0;
          ctx->offset = 0;
@@ -129,7 +130,7 @@
          return;
      }
  
-@@ -481,6 +510,7 @@
+@@ -481,6 +511,7 @@
          ctx->offset = ctx->touch_point2.y - ctx->touch_point1.y;
          ctx->touch_point1.y = ctx->touch_point2.y;
      }
@@ -137,7 +138,7 @@
  
      rx_set_center_internal(ctx, ctx->item_count, 0);
  }
-@@ -508,7 +538,10 @@
+@@ -508,7 +539,10 @@
      }
  
      /* 判断是否为点击 */
@@ -149,7 +150,7 @@
      ctx->touched = 0;
  
      if (is_click) {
-@@ -590,7 +623,7 @@
+@@ -590,7 +624,7 @@
              lv_obj_set_size(item->obj, ctx->config.big_w, ctx->config.big_h);
          }
          lv_obj_center(item->obj);
@@ -158,7 +159,7 @@
      }
  
      int32_t pos_x, pos_y;
-@@ -704,7 +737,7 @@
+@@ -704,7 +738,7 @@
  /* ==================== LV_EVENT_DELETE 事件处理 ==================== */
  static void rx_event_delete(lv_event_t *e)
  {
@@ -167,7 +168,7 @@
      if (!ctx) {
          SW_LOG_ERROR("delete event: ctx is NULL");
          return;
-@@ -810,7 +843,7 @@
+@@ -810,7 +844,7 @@
      lv_obj_set_style_border_width(ctx->screen, 0, LV_PART_MAIN);
      lv_obj_set_style_clip_corner(ctx->screen, false, LV_PART_MAIN);
      lv_obj_clear_flag(ctx->screen, LV_OBJ_FLAG_SCROLLABLE);

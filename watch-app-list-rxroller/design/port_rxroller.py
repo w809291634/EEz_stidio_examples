@@ -23,6 +23,13 @@ ROOT = os.path.dirname(HERE)
 UPSTREAM = os.path.join(ROOT, "src", "native", "rxroller", "Rxroller.c.orig")
 OUT = os.path.join(ROOT, "src", "native", "rxroller", "Rxroller.c")
 
+# ★ 上游补丁里那两个可调常数，唯一出处是 watch_list_config.h（改它就行，别改这里）
+sys.path.insert(0, HERE)
+from wconfig import wcfg  # noqa: E402
+
+SPAN = wcfg("SCALE_SPAN_PITCHES")
+CLICK_MAX = wcfg("CLICK_TRAVEL_MAX_PX")
+
 BANNER = (
     "/*\n"
     " * Rxroller.c —— 由 design/port_rxroller.py 从上游 Rxroller.c.orig 生成，勿手改。\n"
@@ -43,11 +50,12 @@ PATCHES = [
      '/* RX-PORT: LVGL 9 内存 API 改名（lv_mem_alloc->lv_malloc, lv_mem_free->lv_free）*/\n'
      '#ifndef lv_mem_alloc\n#  define lv_mem_alloc(sz) lv_malloc(sz)\n#endif\n'
      '#ifndef lv_mem_free\n#  define lv_mem_free(p)   lv_free(p)\n#endif\n'
-     '/* RX-PORT-FEAT: 缩放衰减窗口，单位=行距。上游写死 1（只有中心行放大，\n'
-     ' *  相邻行直接落到 edge_scale），参考图（桌面 Design Watch 的 AppList）是\n'
-     ' *  好几行连续渐变，所以把窗口放宽到 3 个行距。取 1 即恢复上游行为。\n'
+     '/* RX-PORT-FEAT: 缩放衰减窗口，单位=行距。上游写死 1 ⇒ 只有正中那行是大的，\n'
+     ' *  紧邻行立刻落到 edge_scale（= "未选中就是最小"的口径）。\n'
+     ' *  调大它才有"上下几行连续渐变"。值来自 watch_list_config.h 的\n'
+     ' *  SCALE_SPAN_PITCHES，取 1 时与上游行为完全一致。\n'
      ' *  这是**能力补丁**不是版本适配，diff 里单列一条。 */\n'
-     '#ifndef RX_SCALE_SPAN_PITCHES\n#  define RX_SCALE_SPAN_PITCHES 3\n#endif\n',
+     '#ifndef RX_SCALE_SPAN_PITCHES\n#  define RX_SCALE_SPAN_PITCHES %d\n#endif\n' % SPAN,
      1),
     # 衰减窗口参数化：三处 icon_distance 换成 span
     ("    int32_t distance = LV_ABS(item->distance);\n"
@@ -146,8 +154,8 @@ PATCHES = [
      '#include "Rxroller.h"\n'
      '/* RX-PORT-FIX: 累计位移 <= 该值才算点击（px）。行距 100px，轻点抖动远小于它 */\n'
      '#ifndef RXROLLER_CLICK_TRAVEL_MAX\n'
-     '#  define RXROLLER_CLICK_TRAVEL_MAX 10\n'
-     '#endif\n',
+     '#  define RXROLLER_CLICK_TRAVEL_MAX %d\n'
+     '#endif\n' % CLICK_MAX,
      1),
 ]
 

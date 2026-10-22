@@ -21,13 +21,16 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 from apps import APPS  # noqa: E402
+from wconfig import wcfg  # noqa: E402
 
 ICON_DIR = os.path.join(ROOT, "src", "native", "icons")
 FONT_PATH = os.path.join(ROOT, "fonts", "simhei.ttf")
 
-SIZE = 76
-INSET = 4
-CORNER = 20
+# ★ 尺寸唯一出处是 src/native/watch_list_config.h，这里只按它等比派生
+SIZE = wcfg("ICON_PX")
+INSET = max(4, SIZE // 16)
+CORNER = SIZE * 20 // 76
+GLYPH_FONT = SIZE * 30 // 76
 PALETTE = [
     (61, 220, 151), (255, 204, 0), (255, 99, 99), (90, 200, 250),
     (52, 199, 89), (255, 55, 95), (48, 176, 199), (150, 160, 175),
@@ -39,7 +42,7 @@ def render(glyph, rgb):
     d = ImageDraw.Draw(img)
     d.rounded_rectangle((INSET, INSET, SIZE - 1 - INSET, SIZE - 1 - INSET),
                         radius=CORNER, fill=rgb + (255,))
-    f = ImageFont.truetype(FONT_PATH, 30)
+    f = ImageFont.truetype(FONT_PATH, GLYPH_FONT)
     box = d.textbbox((0, 0), glyph, font=f)
     d.text(((SIZE - (box[2] - box[0])) / 2 - box[0],
             (SIZE - (box[3] - box[1])) / 2 - box[1]),
