@@ -1,0 +1,49 @@
+<svg viewBox="0 0 680 500" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+  <title>09 · 组件内嵌容器</title>
+  <desc>同一组件放进设置页卡片，尺寸随容器自适应</desc>
+  <g transform="translate(40,40) scale(1.25)">
+    <rect x="0" y="0" width="480" height="320" rx="14" fill="#0B0F1A" stroke="#26314A" stroke-width="1"/>
+    <text x="20" y="30" fill="#F0F4FC" font-size="17" font-weight="500">设置</text>
+    <text x="20" y="48" fill="#5C6A85" font-size="10.5">网络与连接</text>
+    <rect x="20" y="58" width="440" height="236" fill="#0D1420" rx="12" stroke="#26314A" stroke-width="0.6"/>
+    <text x="36" y="78" fill="#5C6A85" font-size="11">WiFi</text>
+    <text x="444" y="78" fill="#8A99B3" font-size="10" text-anchor="end">管理</text>
+    <rect x="28" y="86" width="424" height="176" fill="none" rx="10" stroke="#3A4867" stroke-width="0.6" stroke-dasharray="3 3"/>
+    <text x="40" y="108" fill="#F0F4FC" font-size="13" font-weight="500">WiFi</text>
+    <text x="40" y="122" fill="#8A99B3" font-size="9">已发现 6 个网络</text>
+    <rect x="376" y="98" width="56" height="20" fill="#161E30" rx="10" stroke="#26314A" stroke-width="0.5"/>
+    <text x="404" y="112" fill="#B9C6DC" font-size="9" text-anchor="middle">刷新</text>
+    <rect x="40" y="130" width="400" height="38" fill="#101A28" rx="8" stroke="#2E9F79" stroke-width="1"/>
+    <rect x="52" y="155" width="3" height="4" fill="#3DDC97"/>
+    <rect x="57" y="152.5" width="3" height="6.5" fill="#3DDC97"/>
+    <rect x="62" y="150" width="3" height="9" fill="#3DDC97"/>
+    <rect x="67" y="147.5" width="3" height="11.5" fill="#3DDC97"/>
+    <text x="76" y="146" fill="#F0F4FC" font-size="12">yjt_dev_2.4G</text>
+    <text x="76" y="159" fill="#8A99B3" font-size="9">WPA2 · -58 dBm · 5 GHz</text>
+    <rect x="364" y="145" width="8" height="6.5" fill="#8A99B3" rx="1.3"/>
+    <path d="M366 145 v-2 a2 2 0 0 1 4 0 v2" fill="none" stroke="#8A99B3" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="386" y="141" width="42" height="15" fill="#0E2A22" rx="7.5" stroke="#2E9F79" stroke-width="0.5"/>
+    <text x="407" y="152" fill="#3DDC97" font-size="8.5" text-anchor="middle">已连接</text>
+    <rect x="40" y="175" width="400" height="38" fill="#101A28" rx="8" stroke="#26314A" stroke-width="0.5"/>
+    <rect x="52" y="200" width="3" height="4" fill="#5B8CFF"/>
+    <rect x="57" y="197.5" width="3" height="6.5" fill="#5B8CFF"/>
+    <rect x="62" y="195" width="3" height="9" fill="#5B8CFF"/>
+    <rect x="67" y="192.5" width="3" height="11.5" fill="#5B8CFF"/>
+    <text x="76" y="191" fill="#F0F4FC" font-size="12">1号楼6层WiFi</text>
+    <text x="76" y="204" fill="#8A99B3" font-size="9">WPA3 · -63 dBm · 5 GHz</text>
+    <rect x="364" y="190" width="8" height="6.5" fill="#8A99B3" rx="1.3"/>
+    <path d="M366 190 v-2 a2 2 0 0 1 4 0 v2" fill="none" stroke="#8A99B3" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="390" y="186" width="38" height="15" fill="#16203A" rx="7.5" stroke="#5B8CFF" stroke-width="0.5"/>
+    <text x="409" y="197" fill="#9DB8FF" font-size="8.5" text-anchor="middle">已保存</text>
+    <rect x="40" y="220" width="400" height="38" fill="#101A28" rx="8" stroke="#26314A" stroke-width="0.5"/>
+    <rect x="52" y="245" width="3" height="4" fill="#5B8CFF"/>
+    <rect x="57" y="242.5" width="3" height="6.5" fill="#5B8CFF"/>
+    <rect x="62" y="240" width="3" height="9" fill="#26314A"/>
+    <rect x="67" y="237.5" width="3" height="11.5" fill="#26314A"/>
+    <text x="76" y="236" fill="#F0F4FC" font-size="12">Office-2G</text>
+    <text x="76" y="249" fill="#8A99B3" font-size="9">开放网络 · -74 dBm</text>
+    <text x="428" y="242" fill="#5C6A85" font-size="8.5" text-anchor="end">无需密码</text>
+    <text x="40" y="274" fill="#5C6A85" font-size="8.5">组件根 = LVGL 容器：整页用铺满，内嵌时行宽随容器变化</text>
+  </g>
+  <text x="40" y="472" fill="#7C8AA5" font-size="12">09 组件内嵌：同一组件放进设置页卡片，行宽/字号随容器自适应（容器 408×176）</text>
+</svg>
