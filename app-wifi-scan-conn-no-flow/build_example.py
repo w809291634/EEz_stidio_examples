@@ -65,12 +65,21 @@ TEXT3     = "0x6b7791"   # 三级文字（占位/提示）
 FAIL      = "0xff5b5b"   # 危险色
 FAIL_BG   = "0x3a1618"   # 危险按钮底
 SHEET_BG  = "0x1c2440"   # 半页/对话框底
+PRI       = "0x5b8cff"   # 主行动按钮底（= 设计图 PRI）
+PRI_TXT   = "0x0a1020"   # 主行动按钮文字
+
+# ---- 顶部刷新按钮（设计图与本文件同值，preflight 对账）----
+HEAD_BTN = (400, 14, 64, 26)
 
 # ---- 连接半页几何（与 design/mockup_gen.py 同值，preflight 会对账）----
 SHEET_Y, SHEET_H = 96, 224
 SHEET_TA = (8, 43, 364, 36)          # 相对 sheet
 SHEET_BTN = (396, 43, 76, 36)
 SHEET_KB = (8, 92, 464, 132)
+SHEET_KB_GAP = 4                     # 键间距；4 行 = (132-3*4)/4 = 30 px/行
+# one-line 输入框的真实高度 = 行高 + 上下 pad（探针实测 cn14 行高 19，不是字号 14）
+TA_LINE_H = 19
+SHEET_TA_PAD = (SHEET_TA[3] - TA_LINE_H) // 2
 SHEET_CLOSE = (436, 15, 28, 20)      # 相对 sheet
 
 # ---- 忘记确认对话框（绝对坐标）----
@@ -210,7 +219,8 @@ def bar(x, y, w, h, identifier):
     )
 
 
-def button(x, y, w, h, text, action, identifier, bg=ELEVATED):
+def button(x, y, w, h, text, action, identifier, bg=ELEVATED,
+           text_color="0xFFFFFF"):
     """按钮：子 label 用 EEZ 原生新建按钮形态（content 尺寸 + align
     CENTER，官方 defaultValue 逐字段一致——P-0164 坑 20 定论）。"""
     lbl = {
@@ -222,7 +232,7 @@ def button(x, y, w, h, text, action, identifier, bg=ELEVATED):
         "localStyles": {"objID": oid(),
                         "definition": {"MAIN": {"DEFAULT": {
                             "align": "CENTER",
-                            "text_color": "0xFFFFFF",
+                            "text_color": text_color,
                             "text_font": FONT_NAME}}}},
     }
     return widget(
@@ -318,7 +328,8 @@ def build_project():
     head = [
         label(16, 14, 200, 24, "Wi-Fi", TEXT1, "lbl_title"),
         label(16, 40, 372, 16, "", TEXT2, "lbl_status"),
-        button(400, 14, 64, 26, "刷 新", "scan_start", "btn_refresh"),
+        button(HEAD_BTN[0], HEAD_BTN[1], HEAD_BTN[2], HEAD_BTN[3],
+               "刷 新", "scan_start", "btn_refresh"),
     ]
 
     # ---------------- 列表：EEZ List (LVGL) 控件 ----------------
@@ -362,18 +373,37 @@ def build_project():
             widget("LVGLTextareaWidget", SHEET_TA[0], SHEET_TA[1],
                    SHEET_TA[2], SHEET_TA[3],
                    identifier="pwd_ta",
-                   local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=ROW_BG,
-                                                   bg_opa=255, radius=8,
-                                                   text_color=TEXT1,
-                                                   text_font=FONT_NAME)}},
+                   # ★ oneLineMode 会把 height 强制成 LV_SIZE_CONTENT
+                   #   （lv_textarea.c:557），36 的设计高度只能靠上下 pad 撑：
+                   #   探针实测渲染高 = 行高 19 + 2×SHEET_TA_PAD。
+                   local={"MAIN": {"DEFAULT": dict(
+                       ZERO_PAD, pad_top=SHEET_TA_PAD,
+                       pad_bottom=SHEET_TA_PAD,
+                       bg_color=ROW_BG,
+                       bg_opa=255, radius=8,
+                       border_width=1, border_color=ROW_EDGE,
+                       text_color=TEXT1,
+                       text_font=FONT_NAME)}},
                    text="", textType="literal", placeholder="输入密码",
                    oneLineMode=True, passwordMode=True,
                    acceptedCharacters="", maxTextLength=64),
             button(SHEET_BTN[0], SHEET_BTN[1], SHEET_BTN[2], SHEET_BTN[3],
-                   "连 接", "wifi_connect", "btn_connect"),
+                   "连 接", "wifi_connect", "btn_connect",
+                   bg=PRI, text_color=PRI_TXT),
             widget("LVGLKeyboardWidget", SHEET_KB[0], SHEET_KB[1],
                    SHEET_KB[2], SHEET_KB[3],
-                   identifier="kb_main", textarea="pwd_ta", mode="TEXT_LOWER"),
+                   identifier="kb_main", textarea="pwd_ta", mode="TEXT_LOWER",
+                   # ★ lv_keyboard 构造函数写死 lv_obj_align(BOTTOM_MID,0,0)，
+                   #   不覆盖的话 set_pos 变成"相对底边中点的偏移"，
+                   #   实测整块键盘下移 92px、只有第一行留在屏内。
+                   #   改 TOP_LEFT 后 (8,92) 才是左上角坐标。
+                   local={"MAIN": {"DEFAULT": {
+                       "align": "TOP_LEFT",
+                       "pad_top": 0, "pad_bottom": 0,
+                       "pad_left": 0, "pad_right": 0,
+                       "pad_row": SHEET_KB_GAP, "pad_column": SHEET_KB_GAP,
+                       "border_width": 0, "outline_width": 0,
+                       "bg_color": SHEET_BG, "bg_opa": 255, "radius": 0}}}),
         ],
     )
     overlay = widget(

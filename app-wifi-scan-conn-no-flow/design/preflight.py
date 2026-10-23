@@ -130,6 +130,9 @@ def check_geometry():
     真实按钮是 (170,256,140,34)，标注画到了文案上 —— 三方（生成器/设计图/标注）
     各存一份数字，迟早对不上。"""
     print("\n=== [④A] 出码几何 == 设计源 == 设计图 ===")
+    import io
+    import re
+    sys.path.insert(0, ROOT)          # build_example 在工程根
     import build_example as BE
     import mockup_gen as MG
     ok = True
@@ -140,13 +143,15 @@ def check_geometry():
              ("SHEET_TA", BE.SHEET_TA, MG.SHEET_TA),
              ("SHEET_BTN", BE.SHEET_BTN, MG.SHEET_BTN),
              ("SHEET_KB", BE.SHEET_KB, MG.SHEET_KB),
+             ("SHEET_KB_GAP", BE.SHEET_KB_GAP, MG.SHEET_KB_GAP),
              ("DIALOG_BOX", BE.DIALOG_BOX, MG.DIALOG_BOX),
              ("DIALOG_BTN_L", BE.DIALOG_BTN_L, MG.DIALOG_BTN_L),
              ("DIALOG_BTN_R", BE.DIALOG_BTN_R, MG.DIALOG_BTN_R),
-             ("HEAD_BTN", BE.HEAD_BTN, MG.HEAD_BTN),
-             ("EMPTY_BTN", BE.EMPTY_BTN, MG.EMPTY_BTN)]
+             ("HEAD_BTN", BE.HEAD_BTN, MG.HEAD_BTN)]
+    # 空态「重新扫描」只存在于设计图/标注（EEZ 里空态由 native 画），不进这份对账
+    norm = lambda v: v if isinstance(v, tuple) else (v,)
     bad = ["%s: 生成器=%s 设计图=%s" % (n, a, b)
-           for n, a, b in pairs if tuple(a) != tuple(b)]
+           for n, a, b in pairs if norm(a) != norm(b)]
     print("%s 设计源与设计图几何一致（%d 组）"
           % ("OK  " if not bad else "FAIL", len(pairs)))
     if bad:
@@ -169,15 +174,13 @@ def check_geometry():
         return (int(m1.group(1)), int(m1.group(2)),
                 int(m2.group(1)), int(m2.group(2)))
 
-    def want_box(rel, base=(0, 0)):
-        return (base[0] + rel[0], base[1] + rel[1], rel[2], rel[3])
-
     checks = [
         ("sheet", (0, BE.SHEET_Y, BE.SCREEN_W, BE.SHEET_H)),
-        ("pwd_ta", want_box(BE.SHEET_TA, (0, BE.SHEET_Y))),
-        ("btn_connect", want_box(BE.SHEET_BTN, (0, BE.SHEET_Y))),
-        ("kb_main", want_box(BE.SHEET_KB, (0, BE.SHEET_Y))),
-        ("sheet_handle", (224, BE.SHEET_Y + 6, 32, 3)),
+        # ★ 半页里的子控件在 EEZ 出码里是**相对 sheet** 的坐标，不要加 SHEET_Y
+        ("pwd_ta", BE.SHEET_TA),
+        ("btn_connect", BE.SHEET_BTN),
+        ("kb_main", BE.SHEET_KB),
+        ("sheet_handle", (224, 6, 32, 3)),
         ("dlg_card", BE.DIALOG_BOX),
         ("btn_dlg_forget",
          (BE.DIALOG_BTN_L[0] - BE.DIALOG_BOX[0],
@@ -199,6 +202,28 @@ def check_geometry():
         hidden = "LV_OBJ_FLAG_HIDDEN" in seg
         print("%s %-14s 默认隐藏=%s" % ("OK  " if hidden else "FAIL", ident, hidden))
         ok = ok and hidden
+
+    # ④ 出码几何相等 ≠ 渲染位置相等（实测教训：键盘整块下移 92px 出屏）
+    #    lv_keyboard 构造函数写死 align=BOTTOM_MID，set_pos 会被当成"相对底边
+    #    中点的偏移"；lv_textarea 的 oneLineMode 会把 height 改成 LV_SIZE_CONTENT。
+    #    这两处必须有显式覆盖，否则设计坐标全是纸面值。
+    def seg_of(ident, n=900):
+        i = src.find("objects.%s = obj;" % ident)
+        return "" if i < 0 else src[i:i + n]
+
+    guards = [
+        ("kb_main", "align 已覆盖为 TOP_LEFT",
+         "lv_obj_set_style_align(obj, LV_ALIGN_TOP_LEFT",
+         "lv_keyboard 构造函数默认 BOTTOM_MID，不覆盖则 set_pos 语义变成偏移量"),
+        ("pwd_ta", "pad_top=%d 撑住 one-line 高度" % BE.SHEET_TA_PAD,
+         "lv_obj_set_style_pad_top(obj, %d," % BE.SHEET_TA_PAD,
+         "oneLineMode 强制 height=LV_SIZE_CONTENT，只能用上下 pad 撑"),
+    ]
+    for ident, what, needle, why in guards:
+        hit = needle in seg_of(ident)
+        print("%s %-14s %s" % ("OK  " if hit else "FAIL", ident,
+                               what if hit else "缺 %s（%s）" % (needle, why)))
+        ok = ok and hit
     return ok
 
 

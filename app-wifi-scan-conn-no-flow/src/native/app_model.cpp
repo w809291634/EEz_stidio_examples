@@ -72,6 +72,11 @@ void user_io_tick(void)
     while (app_pop_output(&id, &v)) {
         switch (id) {
         case APP_OUT_WIFI_SCAN: io_wifi_scan(v.i); break;
+        /* 第⑤步才接线（后端已定：真实 Windows WLAN）*/
+        case APP_OUT_WIFI_CONNECT: break;   /* TODO(⑤): io_wifi_connect(ssid, pwd) */
+        case APP_OUT_PWD_CANCEL:   break;   /* TODO(⑤): 半页显隐 */
+        case APP_OUT_DLG_FORGET:   break;   /* TODO(⑤): io_wifi_forget(ssid) */
+        case APP_OUT_DLG_CANCEL:   break;   /* TODO(⑤): 对话框显隐 */
         default: break;
         }
     }

@@ -45,7 +45,8 @@ FAIL_BG = "#2A1620"
 T1, T2, T3 = "#F0F4FC", "#8A99B3", "#5C6A85"
 DIM = "#26314A"
 FIELD_BG = "#0E1524"
-KEY_BG = "#1A2338"
+KEY_BG = "#282B30"   # = LVGL 暗色主题 DARK_COLOR_CARD（EEZ 的 localStyles 只出
+                     #   LV_PART_MAIN，键帽色改不动，设计图按渲染真值对齐）
 PILL_BG = "#161E30"
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mockups")
@@ -176,7 +177,7 @@ def group_label(s, y, label, trailing=None):
 
 
 # 控件的真实几何（标注脚本从这里取数，避免手抄漂移）
-HEAD_BTN = (W - PAD - 64, 13, 64, 26)
+HEAD_BTN = (W - PAD - 64, 14, 64, 26)   # 与 build_example.HEAD_BTN 同值
 EMPTY_BTN = (170, 256, 140, 34)
 DIALOG_BOX = (70, 90, 340, 140)
 DIALOG_BTN_L = (90, 182, 140, 32)
@@ -187,7 +188,7 @@ def header(s, sub, btn="刷新", busy=False):
     s.text(PAD, 26, "WiFi", 17, T1, weight="500")
     s.text(PAD, 42, sub, 11.5, T2)
     bx = W - PAD - 64
-    s.rect(bx, 13, 64, 26, PILL_BG, rx=13, stroke=LINE, sw=0.5)
+    s.rect(*HEAD_BTN, PILL_BG, rx=13, stroke=LINE, sw=0.5)
     if busy:
         spinner(s, bx + 15, 26, 5.5)
         s.text(bx + 40, 30, btn, 10.5, PRI_TXT, anchor="middle")
@@ -732,6 +733,7 @@ SHEET_Y, SHEET_H = 96, 224
 SHEET_TA = (8, 43, 364, 36)          # x,y,w,h（相对 sheet）
 SHEET_BTN = (396, 43, 76, 36)
 SHEET_KB = (8, 92, 464, 132)
+SHEET_KB_GAP = 4                     # 键间距（与 build_example.py 同值）
 
 
 def sheet(s, state="input", ssid="1号楼6层WiFi", pwd="", remember=False):
@@ -759,7 +761,7 @@ def sheet(s, state="input", ssid="1号楼6层WiFi", pwd="", remember=False):
     s.text(bx + bw / 2.0, SHEET_Y + by + 23,
            ("连接中…" if busy else "连 接"), 11,
            (T3 if busy else "#0A1020"), anchor="middle")
-    lvgl_keyboard(s, SHEET_Y + SHEET_KB[1], key_h=29, gap=4,
+    lvgl_keyboard(s, SHEET_Y + SHEET_KB[1], key_h=30, gap=SHEET_KB_GAP,
                   x0=SHEET_KB[0], width=SHEET_KB[2])
 
 

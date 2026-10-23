@@ -22,3 +22,6 @@ watch-app-list-rxroller_no_flow_2/upstream_Rxroller/
 
 # 各工程/仓库根的核对过程件（探针截图、对照长图、一次性补丁脚本）——交付件不放这里
 tmp/
+
+# EEZ 编辑器窗口状态（样板工程各自已忽略，这里统一兜底）
+*.eez-project-ui-state*

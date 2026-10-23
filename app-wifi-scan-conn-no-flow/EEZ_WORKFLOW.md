@@ -201,6 +201,7 @@ if (getenv("WIFI_SHOT")) take_shot("shot_fake.bmp");
 | 文字豆腐 | 字体条目/字符集（A2–A4） | 对齐样式 |
 | 画布正常、仿真异常 | 字库没烘（B7）/ 产物没更新（G3） | "EEZ 有 bug" |
 | 仿真正常、画布异常 | 画布缺字体/资源，不是渲染引擎不支持 | 样式写法 |
+| 出码几何对账全绿、仿真里控件却错位/塌高 | 控件构造函数改写 align/height（kit cases **B16**：`lv_keyboard` 写死 BOTTOM_MID、`oneLineMode` 强改 LV_SIZE_CONTENT）。用 `WIFI_KBPROBE=1` 跑 main.exe 量绝对坐标 | "这个尺寸装不下" |
 
 ---
 

@@ -76,6 +76,30 @@ static void headless_hooks(void)
     }
     if (getenv("WIFI_SHOT") && scanned && !shot &&
             app_get_input_i(APP_IN_SCAN_STATE) == 2) {
+        if (getenv("WIFI_KBPROBE")) {   /* 渲染几何探针：量绝对坐标，不是生成码字面值 */
+            extern objects_t objects;
+            lv_obj_t *kb = objects.kb_main;
+            lv_obj_t *sh = objects.sheet;
+            lv_obj_t *ta = objects.pwd_ta;
+            lv_area_t a;
+            lv_obj_get_coords(kb, &a);
+            printf("[PROBE] kb abs=(%d,%d)-(%d,%d) w=%d h=%d\n",
+                   (int)a.x1, (int)a.y1, (int)a.x2, (int)a.y2,
+                   (int)lv_obj_get_width(kb), (int)lv_obj_get_height(kb));
+            printf("[PROBE] kb pad(top=%d bot=%d row=%d) align=%d\n",
+                   (int)lv_obj_get_style_pad_top(kb, LV_PART_MAIN),
+                   (int)lv_obj_get_style_pad_bottom(kb, LV_PART_MAIN),
+                   (int)lv_obj_get_style_pad_row(kb, LV_PART_MAIN),
+                   (int)lv_obj_get_style_align(kb, LV_PART_MAIN));
+            lv_obj_get_coords(sh, &a);
+            printf("[PROBE] sheet abs=(%d,%d)-(%d,%d) h=%d\n",
+                   (int)a.x1, (int)a.y1, (int)a.x2, (int)a.y2,
+                   (int)lv_obj_get_height(sh));
+            lv_obj_get_coords(ta, &a);
+            printf("[PROBE] pwd_ta abs=(%d,%d)-(%d,%d) h=%d\n",
+                   (int)a.x1, (int)a.y1, (int)a.x2, (int)a.y2,
+                   (int)lv_obj_get_height(ta));
+        }
         take_shot("shot_fake.bmp");
         shot = 1;
         if (getenv("WIFI_AUTOEXIT")) exit(0);
