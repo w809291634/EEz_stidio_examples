@@ -175,6 +175,14 @@ def group_label(s, y, label, trailing=None):
         s.text(W - PAD, y, trailing, 10, T3, anchor="end")
 
 
+# 控件的真实几何（标注脚本从这里取数，避免手抄漂移）
+HEAD_BTN = (W - PAD - 64, 13, 64, 26)
+EMPTY_BTN = (170, 256, 140, 34)
+DIALOG_BOX = (70, 90, 340, 140)
+DIALOG_BTN_L = (90, 182, 140, 32)
+DIALOG_BTN_R = (250, 182, 140, 32)
+
+
 def header(s, sub, btn="刷新", busy=False):
     s.text(PAD, 26, "WiFi", 17, T1, weight="500")
     s.text(PAD, 42, sub, 11.5, T2)
@@ -287,7 +295,7 @@ def sc_empty(s):
     wifi_glyph(s, W / 2, 168, T3)
     s.text(W / 2, 218, "未发现网络", 15, T1, anchor="middle")
     s.text(W / 2, 240, "请确认 WiFi 已开启，然后重新扫描", 11, T2, anchor="middle")
-    s.rect(170, 256, 140, 34, PRI, rx=17)
+    s.rect(*EMPTY_BTN, PRI, rx=17)
     s.text(W / 2, 278, "重新扫描", 12, "#FFFFFF", anchor="middle")
 
 
@@ -798,16 +806,16 @@ def sc_menu(s):
     不放「记住密码」开关：既然这个对话框的目的就是忘记，再给个“记住”开关是自相矛盾的选项。"""
     _list_base(s, target_status=("saved", "已保存"))
     s.rect(0, 0, W, H, "#05070D", rx=14, opacity="0.45")
-    DX, DY, DW, DH = 70, 90, 340, 140
+    DX, DY, DW, DH = DIALOG_BOX
     s.rect(DX, DY, DW, DH, "#161E30", rx=14, stroke=LINE, sw=0.6)
     s.text(DX + 20, DY + 32, "忘记此网络？", 14, T1, weight="500")
     s.text(DX + 20, DY + 54, "1号楼6层WiFi · WPA3 · -63 dBm", 11, T2)
     s.text(DX + 20, DY + 74, "将删除已保存的密码，下次连接需重新输入。", 10.5, T3)
     # 左右两个按钮
     # 左：忘记（危险）；右：取消（用户定的顺序，与常规相反，别＜顺手＞调回去）
-    s.rect(DX + 20, DY + 92, 140, 32, FAIL_BG, rx=8, stroke=FAIL_EDGE, sw=0.6)
+    s.rect(*DIALOG_BTN_L, FAIL_BG, rx=8, stroke=FAIL_EDGE, sw=0.6)
     s.text(DX + 90, DY + 113, "忘记", 11.5, FAIL, anchor="middle")
-    s.rect(DX + 180, DY + 92, 140, 32, "#1B2438", rx=8, stroke=LINE, sw=0.5)
+    s.rect(*DIALOG_BTN_R, "#1B2438", rx=8, stroke=LINE, sw=0.5)
     s.text(DX + 250, DY + 113, "取 消", 11.5, T2, anchor="middle")
 
 

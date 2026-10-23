@@ -61,6 +61,22 @@ BAR_DIM   = "0x2a3550"   # 信号条（未点亮）
 ELEVATED  = "0x1c2440"   # 按钮底
 TEXT1     = "0xf0f4fc"   # 主文字
 TEXT2     = "0x8a99b3"   # 次文字
+TEXT3     = "0x6b7791"   # 三级文字（占位/提示）
+FAIL      = "0xff5b5b"   # 危险色
+FAIL_BG   = "0x3a1618"   # 危险按钮底
+SHEET_BG  = "0x1c2440"   # 半页/对话框底
+
+# ---- 连接半页几何（与 design/mockup_gen.py 同值，preflight 会对账）----
+SHEET_Y, SHEET_H = 96, 224
+SHEET_TA = (8, 43, 364, 36)          # 相对 sheet
+SHEET_BTN = (396, 43, 76, 36)
+SHEET_KB = (8, 92, 464, 132)
+SHEET_CLOSE = (436, 15, 28, 20)      # 相对 sheet
+
+# ---- 忘记确认对话框（绝对坐标）----
+DIALOG_BOX = (70, 90, 340, 140)
+DIALOG_BTN_L = (90, 182, 140, 32)
+DIALOG_BTN_R = (250, 182, 140, 32)
 
 FONT_FILE = "fonts/simhei.ttf"   # 全量黑体（相对工程目录，P-0035）
 FONT_NAME = "cn14"
@@ -194,7 +210,7 @@ def bar(x, y, w, h, identifier):
     )
 
 
-def button(x, y, w, h, text, action, identifier):
+def button(x, y, w, h, text, action, identifier, bg=ELEVATED):
     """按钮：子 label 用 EEZ 原生新建按钮形态（content 尺寸 + align
     CENTER，官方 defaultValue 逐字段一致——P-0164 坑 20 定论）。"""
     lbl = {
@@ -212,7 +228,7 @@ def button(x, y, w, h, text, action, identifier):
     return widget(
         "LVGLButtonWidget", x, y, w, h,
         identifier=identifier,
-        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=ELEVATED,
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=bg,
                                         bg_opa=255, radius=8)}},
         children=[lbl],
         eventHandlers=[{"objID": oid(), "eventName": "CLICKED",
@@ -317,7 +333,96 @@ def build_project():
         flagScrollbarMode="AUTO",       # 内容超高时显示滚动条
     )
 
-    screen_children = head + [list_box]
+    # ---------------- 连接半页（DESIGN.md §6.1 方案 C，默认隐藏）----------------
+    # ★ overlay_root 挂 **screen 根**：放进容器会被父边界裁剪、坐标二次偏移（P-0007）。
+    scrim = widget(
+        "LVGLContainerWidget", 0, 0, SCREEN_W, SCREEN_H,
+        identifier="scrim",
+        flags="CLICKABLE",
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color="0x000000",
+                                        bg_opa=115, radius=0)}},
+        eventHandlers=[{"objID": oid(), "eventName": "CLICKED",
+                        "handlerType": "action", "action": "pwd_cancel",
+                        "userData": 0}],
+    )
+    sheet = widget(
+        "LVGLContainerWidget", 0, SHEET_Y, SCREEN_W, SHEET_H,
+        identifier="sheet",
+        flags="CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK",
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=SHEET_BG,
+                                        bg_opa=255, radius=0)}},
+        children=[
+            widget("LVGLContainerWidget", (SCREEN_W - 32) // 2, 6, 32, 3,
+                   identifier="sheet_handle", flags="",
+                   local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=ROW_EDGE,
+                                                   bg_opa=255, radius=2)}}),
+            label(16, 15, 400, 20, "", TEXT1, "lbl_pwd_ssid"),
+            button(SHEET_CLOSE[0], SHEET_CLOSE[1], SHEET_CLOSE[2], SHEET_CLOSE[3],
+                   "×", "pwd_cancel", "btn_pwd_close"),
+            widget("LVGLTextareaWidget", SHEET_TA[0], SHEET_TA[1],
+                   SHEET_TA[2], SHEET_TA[3],
+                   identifier="pwd_ta",
+                   local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=ROW_BG,
+                                                   bg_opa=255, radius=8,
+                                                   text_color=TEXT1,
+                                                   text_font=FONT_NAME)}},
+                   text="", textType="literal", placeholder="输入密码",
+                   oneLineMode=True, passwordMode=True,
+                   acceptedCharacters="", maxTextLength=64),
+            button(SHEET_BTN[0], SHEET_BTN[1], SHEET_BTN[2], SHEET_BTN[3],
+                   "连 接", "wifi_connect", "btn_connect"),
+            widget("LVGLKeyboardWidget", SHEET_KB[0], SHEET_KB[1],
+                   SHEET_KB[2], SHEET_KB[3],
+                   identifier="kb_main", textarea="pwd_ta", mode="TEXT_LOWER"),
+        ],
+    )
+    overlay = widget(
+        "LVGLContainerWidget", 0, 0, SCREEN_W, SCREEN_H,
+        identifier="overlay_root", flags="",
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=BG, bg_opa=0, radius=0)}},
+        children=[scrim, sheet],
+        hiddenFlag=True,
+    )
+
+    # ---------------- 忘记确认对话框（长按已保存行，默认隐藏）----------------
+    dlg_scrim = widget(
+        "LVGLContainerWidget", 0, 0, SCREEN_W, SCREEN_H,
+        identifier="dlg_scrim",
+        flags="CLICKABLE",
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color="0x000000",
+                                        bg_opa=140, radius=0)}},
+        eventHandlers=[{"objID": oid(), "eventName": "CLICKED",
+                        "handlerType": "action", "action": "dlg_cancel",
+                        "userData": 0}],
+    )
+    dlg_card = widget(
+        "LVGLContainerWidget", DIALOG_BOX[0], DIALOG_BOX[1],
+        DIALOG_BOX[2], DIALOG_BOX[3],
+        identifier="dlg_card", flags="CLICKABLE|CLICK_FOCUSABLE",
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=SHEET_BG,
+                                        bg_opa=255, radius=14)}},
+        children=[
+            label(20, 18, 300, 20, "忘记此网络？", TEXT1, "lbl_dlg_title"),
+            label(20, 40, 300, 16, "", TEXT2, "lbl_dlg_ssid"),
+            label(20, 58, 300, 16, "将删除已保存的密码，下次连接需重新输入。",
+                  TEXT2, "lbl_dlg_hint"),
+            button(DIALOG_BTN_L[0] - DIALOG_BOX[0], DIALOG_BTN_L[1] - DIALOG_BOX[1],
+                   DIALOG_BTN_L[2], DIALOG_BTN_L[3], "忘 记", "dlg_forget",
+                   "btn_dlg_forget", bg=FAIL_BG),
+            button(DIALOG_BTN_R[0] - DIALOG_BOX[0], DIALOG_BTN_R[1] - DIALOG_BOX[1],
+                   DIALOG_BTN_R[2], DIALOG_BTN_R[3], "取 消", "dlg_cancel",
+                   "btn_dlg_cancel"),
+        ],
+    )
+    dlg = widget(
+        "LVGLContainerWidget", 0, 0, SCREEN_W, SCREEN_H,
+        identifier="dlg_root", flags="",
+        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=BG, bg_opa=0, radius=0)}},
+        children=[dlg_scrim, dlg_card],
+        hiddenFlag=True,
+    )
+
+    screen_children = head + [list_box, overlay, dlg]
 
     gvs = []   # 本工程 EEZ 不持有任何变量：状态由 native 经 app_model 契约直驱
 
@@ -389,7 +494,20 @@ def build_project():
         "actions": [
             {"objID": oid(), "name": "scan_start",
              "description": "wifi: scan_start",
-             "implementationType": "native", "userProperties": []}
+             "implementationType": "native", "userProperties": []},
+            # 连接半页两个动作 + 忘记对话框两个动作（实现全在 native，EEZ 只出桩）
+            {"objID": oid(), "name": "wifi_connect",
+             "description": "wifi: connect(pwd_ta)", "implementationType": "native",
+             "userProperties": []},
+            {"objID": oid(), "name": "pwd_cancel",
+             "description": "wifi: close password sheet", "implementationType": "native",
+             "userProperties": []},
+            {"objID": oid(), "name": "dlg_forget",
+             "description": "wifi: forget saved network", "implementationType": "native",
+             "userProperties": []},
+            {"objID": oid(), "name": "dlg_cancel",
+             "description": "wifi: close dialog", "implementationType": "native",
+             "userProperties": []}
         ],
         "userPages": [page("Main", screen_children)],
         "userWidgets": [],

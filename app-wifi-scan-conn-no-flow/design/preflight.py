@@ -123,6 +123,85 @@ def check_artifacts():
     return True
 
 
+def check_geometry():
+    """④ A 层：EEZ 出码里的控件几何必须等于设计源常量，且设计源与设计图脚本同值。
+
+    这条门禁是为一次真实错误加的：空态「重新扫描」的标注框抄错成 (190,236,100,30)，
+    真实按钮是 (170,256,140,34)，标注画到了文案上 —— 三方（生成器/设计图/标注）
+    各存一份数字，迟早对不上。"""
+    print("\n=== [④A] 出码几何 == 设计源 == 设计图 ===")
+    import build_example as BE
+    import mockup_gen as MG
+    ok = True
+
+    # ① 设计源（生成器）与设计图脚本的几何常量必须一致
+    pairs = [("SHEET_Y", BE.SHEET_Y, MG.SHEET_Y),
+             ("SHEET_H", BE.SHEET_H, MG.SHEET_H),
+             ("SHEET_TA", BE.SHEET_TA, MG.SHEET_TA),
+             ("SHEET_BTN", BE.SHEET_BTN, MG.SHEET_BTN),
+             ("SHEET_KB", BE.SHEET_KB, MG.SHEET_KB),
+             ("DIALOG_BOX", BE.DIALOG_BOX, MG.DIALOG_BOX),
+             ("DIALOG_BTN_L", BE.DIALOG_BTN_L, MG.DIALOG_BTN_L),
+             ("DIALOG_BTN_R", BE.DIALOG_BTN_R, MG.DIALOG_BTN_R),
+             ("HEAD_BTN", BE.HEAD_BTN, MG.HEAD_BTN),
+             ("EMPTY_BTN", BE.EMPTY_BTN, MG.EMPTY_BTN)]
+    bad = ["%s: 生成器=%s 设计图=%s" % (n, a, b)
+           for n, a, b in pairs if tuple(a) != tuple(b)]
+    print("%s 设计源与设计图几何一致（%d 组）"
+          % ("OK  " if not bad else "FAIL", len(pairs)))
+    if bad:
+        ok = False
+        print("      " + "; ".join(bad))
+
+    # ② 出码几何 == 设计源
+    src = io.open(os.path.join(ROOT, "src", "ui", "screens.c"),
+                  encoding="utf-8").read()
+
+    def geo(ident):
+        i = src.find("objects.%s = obj;" % ident)
+        if i < 0:
+            return None
+        seg = src[i:i + 400]
+        m1 = re.search(r"lv_obj_set_pos\(obj, (-?\d+), (-?\d+)\)", seg)
+        m2 = re.search(r"lv_obj_set_size\(obj, (-?\d+), (-?\d+)\)", seg)
+        if not (m1 and m2):
+            return None
+        return (int(m1.group(1)), int(m1.group(2)),
+                int(m2.group(1)), int(m2.group(2)))
+
+    def want_box(rel, base=(0, 0)):
+        return (base[0] + rel[0], base[1] + rel[1], rel[2], rel[3])
+
+    checks = [
+        ("sheet", (0, BE.SHEET_Y, BE.SCREEN_W, BE.SHEET_H)),
+        ("pwd_ta", want_box(BE.SHEET_TA, (0, BE.SHEET_Y))),
+        ("btn_connect", want_box(BE.SHEET_BTN, (0, BE.SHEET_Y))),
+        ("kb_main", want_box(BE.SHEET_KB, (0, BE.SHEET_Y))),
+        ("sheet_handle", (224, BE.SHEET_Y + 6, 32, 3)),
+        ("dlg_card", BE.DIALOG_BOX),
+        ("btn_dlg_forget",
+         (BE.DIALOG_BTN_L[0] - BE.DIALOG_BOX[0],
+          BE.DIALOG_BTN_L[1] - BE.DIALOG_BOX[1], 140, 32)),
+        ("btn_dlg_cancel",
+         (BE.DIALOG_BTN_R[0] - BE.DIALOG_BOX[0],
+          BE.DIALOG_BTN_R[1] - BE.DIALOG_BOX[1], 140, 32)),
+    ]
+    for ident, expect in checks:
+        got = geo(ident)
+        good = got is not None and tuple(got) == tuple(expect)
+        print("%s %-14s 出码=%s 设计=%s" % ("OK  " if good else "FAIL", ident, got, expect))
+        ok = ok and good
+
+    # ③ 两个模态默认必须是隐藏的
+    for ident, expect in (("overlay_root", 1), ("dlg_root", 1)):
+        i = src.find("objects.%s = obj;" % ident)
+        seg = src[i:i + 300]
+        hidden = "LV_OBJ_FLAG_HIDDEN" in seg
+        print("%s %-14s 默认隐藏=%s" % ("OK  " if hidden else "FAIL", ident, hidden))
+        ok = ok and hidden
+    return ok
+
+
 def main():
     skip_cli = "--skip-cli" in sys.argv
     with_sim = "--with-sim" in sys.argv
@@ -143,6 +222,8 @@ def main():
     if not check_artifacts():
         sys.exit(1)
     if not check_no_flow():
+        sys.exit(1)
+    if not check_geometry():
         sys.exit(1)
 
     if with_sim:
