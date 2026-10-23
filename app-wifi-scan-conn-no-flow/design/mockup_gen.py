@@ -279,8 +279,7 @@ def sc_scanning(s):
         s.rect(TEXT_X, y + 26, 168, 7, "#18202F", rx=3.5)
         s.rect(RIGHT_EDGE - 46, y + STATUS_CY - 8, 46, 17, "#161E30", rx=8.5)
         y += PITCH
-    spinner(s, 190, 300, 8, PRI)
-    s.text(206, 304, "正在读取扫描结果", 10.5, T3)
+    # 状态只留标题栏一处（与 06 同一口径）；底部提示在实现里不存在。
 
 
 def sc_empty(s):
@@ -293,33 +292,16 @@ def sc_empty(s):
 
 
 def sc_connecting(s):
-    header(s, "正在连接 1号楼6层WiFi…")
-    group_label(s, GRP1_LABEL_Y, "已连接 · 已保存")
-    row(s, GRP1_TOP, "1号楼6层WiFi", "WPA3 · -63 dBm · 5 GHz", 4,
-        status=("ing", "连接中"), accent="ing")
-    row(s, GRP1_TOP + PITCH, "yjt_dev_2.4G", "WPA2 · -58 dBm · 5 GHz", 4,
-        status=("saved", "已保存"))
-    group_label(s, GRP2_LABEL_Y, "可用网络", "共 6 个")
-    row(s, GRP2_TOP, "YJT-1号楼办公", "WPA2 · -66 dBm · 2.4 GHz", 3)
-    row(s, GRP2_TOP + PITCH, "Office-2G", "开放网络 · -74 dBm · 2.4 GHz", 2,
-        lock=False, status=("open", "无需密码"))
-    spinner(s, PAD + 8, 300, 6, PRI)
-    s.text(PAD + 22, 304, "正在认证并获取 IP，请稍候", 10.5, PRI_TXT)
+    _list_base(s, sub="正在连接 1号楼6层WiFi…",
+               target_status=("ing", "连接中"), target_accent="ing")
+    # 状态只留一处：标题栏副标题「正在连接 …」。
+    # 旧版底部那行 spinner + 文案和键盘重叠（半页占到 320），已删。
+    sheet(s, "connecting", ssid="1号楼6层WiFi", pwd="12345678")
 
 
 def sc_failed(s):
-    header(s, "已发现 6 个网络")
-    group_label(s, GRP1_LABEL_Y, "已连接 · 已保存")
-    row(s, GRP1_TOP, "1号楼6层WiFi", "WPA3 · -63 dBm · 5 GHz", 4,
-        status=("fail", "连接失败"), accent="fail")
-    row(s, GRP1_TOP + PITCH, "yjt_dev_2.4G", "WPA2 · -58 dBm · 5 GHz", 4,
-        status=("saved", "已保存"))
-    group_label(s, GRP2_LABEL_Y, "可用网络", "共 6 个")
-    row(s, GRP2_TOP, "YJT-1号楼办公", "WPA2 · -66 dBm · 2.4 GHz", 3)
-    row(s, GRP2_TOP + PITCH, "Office-2G", "开放网络 · -74 dBm · 2.4 GHz", 2,
-        lock=False, status=("open", "无需密码"))
-    s.rect(PAD, 292, ROW_W, 20, FAIL_BG, rx=6, stroke=FAIL_EDGE, sw=0.5)
-    s.text(PAD + 10, 306, "密码错误，点按该网络重新输入", 10.5, FAIL)
+    _list_base(s, target_status=("fail", "连接失败"), target_accent="fail")
+    sheet(s, "failed", ssid="1号楼6层WiFi", pwd="12345678")
 
 
 def sc_forget(s):
@@ -736,25 +718,163 @@ def sc_password_flow(s):
            8.5, T3)
 
 
+
+# ---------------- 连接半页（方案 C，几何与实现逐像素一致）----------------
+SHEET_Y, SHEET_H = 96, 224
+SHEET_TA = (8, 43, 364, 36)          # x,y,w,h（相对 sheet）
+SHEET_BTN = (396, 43, 76, 36)
+SHEET_KB = (8, 92, 464, 132)
+
+
+def sheet(s, state="input", ssid="1号楼6层WiFi", pwd="", remember=False):
+    """scrim + sheet。state: input / connecting / failed。
+
+    ★ 这里的坐标就是 build_example.py 里写进 EEZ 的那组数 —— 设计图与实现同源。"""
+    s.rect(0, 0, W, H, "#05070D", rx=14, opacity="0.55")
+    s.rect(0, SHEET_Y, W, SHEET_H, "#1C2440", rx=0)
+    s.rect((W - 32) / 2.0, SHEET_Y + 6, 32, 3, LINE, rx=1.5)
+    if state == "failed":
+        s.text(16, SHEET_Y + 15 + 14, "密码错误，请重试", 13, FAIL, weight="500")
+    else:
+        s.text(16, SHEET_Y + 15 + 14, ssid, 13, T1, weight="500")
+    s.text(W - 30, SHEET_Y + 15 + 14, "×", 15, T2, anchor="middle")
+    x, y, w, h = SHEET_TA
+    s.rect(x, SHEET_Y + y, w, h, ROW_BG, rx=8,
+           stroke=(FAIL_EDGE if state == "failed" else LINE), sw=0.8)
+    if pwd:
+        s.text(x + 12, SHEET_Y + y + 23, "•" * len(pwd), 13, T1)
+    else:
+        s.text(x + 12, SHEET_Y + y + 23, "输入密码", 12, T3)
+    bx, by, bw, bh = SHEET_BTN
+    busy = (state == "connecting")
+    s.rect(bx, SHEET_Y + by, bw, bh, ("#2A3550" if busy else PRI), rx=8)
+    s.text(bx + bw / 2.0, SHEET_Y + by + 23,
+           ("连接中…" if busy else "连 接"), 11,
+           (T3 if busy else "#0A1020"), anchor="middle")
+    lvgl_keyboard(s, SHEET_Y + SHEET_KB[1], key_h=29, gap=4,
+                  x0=SHEET_KB[0], width=SHEET_KB[2])
+
+
+def _list_base(s, sub="已发现 6 个网络", target_status=None, target_accent=None):
+    header(s, sub)
+    group_label(s, GRP1_LABEL_Y, "已连接 · 已保存")
+    row(s, GRP1_TOP, "yjt_dev_2.4G", "WPA2 · -58 dBm · 5 GHz", 4,
+        status=("conn", "已连接"), accent="conn")
+    row(s, GRP1_TOP + PITCH, "1号楼6层WiFi", "WPA3 · -63 dBm · 5 GHz", 4,
+        status=target_status, accent=target_accent)
+    group_label(s, GRP2_LABEL_Y, "可用网络", "共 6 个")
+    row(s, GRP2_TOP, "YJT-1号楼办公", "WPA2 · -66 dBm · 2.4 GHz", 3)
+    row(s, GRP2_TOP + PITCH, "Office-2G", "开放网络 · -74 dBm · 2.4 GHz", 2,
+        lock=False, status=("open", "无需密码"))
+
+
+def sc_sheet_open(s):
+    _list_base(s, target_status=("saved", "已保存"))
+    sheet(s, "input", ssid="1号楼6层WiFi")
+
+
+def sc_sheet_error(s):
+    _list_base(s, target_status=("fail", "连接失败"), target_accent="fail")
+    sheet(s, "failed", ssid="1号楼6层WiFi", pwd="12345678")
+
+
+def sc_connected(s):
+    # 成功态：目标网络升到"已连接"这一行，原已连接的那条退回"已保存"
+    header(s, "已连接 1号楼6层WiFi")
+    group_label(s, GRP1_LABEL_Y, "已连接 · 已保存")
+    row(s, GRP1_TOP, "1号楼6层WiFi", "WPA3 · -63 dBm · 5 GHz", 4,
+        status=("conn", "已连接"), accent="conn")
+    row(s, GRP1_TOP + PITCH, "yjt_dev_2.4G", "WPA2 · -58 dBm · 5 GHz", 4,
+        status=("saved", "已保存"))
+    group_label(s, GRP2_LABEL_Y, "可用网络", "共 6 个")
+    row(s, GRP2_TOP, "YJT-1号楼办公", "WPA2 · -66 dBm · 2.4 GHz", 3)
+    row(s, GRP2_TOP + PITCH, "Office-2G", "开放网络 · -74 dBm · 2.4 GHz", 2,
+        lock=False, status=("open", "无需密码"))
+
+
+def sc_menu(s):
+    """长按已保存网络 -> 忘记确认对话框（左取消 / 右忘记）。
+
+    不放「记住密码」开关：既然这个对话框的目的就是忘记，再给个“记住”开关是自相矛盾的选项。"""
+    _list_base(s, target_status=("saved", "已保存"))
+    s.rect(0, 0, W, H, "#05070D", rx=14, opacity="0.45")
+    DX, DY, DW, DH = 70, 90, 340, 140
+    s.rect(DX, DY, DW, DH, "#161E30", rx=14, stroke=LINE, sw=0.6)
+    s.text(DX + 20, DY + 32, "忘记此网络？", 14, T1, weight="500")
+    s.text(DX + 20, DY + 54, "1号楼6层WiFi · WPA3 · -63 dBm", 11, T2)
+    s.text(DX + 20, DY + 74, "将删除已保存的密码，下次连接需重新输入。", 10.5, T3)
+    # 左右两个按钮
+    # 左：忘记（危险）；右：取消（用户定的顺序，与常规相反，别＜顺手＞调回去）
+    s.rect(DX + 20, DY + 92, 140, 32, FAIL_BG, rx=8, stroke=FAIL_EDGE, sw=0.6)
+    s.text(DX + 90, DY + 113, "忘记", 11.5, FAIL, anchor="middle")
+    s.rect(DX + 180, DY + 92, 140, 32, "#1B2438", rx=8, stroke=LINE, sw=0.5)
+    s.text(DX + 250, DY + 113, "取 消", 11.5, T2, anchor="middle")
+
+
+def lvgl_keyboard(s, top, key_h=29, gap=4, x0=8, width=464, ok_text="OK"):
+    """按 LVGL TEXT_LOWER 的真实键位画键盘（12/12/12/5）。
+
+    符号键用 ASCII 代替（设计图字体没有 LV_SYMBOL）：⌫→del、↵→ret、键盘→abc、
+    ←→<、→→>、OK 保留字母；真机由 LVGL 画成对应图标。"""
+    rows = [
+        [("1#", 1.4)] + [(k, 1.0) for k in "qwertyuiop"] + [("del", 1.4)],
+        [("ABC", 1.4)] + [(k, 1.0) for k in "asdfghjkl"] + [("ret", 1.4)],
+        [("_", 1.0), ("-", 1.0)] + [(k, 1.0) for k in "zxcvbnm"] +
+        [(".", 1.0), (",", 1.0), (":", 1.0)],
+        [("键盘", 1.6), ("<", 1.0), ("", 6.0), (">", 1.0), (ok_text, 1.6)],
+    ]
+    for ri, keys in enumerate(rows):
+        y = top + ri * (key_h + gap)
+        total_w = sum(w for _k, w in keys)
+        unit = (width - (len(keys) - 1) * gap) / total_w
+        cx = x0
+        for k, wgt in keys:
+            kw = unit * wgt
+            done = (k == ok_text)
+            s.rect(cx, y, kw, key_h, PRI if done else KEY_BG, rx=5,
+                   stroke=None if done else "#212B42", sw=0.5)
+            if k == "":
+                s.rect(cx + kw * 0.3, y + key_h / 2 - 2, kw * 0.4, 4, "#2C3852", rx=2)
+            elif k:
+                s.text(cx + kw / 2, y + key_h / 2 + 4, k,
+                       10 if len(k) > 1 else 11,
+                       "#0A1020" if done else T1, anchor="middle")
+            cx += kw + gap
+
+
 SCREENS = [
     ("mockup_01_list.svg", "01 · 列表主态（分组）",
      "已连接/已保存置顶分组 + 可用网络；行内含信号图示、名称、类型·强度·频段、锁、状态位",
      "01 列表主态：分组置顶（已连接 · 已保存 / 可用网络），行高 46、行距 6、状态位右缘统一", sc_list),
     ("mockup_02_scanning.svg", "02 · 扫描中",
-     "骨架行占位 + 刷新按钮转圈 + 底部读取提示",
-     "02 扫描中：4 行骨架占位，刷新按钮呈扫描态，底部提示正在读取结果", sc_scanning),
+     "骨架行占位 + 刷新按钮转圈；状态只在标题栏一行",
+     "02 扫描中：4 行骨架占位，刷新按钮呈扫描态，状态统一在标题栏", sc_scanning),
     ("mockup_03_empty.svg", "03 · 无网络（空态）",
      "WiFi 图标 + 文案 + 重新扫描主按钮",
      "03 空态：WiFi 图标 + 「未发现网络」+ 引导文案 + 重新扫描按钮", sc_empty),
+    ("mockup_04_sheet.svg", "04 · 连接半页（输入密码）",
+     "点带锁网络行：遮罩淡入 + 半页自底部上滑；密码框 + 连接 + 全宽键盘",
+     "04 连接半页：sheet 480×224（把手6+标题20+输入行36+间距30+键盘132），overlay 挂 screen 根",
+     sc_sheet_open),
+    ("mockup_05_sheet_error.svg", "05 · 半页 · 密码错误",
+     "标题行就地变红字（不额外占高度），密码框红描边并保持焦点",
+     "05 密码错误：错误提示就地显示在标题行，键盘不收起", sc_sheet_error),
     ("mockup_06_connecting.svg", "06 · 连接中",
-     "目标行蓝描边 + 「连接中」胶囊；半页按钮同步变「连接中…」",
-     "06 连接中：目标行蓝描边、状态位「连接中」、底部转圈提示", sc_connecting),
+     "状态只在标题栏一行；半页内密码框保持、连接键变灰「连接中…」",
+     "06 连接中：状态统一在标题栏（底部不再另起一行），连接键禁用防重复投递", sc_connecting),
     ("mockup_07_failed.svg", "07 · 连接失败",
      "目标行红描边 + 失败胶囊；半页标题行红字「密码错误」",
      "07 连接失败：目标行红描边 + 状态胶囊；错误就地显示在半页标题行（不额外占高度）", sc_failed),
     ("mockup_08_forget_confirm.svg", "08 · 忘记网络确认",
      "长按行触发：遮罩 + 确认卡（取消 / 忘记）",
      "08 忘记确认：长按已保存网络 → 遮罩 + 确认弹层，忘记为危险色按钮", sc_forget),
+    ("mockup_10_connected.svg", "10 · 连接成功",
+     "半页自动收起，目标行转绿「已连接」；标题栏回显当前连接",
+     "10 连接成功：sheet 收起（不打断列表），行状态就地变绿", sc_connected),
+    ("mockup_11_menu.svg", "11 · 长按菜单",
+     "对话框形式：标题/网络信息 + 左右两个按钮（左「忘记」/ 右「取消」）",
+     "11 忘记确认对话框：左忘记、右取消（用户定序）；不放『记住密码』开关",
+     sc_menu),
     ("mockup_09_embedded.svg", "09 · 组件内嵌容器",
      "同一组件放进设置页卡片，尺寸随容器自适应",
      "09 组件内嵌：同一组件放进设置页卡片，行宽/字号随容器自适应（容器 408×176）", sc_embedded),

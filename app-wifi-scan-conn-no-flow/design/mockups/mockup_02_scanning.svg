@@ -1,6 +1,6 @@
 <svg viewBox="0 0 680 500" width="100%" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
   <title>02 · 扫描中</title>
-  <desc>骨架行占位 + 刷新按钮转圈 + 底部读取提示</desc>
+  <desc>骨架行占位 + 刷新按钮转圈；状态只在标题栏一行</desc>
   <g transform="translate(40,40) scale(1.25)">
     <rect x="0" y="0" width="480" height="320" rx="14" fill="#0B0F1A" stroke="#26314A" stroke-width="1"/>
     <text x="16" y="26" fill="#F0F4FC" font-size="17" font-weight="500">WiFi</text>
@@ -41,9 +41,6 @@
     <rect x="58" y="229" width="118" height="9" fill="#1B2438" rx="4"/>
     <rect x="58" y="244" width="168" height="7" fill="#18202F" rx="3.5"/>
     <rect x="404" y="233" width="46" height="17" fill="#161E30" rx="8.5"/>
-    <circle cx="190" cy="300" r="8" fill="none" stroke="#2A3550" stroke-width="2"/>
-    <path d="M190 292 a8 8 0 0 1 8 8" fill="none" stroke="#5B8CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="206" y="304" fill="#5C6A85" font-size="10.5">正在读取扫描结果</text>
   </g>
-  <text x="40" y="472" fill="#7C8AA5" font-size="12">02 扫描中：4 行骨架占位，刷新按钮呈扫描态，底部提示正在读取结果</text>
+  <text x="40" y="472" fill="#7C8AA5" font-size="12">02 扫描中：4 行骨架占位，刷新按钮呈扫描态，状态统一在标题栏</text>
 </svg>
