@@ -94,7 +94,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set the output path for the executable
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+# ★ 默认仍是 PC_SIM/bin，保持所有老工程行为不变。
+#   但那是**全工程共用**的路径：两个示例交替构建时，后链的会把前链的 main.exe 覆盖，
+#   双击前一个工程的 bat 却跑起来后一个（实测踩过：rows/pitch 与本工程 config 对不上）。
+#   需要隔离的工程在 run_sim.bat 里设环境变量 SIM_BIN_DIR 指向自己的目录即可。
+if(DEFINED ENV{SIM_BIN_DIR} AND NOT "$ENV{SIM_BIN_DIR}" STREQUAL "")
+    set(EXECUTABLE_OUTPUT_PATH "$ENV{SIM_BIN_DIR}")
+    message(STATUS "[sim] 输出目录(工程私有)=$ENV{SIM_BIN_DIR}")
+else()
+    set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+endif()
 set(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 # ----------------------------------------------------------------------------
