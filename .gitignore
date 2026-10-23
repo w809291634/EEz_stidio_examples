@@ -19,3 +19,6 @@ watch-app-list-rxroller_no_flow_2/shots/*.bmp
 # 上游开源仓库的完整本地克隆（整仓对照用；含 .git，嵌套仓库不入库）
 watch-app-list-rxroller_no_flow/upstream_Rxroller/
 watch-app-list-rxroller_no_flow_2/upstream_Rxroller/
+
+# 各工程/仓库根的核对过程件（探针截图、对照长图、一次性补丁脚本）——交付件不放这里
+tmp/
