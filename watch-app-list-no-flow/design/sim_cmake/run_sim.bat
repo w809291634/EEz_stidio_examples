@@ -30,6 +30,10 @@ if "%SIM_TARGET_PROJ_DIR:~-1%"=="\" set "SIM_TARGET_PROJ_DIR=%SIM_TARGET_PROJ_DI
 
 set "PC_SIM_DIR=C:\Users\yjt54\Desktop\EEz_stidio_examples\PC_SIM\lv_port_pc_vscode_v9.5"
 set "BUILD_DIR=%SIM_DIR%\build_rel"
+REM Keep the exe PRIVATE to this project. PC_SIM\bin is shared by every
+REM example: another project building later overwrites main.exe, and this
+REM bat would then launch the wrong program. PC_SIM CMakeLists reads SIM_BIN_DIR.
+set "SIM_BIN_DIR=%BUILD_DIR%\bin"
 
 REM Toolchain PATH: mingw / cmake / sdl2. setup_env.bat deliberately has no
 REM setlocal, so the PATH change propagates here.
@@ -55,7 +59,16 @@ if errorlevel 1 (
     exit /b 1
 )
 echo [run_sim] build succeeded.
+set "LOCAL_EXE=%SIM_BIN_DIR%\main.exe"
+if not exist "%LOCAL_EXE%" (
+    echo [run_sim] local exe not found: %LOCAL_EXE%
+    echo            PC_SIM still writes to the shared bin dir; see SIM_BIN_DIR
+    echo            branch in PC_SIM\CMakeLists.txt
+    pause
+    exit /b 1
+)
+echo [run_sim] exe = %LOCAL_EXE%
 if /i "%~1"=="build" exit /b 0
 echo [run_sim] launching simulator window...
-"%PC_SIM_DIR%\bin\main.exe"
+"%LOCAL_EXE%"
 exit /b 0

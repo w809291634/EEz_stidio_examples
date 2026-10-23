@@ -6,10 +6,15 @@
 - 现有 6 例：minimal-lvgl-project / widget-gallery / font-entry-form / two-state-styles /
   gesture-page-switch（双向手势）/ one-way-gesture-switch（单向手势）。
 
-## PC_SIM 仿真器适配（2026-10-19 完成并验证）
-- 换工程 = 双击该工程 `design/sim_cmake/run_sim.bat`；`apl_lvgl_v9_4`、`PC_SIM` 两公共目录零改动。
+## PC_SIM 仿真器适配（2026-10-19 完成并验证；2026-10-23 加输出隔离）
+- 换工程 = 双击该工程 `design/sim_cmake/run_sim.bat`；示例代码层仍不碰 `apl_lvgl_v9_4`。
 - 机制：PC_SIM CMakeLists 优先读环境变量 `SIM_TARGET_PROJ_DIR`（回退 eez-test）；
   每工程三件套 run_sim.bat / main.c / lv_conf.h；SIM_H_RES/SIM_V_RES 在 PC_SIM 配置区改分辨率。
+- **输出目录按工程隔离（2026-10-23）**：PC_SIM CMakeLists 多认一个 `SIM_BIN_DIR`（不设＝老行为
+  `PC_SIM/bin`）；所有示例 bat 都设 `SIM_BIN_DIR=%BUILD_DIR%\bin` 并跑自己那份 exe。
+  原因：`PC_SIM/bin/main.exe` 是全仓库共用路径，两个工程交替构建时后链的会覆盖，
+  双击 A 却跑起 B（实测：本仓库示例 vs `D:\temp_d\AI_Temporary_Reply\watch` 互相覆盖，
+  打印的 rows/pitch 与自身 config 对不上）。**新增示例照抄任意现有 bat 即可继承隔离。**
 - 坑（详见根 README §4）：thorvg 需关 VECTOR_GRAPHIC/THORVG/LOTTIE；main.c 勿定义
   SDL_MAIN_HANDLED；bat 须 ASCII、括号块内 echo 不得含 `)`；换工程须强制 cmake 重配置；
   首编偶发 ninja 依赖目录竞态重跑即过；中文字体用 lv_font_conv 离线烘（产物落 src/ui/）。

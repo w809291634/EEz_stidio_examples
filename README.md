@@ -122,11 +122,13 @@ EEZ_stidio_examples/
 
 - `PC_SIM/lv_port_pc_vscode_v9.5/CMakeLists.txt` 优先读环境变量 `SIM_TARGET_PROJ_DIR`
   定位目标工程（未注入时回退 eez-test，兼容旧用法）；
+- 同样的 CMakeLists 还认一个**可选**的 `SIM_BIN_DIR`：设了就把 exe 输出到那里，不设仍是
+  老的 `PC_SIM\bin`。示例 bat 一律设成 `build_rel\bin` ⇒ **每个工程有自己的 exe**。
 - 每个 EEZ 工程自带 `design/sim_cmake/` 三件套（**应用侧变动全部放在各工程内**）：
 
 | 文件 | 作用 |
 |---|---|
-| `run_sim.bat` | 注入本工程绝对路径到 `SIM_TARGET_PROJ_DIR`，直接调 `setup_env.bat` + cmake；**build_rel 生成在本 bat 同目录**（每工程独立缓存） |
+| `run_sim.bat` | 注入本工程绝对路径到 `SIM_TARGET_PROJ_DIR`、输出目录到 `SIM_BIN_DIR`，直接调 `setup_env.bat` + cmake；**build_rel 与 exe 都在本 bat 同目录**（每工程独立） |
 | `main.c` | 仿真入口：`lv_init` + SDL 窗口/鼠标/滚轮/键盘 + `ui_init` 主循环 |
 | `lv_conf.h` | 本工程专用仿真配置（经 `LV_CONF_PATH` 传入） |
 
@@ -137,7 +139,10 @@ EEZ_stidio_examples/
 运行  run_sim.bat build                          → 只编译不启动
 ```
 
-- 产物：`PC_SIM\lv_port_pc_vscode_v9.5\bin\main.exe`（每次编译覆盖，即"当前工程"的仿真器）。
+- 产物：`<工程>\design\sim_cmake\build_rel\bin\main.exe`（**每个工程一份**）。
+  ⚠ 2026-10-23 之前是 `PC_SIM\bin\main.exe`，全仓库共用 —— 两个工程交替构建时后链的会覆盖，
+  双击 A 却跑起 B（实测：本仓库示例与 `D:\temp_d\AI_Temporary_Reply\watch` 互相覆盖，
+  打印的 rows/pitch 与自身 config 对不上）。现在不设 `SIM_BIN_DIR` 也不会再被本仓库的示例影响。
 - **缓存**：`build_rel` 在各工程 `design\sim_cmake\` 下、永不删除；每个示例首次编译全量编
   LVGL 一次（ccache 加速），之后增量秒级（`ninja: no work to do`）；切换工程互不污染。
 - 旧机制（共享 `PC_SIM\build_rel` + 每次删除重编）已废弃；PC_SIM 下遗留的
