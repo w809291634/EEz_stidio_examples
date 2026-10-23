@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""app-wifi-scan-flow-no-flow —— WiFi 扫描列表（no-flow 变体：关 EEZ Flow 运行时）
+"""app-wifi-scan-conn-no-flow —— WiFi 扫描列表（no-flow 变体：关 EEZ Flow 运行时）
 
 本文件是工程唯一设计源：由它生成 .eez-project，请勿手改产物。
 与 app-wifi-scan-flow 的唯一设计差异：settings.general.flowSupport=False、
 settings.build.generateSourceCodeForEezFramework=False（见本文件 README）。
 
-    python build_example.py        → app-wifi-scan-flow-no-flow.eez-project
+    python build_example.py        → app-wifi-scan-conn-no-flow.eez-project
     python design/cli_build.py     → src/ui/（EEZ CLI 生成，勿手改）
     python design/gen_font.py      → src/ui/fonts/ui_font_cn14.c
 
@@ -36,10 +36,18 @@ settings.build.generateSourceCodeForEezFramework=False（见本文件 README）�
 import json
 import os
 import sys
+
+# Windows 控制台默认 GBK：打印字体丢弃字符（如 U+30FB）或检查名里的符号
+# 会 UnicodeEncodeError 把流程本身打断 —— 编不出的字符替换掉，不中断。
+try:
+    sys.stdout.reconfigure(errors="replace")
+    sys.stderr.reconfigure(errors="replace")
+except (AttributeError, ValueError):
+    pass
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PROJECT_FILE = os.path.join(HERE, "app-wifi-scan-flow-no-flow.eez-project")
+PROJECT_FILE = os.path.join(HERE, "app-wifi-scan-conn-no-flow.eez-project")
 
 SCREEN_W, SCREEN_H = 480, 320
 ROW_PITCH, ROW_H, ROW_COUNT = 50, 44, 10

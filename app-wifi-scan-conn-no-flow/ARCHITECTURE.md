@@ -127,7 +127,7 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
 ## 7. 目录与归属红线
 
 ```
-app-wifi-scan-flow-no-flow/
+app-wifi-scan-conn-no-flow/
 ├── build_example.py          ← 设计源（人写）★ 改 UI 只改这里；两个 no-flow 开关在本文件
 ├── design/cli_build.py       ← EEZ CLI + flow 错误守卫
 ├── design/preflight.py       ← 全链预检 + ★ check_no_flow 门禁（本变体新增）

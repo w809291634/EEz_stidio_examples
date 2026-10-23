@@ -5,7 +5,7 @@ import os, subprocess, sys, time, tempfile
 
 EXE = r'C:\Users\yjt54\AppData\Local\Programs\eezstudio\EEZ Studio.exe'
 HERE = os.path.dirname(os.path.abspath(__file__))
-PROJ = os.path.join(os.path.dirname(HERE), 'app-wifi-scan-flow-no-flow.eez-project')
+PROJ = os.path.join(os.path.dirname(HERE), 'app-wifi-scan-conn-no-flow.eez-project')
 
 env = dict(os.environ)
 env.pop('ELECTRON_RUN_AS_NODE', None)          # 坑 3：不去掉会报 bad option

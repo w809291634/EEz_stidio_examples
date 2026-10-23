@@ -1,4 +1,4 @@
-# app-wifi-scan-flow-no-flow —— WiFi 扫描列（关掉 EEZ Flow 运行时的姊妹工程）
+# app-wifi-scan-conn-no-flow —— WiFi 扫描列（关掉 EEZ Flow 运行时的姊妹工程）
 
 > **演示点**：同一份 UI/native 设计，把 EEZ Flow 运行时整个摘掉之后，工程还能不能构建、
 > 按钮点击还能不能触到 native 动作。结论是**能，而且不用改一行业务代码**——
@@ -27,9 +27,9 @@
 ## 工程结构
 
 ```
-app-wifi-scan-flow-no-flow/
+app-wifi-scan-conn-no-flow/
 ├── build_example.py                    ← 唯一设计源（改 UI 改它；两个 False 开关在本文件）
-├── app-wifi-scan-flow-no-flow.eez-project ← 生成产物，EEZ Studio 可直接打开
+├── app-wifi-scan-conn-no-flow.eez-project ← 生成产物，EEZ Studio 可直接打开
 ├── design/
 │   ├── preflight.py                    ← ★ 一键全链 + no-flow 判据（本变体新增）
 │   ├── cli_build.py                    ← EEZ CLI 构建 + flow 错误守卫

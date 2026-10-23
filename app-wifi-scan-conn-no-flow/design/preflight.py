@@ -19,6 +19,14 @@ import subprocess
 import sys
 import time
 
+# Windows 控制台默认 GBK：打印字体丢弃字符（如 U+30FB）或检查名里的符号
+# 会 UnicodeEncodeError 把流程本身打断 —— 编不出的字符替换掉，不中断。
+try:
+    sys.stdout.reconfigure(errors="replace")
+    sys.stderr.reconfigure(errors="replace")
+except (AttributeError, ValueError):
+    pass
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PY = sys.executable
 
