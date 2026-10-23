@@ -1,57 +1,52 @@
 # -*- coding: utf-8 -*-
 """gen_assets.py —— 由 design/apps.py 一张表生成两样东西
 
-  1) src/native/icons/img_<icon_id>.c   22 个占位图标（76x76 ARGB8888）
+  1) src/native/icons/img_<icon_id>.c   22 个圆形矢量图标（ICON_PX 见方 ARGB8888）
   2) src/native/app_rows.c/.h           native 侧读的常量表（id/中文名/图标指针）
 
 图标形态与 EEZ 生成的 images/*.c 逐字段一致（ARGB8888 / stride=w*4 /
 LV_IMAGE_HEADER_MAGIC），lv_img_set_src 直接吃。
-尺寸 76 = Design Watch 参考口径里行的基准图标宽（其注释：峰值 76x1.094x1.078≈88px
-仍要避开 100px 行距撞行），留 4px 透明边免得相邻行糊在一起。
+尺寸唯一出处是 watch_list_config.h 的 ICON_PX；**画法在 icons_art.py**，
+本文件只管接线与落盘 —— 换图标只动 icons_art.py，别在这里画第二套。
+内容方框与旧版（圆角方那版）逐像素一致，留 4px 透明边避免相邻行糊在一起。
 
 用法：python design/gen_assets.py
 """
 import os
 import sys
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 from apps import APPS  # noqa: E402
+from icons_art import ART, render_icon  # noqa: E402
 from wconfig import wcfg  # noqa: E402
 
 ICON_DIR = os.path.join(ROOT, "src", "native", "icons")
-FONT_PATH = os.path.join(ROOT, "fonts", "simhei.ttf")
 
 # ★ 尺寸唯一出处是 src/native/watch_list_config.h，这里只按它等比派生
 SIZE = wcfg("ICON_PX")
-INSET = max(4, SIZE // 16)
-CORNER = SIZE * 20 // 76
-GLYPH_FONT = SIZE * 30 // 76
-PALETTE = [
-    (61, 220, 151), (255, 204, 0), (255, 99, 99), (90, 200, 250),
-    (52, 199, 89), (255, 55, 95), (48, 176, 199), (150, 160, 175),
-]
+INSET = max(4, SIZE // 16)     # 与旧版同一个透明边；图标内容仍占 (INSET, SIZE-1-INSET)
 
 
-def render(glyph, rgb):
-    img = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((INSET, INSET, SIZE - 1 - INSET, SIZE - 1 - INSET),
-                        radius=CORNER, fill=rgb + (255,))
-    f = ImageFont.truetype(FONT_PATH, GLYPH_FONT)
-    box = d.textbbox((0, 0), glyph, font=f)
-    d.text(((SIZE - (box[2] - box[0])) / 2 - box[0],
-            (SIZE - (box[3] - box[1])) / 2 - box[1]),
-           glyph, font=f, fill=(20, 24, 32, 255))
-    return img
+def render(icon_id):
+    """按 icon_id 画一个圆形矢量图标。画法全在 icons_art.py，这里只管接线。"""
+    if icon_id not in ART:
+        sys.exit("icons_art.ART 里没有 %s ⇒ 新加的应用行要先补图标" % icon_id)
+    glyph, bg, fg, _src = ART[icon_id]
+    return render_icon(SIZE, glyph, bg, fg, inset=INSET)
 
 
 def emit_icon(name, img):
-    px = img.tobytes()                      # RGBA -> 内存序 B,G,R,A（小端 ARGB8888）
+    # ★ LVGL 的 ARGB8888 是小端 uint32 0xAARRGGBB ⇒ 内存字节序 B,G,R,A；
+    #   而 PIL 的 tobytes() 给的是 R,G,B,A。原来那行注释写着"已转成 B,G,R,A"，
+    #   其实根本没转 —— 实测设计色 #C2ED3C 会发成 #3CEDC2（红蓝互换）。
+    #   这是**字节序**修正，与几何无关，不可能影响拖动观感。
+    r, g, b, a = img.split()
+    px = Image.merge("RGBA", (b, g, r, a)).tobytes()      # 内存序 B,G,R,A
     rows = [",".join("0x%02x" % b for b in px[i:i + 16])
             for i in range(0, len(px), 16)]
     body = (
@@ -107,13 +102,11 @@ def emit_table():
 
 
 def main():
-    if not os.path.exists(FONT_PATH):
-        sys.exit("缺字体源：%s" % FONT_PATH)
     os.makedirs(ICON_DIR, exist_ok=True)
-    for i, (icon_id, name, _target) in enumerate(APPS):
-        emit_icon("img_" + icon_id, render(name[0], PALETTE[i % len(PALETTE)]))
+    for icon_id, _name, _target in APPS:
+        emit_icon("img_" + icon_id, render(icon_id))
     emit_table()
-    print("written: %d 个图标 -> icons/，外加 app_rows.{c,h}" % len(APPS))
+    print("written: %d 个圆形矢量图标 -> icons/，外加 app_rows.{c,h}" % len(APPS))
 
 
 if __name__ == "__main__":
