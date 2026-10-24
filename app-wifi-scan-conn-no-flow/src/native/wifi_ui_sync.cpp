@@ -21,6 +21,7 @@
  *   SCROLL_CHAIN——LVGL 官方的滚动链路本来就是通的。
  */
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include "lvgl.h"
 #include "app_model.h"
@@ -47,6 +48,89 @@
 
 static int s_last_gen = -1;
 static int s_last_state = -1;
+
+/* ---------------- 模态显隐（⑦-1 导航闭环）---------------- */
+/* 打开只能发生在 native：列表行是 build_row 现建的，EEZ 侧没有对应控件。
+ * 关闭走 EEZ 生成的 action（× / 遮罩 / 取消按钮）→ APP_OUT_* → 这里的 close。
+ * 两个模态互斥：同屏只允许一个在前，避免"遮罩叠遮罩"退不出去。 */
+static bool s_sheet_open = false;
+static bool s_dlg_open = false;
+
+bool wifi_ui_sheet_open(void) { return s_sheet_open; }
+bool wifi_ui_dialog_open(void) { return s_dlg_open; }
+
+void wifi_ui_open_sheet(const char *ssid)
+{
+    if (!objects.overlay_root) return;
+    if (ssid && objects.lbl_pwd_ssid) lv_label_set_text(objects.lbl_pwd_ssid, ssid);
+    if (objects.pwd_ta) lv_textarea_set_text(objects.pwd_ta, "");
+    s_dlg_open = false;
+    if (objects.dlg_root) lv_obj_add_flag(objects.dlg_root, LV_OBJ_FLAG_HIDDEN);
+    s_sheet_open = true;
+    lv_obj_remove_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
+    printf("[UI] sheet open: %s\n", ssid ? ssid : "");
+}
+
+void wifi_ui_close_sheet(void)
+{
+    if (!s_sheet_open) return;
+    s_sheet_open = false;
+    if (objects.overlay_root) lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
+    printf("[UI] sheet close\n");
+}
+
+void wifi_ui_open_dialog(const char *ssid)
+{
+    if (!objects.dlg_root) return;
+    if (ssid && objects.lbl_dlg_ssid) lv_label_set_text(objects.lbl_dlg_ssid, ssid);
+    s_sheet_open = false;
+    if (objects.overlay_root) lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
+    s_dlg_open = true;
+    lv_obj_remove_flag(objects.dlg_root, LV_OBJ_FLAG_HIDDEN);
+    printf("[UI] dialog open: %s\n", ssid ? ssid : "");
+}
+
+void wifi_ui_close_dialog(void)
+{
+    if (!s_dlg_open) return;
+    s_dlg_open = false;
+    if (objects.dlg_root) lv_obj_add_flag(objects.dlg_root, LV_OBJ_FLAG_HIDDEN);
+    printf("[UI] dialog close\n");
+}
+
+/* 行的两条通路：单击=需要密码的网络开半页；长按=已保存网络开"忘记"对话框。
+ * 索引存在 user_data 里，事件里回查 io（列表重建后索引与数据仍同源）。
+ *
+ * ★ LVGL 对普通按钮在长按抬手后**仍会补发一次 CLICKED**
+ *   （lv_indev.c:1046 只在 short_click 上做了 long_pr_sent 判断，CLICKED 无条件发）。
+ *   不吞掉它，长按就会"先开对话框、再被补发的 CLICKED 换成半页"，
+ *   模态互斥反而把对话框关掉。用"本次手势的行"来认这条尾巴。 */
+static lv_obj_t *s_long_row = NULL;
+
+static void row_event_cb(lv_event_t *e)
+{
+    lv_obj_t *row = (lv_obj_t *)lv_event_get_target(e);
+    int idx = (int)(intptr_t)lv_obj_get_user_data(row);
+    const wifi_ap_t *ap = wifi_ap_at(idx);
+    if (!ap) return;
+
+    switch (lv_event_get_code(e)) {
+    case LV_EVENT_PRESSED:                    /* 新手势开始，清掉上一次的手尾标记 */
+        s_long_row = NULL;
+        break;
+    case LV_EVENT_CLICKED:
+        if (s_long_row == row) { s_long_row = NULL; break; }   /* 长按补发的尾巴，吞掉 */
+        /* 已连接的网络点开没有意义；开放网络免密直连属 ⑦-2 后端 */
+        if (ap->lock && !ap->connected) wifi_ui_open_sheet(ap->ssid);
+        break;
+    case LV_EVENT_LONG_PRESSED:
+        s_long_row = row;
+        if (ap->saved) wifi_ui_open_dialog(ap->ssid);
+        break;
+    default:
+        break;
+    }
+}
 
 static int rssi_bars(int rssi)
 {
@@ -99,7 +183,7 @@ static lv_obj_t *row_label(lv_obj_t *row, int x, int y, int w, int h,
  * 滚动链与将来的点选都靠它）。注意 add_button 默认 flex_flow=ROW，
  * 要关掉才能用绝对坐标摆信号条/副行/状态。
  */
-static void build_row(lv_obj_t *btn, const wifi_ap_t *ap)
+static void build_row(lv_obj_t *btn, const wifi_ap_t *ap, int index)
 {
     lv_obj_set_height(btn, ROW_H);
     lv_obj_set_layout(btn, LV_LAYOUT_NONE);   /* 关掉 ROW flex，改用绝对坐标 */
@@ -112,6 +196,12 @@ static void build_row(lv_obj_t *btn, const wifi_ap_t *ap)
     lv_obj_set_style_pad_all(btn, 0, LV_PART_MAIN);
     /* 行间距 6（lv_list 的 pad_row 被 EEZ 清成 0，用行的下内边距补） */
     lv_obj_set_style_pad_bottom(btn, 6, LV_PART_MAIN);
+
+    /* ⑦-1 导航：单击开半页 / 长按开"忘记"对话框（PRESSED 用来分手势） */
+    lv_obj_set_user_data(btn, (void *)(intptr_t)index);
+    lv_obj_add_event_cb(btn, row_event_cb, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(btn, row_event_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(btn, row_event_cb, LV_EVENT_LONG_PRESSED, NULL);
 
     /* SSID：add_button 建的那个 label（第 0 个子对象）复用 */
     lv_obj_t *ssid = lv_obj_get_child(btn, 0);
@@ -193,7 +283,7 @@ void wifi_ui_sync(void)
             lv_obj_t *btn = lv_list_add_button(objects.list_box, NULL,
                                                p->ssid);
             if (!btn) break;
-            build_row(btn, p);
+            build_row(btn, p, i);
             shown++;
         }
     }

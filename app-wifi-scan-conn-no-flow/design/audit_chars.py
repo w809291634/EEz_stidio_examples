@@ -47,6 +47,26 @@ def walk2(o):
         for v in o: walk2(v)
 walk2(proj["userPages"])
 
+# ★ native 侧文案（snprintf 拼的元信息、状态行）同样是"界面上的字"，
+#   只查 EEZ 会漏 —— ⑤ 逐状态出图时行内分隔符「·」就是这么漏成豆腐的。
+NATIVE_DIR = os.path.join(ROOT, "src", "native")
+for dirpath, _dirs, files in os.walk(NATIVE_DIR):
+    for fn in sorted(files):
+        if not fn.endswith((".c", ".cpp", ".h")):
+            continue
+        p = os.path.join(dirpath, fn)
+        txt = open(p, encoding="utf-8", errors="replace").read()
+        # 注释里的中文不是上屏文案，先剥掉 /* */ 与 // 注释
+        txt = re.sub(r"/\*.*?\*/", " ", txt, flags=re.S)
+        txt = re.sub(r"//[^\n]*", " ", txt)
+        for lit in re.findall(r'"((?:[^"\\\n]|\\.)*)"', txt):
+            try:
+                decoded = lit.encode("ascii", "backslashreplace") \
+                              .decode("unicode_escape")
+            except UnicodeDecodeError:
+                continue
+            ui_chars.update(decoded)
+
 FONT_CHARS = getattr(be, "FONT_CHARS", None)
 non_ascii = [c for c in ui_chars if ord(c) > 0x7E]
 if FONT_CHARS is None:

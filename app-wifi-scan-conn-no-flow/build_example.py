@@ -104,7 +104,13 @@ def gb2312_charset():
     return "".join(sorted(chars))
 
 
-_RAW_CHARS = (gb2312_charset()
+# ★ Python 'gb2312' 把 0xA1A4 解成 U+30FB「・」，而 CP936/GBK 解成 U+00B7「·」；
+#   simhei 只有后者。行内分隔符（wifi_ui_sync.cpp 的 "%s · %d dBm · %s"）用的
+#   是 U+00B7，不并进字符集就会烘出豆腐（⑤ 逐状态出图当场抓到）。
+NATIVE_SYMBOLS = "·"
+
+
+_RAW_CHARS = (gb2312_charset() + NATIVE_SYMBOLS
               + "".join(chr(c) for c in range(0x20, 0x7F)))
 # ★ ASCII 0x20-0x7E 必须并入（P-0125：lvglRanges[0]=32-126），
 #   漏 ASCII → 画布所有拉丁/数字豆腐

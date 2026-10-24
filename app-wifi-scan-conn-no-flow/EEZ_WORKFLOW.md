@@ -174,6 +174,54 @@ if (getenv("WIFI_SHOT")) take_shot("shot_fake.bmp");
 
 > 每次改完**同一套方法复测**：改布局 → 重跑 5.1–5.3，不要换判据。
 
+### 5.4 逐屏对照交付图（一条命令）
+
+```bat
+%PY% design\shot_states.py          :: 逐状态出图 -> build\sim_shots\*.png
+%PY% design\compare_shots.py        :: 设计图 vs 仿真 并排 -> build\sim_shots\step5_compare.svg
+```
+
+状态开关在 `design/sim_cmake/main.c` 的无头钩子里（`WIFI_SHOT_AT=idle|scanning|done`、
+`WIFI_FAKE_STATE=empty`、`WIFI_KBPROBE=1`）；两个模态由 `WIFI_REACH=sheet|dialog`
+**用注入鼠标真实点击/长按列表行**到达（⑦-1 接线后不再翻 hiddenFlag）。
+
+导航闭环另有断言集：`WIFI_NAVTEST=1 main.exe` → `[NAV] RESULT: PASS n / FAIL m`，
+FAIL 反映到退出码；反向测试见 `tmp/_negtest_nav.py`（掐掉长按通路 → rc=1）。
+
+注入夹具的三个实测坑（都踩过，别再猜）：
+1. 启动后约 300 帧（≈600ms LVGL 时间）之前压进 SDL 队列的鼠标事件不会被消费；
+2. SDL indev 是 `LV_INDEV_MODE_EVENT`，**没有新事件就不会 read**，待派发的 CLICKED
+   会挂到下一次点击——抬起后补一次同坐标 MOUSEMOTION 喂读（按住时喂会被判成拖动，
+   CLICKED 反而被吃掉）；
+3. `pump()` 每帧只把 `lv_tick` 推 2ms，所以"长按 400ms"要按**帧数**换算（260 帧），
+   按真实毫秒估会短一截、长按判不出来。
+
+### 5.5 ⑤ 核对结论（2026-10-23 本轮）
+
+已核对 5 屏（列表主态 / 扫描中 / 空态 / 连接半页 / 忘记对话框），逐屏对照见
+`build/sim_shots/step5_compare.svg`。抓到的差异按归属分三档：
+
+| 档 | 差异 | 归口 |
+|---|---|---|
+| 本轮已修 | 行内分隔符「·」烘成豆腐：Python `gb2312` 把 0xA1A4 解成 U+30FB（simhei 没有），CP936 才是 U+00B7；`audit_chars.py` 原来只扫 EEZ 工程不扫 native 文案 | 字符集 + 门禁（已反向测试） |
+| ④ 未做全（native 画行缺元素） | 行内**锁图标**、状态**胶囊（圆点+描边）**、**分组标题**（已连接·已保存 / 可用网络）、已连接行**绿色描边**、空态**WiFi 图标 + 重新扫描按钮**、底部**长按提示**、扫描中**骨架行**、状态文案与设计不一致（「正在扫描…」vs「正在扫描附近网络…」） | ④ 补全（不是 ⑦：这些是预生成界面内容） |
+| 待用户裁决 | 对话框「取 消」与卡片同色＝隐形；`FAIL`/`FAIL_BG`/`TEXT3` 令牌设计图与出码两套值 | 配色对账（见上轮汇报） |
+
+### 5.6 ⑦-1 导航闭环（2026-10-23 已交付）
+
+点带锁行 → 半页；× / 遮罩空白 → 关；长按已保存行 → 忘记对话框；取消 / 忘记 → 关。
+`[NAV] RESULT: PASS 17 / FAIL 0`，反向测试（掐掉长按通路）rc=1 且点名两条 FAIL。
+
+两条实现口径（都写进代码注释，别再改回去）：
+
+- **LVGL 长按抬手后仍会补发一次 `CLICKED`**（`lv_indev.c:1046` 只对 short_click 判
+  `long_pr_sent`），不吞掉它，长按就是"先开对话框、再被补发的 CLICKED 换成半页"。
+  吞法：`LONG_PRESSED` 记下本次手势的行，`CLICKED` 见到同一行就丢弃并清标记，
+  `PRESSED` 一律清零（防止标记泄漏到下一次点击）。
+- 打开走 native（行是 native 建的，EEZ 侧没有可挂的控件）；**关闭走 EEZ 生成的 action**
+  （× / 遮罩 / 取消按钮 → `APP_OUT_*` → `user_io_tick` 排空时回调 close）。
+  所以 EEZ 工程里那两个模态容器的 `hiddenFlag` 仍是 `True`，[④A] 门禁继续断言。
+
 ---
 
 ## 6. 一次性完成：Gate 表（全绿才交付）

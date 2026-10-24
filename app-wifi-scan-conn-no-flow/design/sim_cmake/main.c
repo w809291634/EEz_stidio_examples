@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "lvgl.h"
@@ -27,6 +28,7 @@
 #include "ui.h"              /* EEZ 生成：ui_init / ui_tick（C 安全，不引入额外 C++ 头） */
 #include "screens.h"        /* objects_t：全局对象表（list_box 等） */
 #include "app_model.h"      /* native 契约：app_get_input_i / APP_IN_SCAN_STATE */
+#include "platform/io_iface.h"   /* wifi_ap_at / wifi_ap_count：按 io 数据挑测试行 */
 
 extern void ui_init(void);
 extern void ui_tick(void);
@@ -63,47 +65,80 @@ static void take_shot(const char *path)
     lv_draw_buf_destroy(buf);
 }
 
-/* 无头验证钩子：WIFI_AUTOSCAN=1 自动扫一次；WIFI_SHOT=1 在完成后截图 */
+/* 无头验证钩子（⑤ 双核对的入口）：
+ *   WIFI_SHOT_AT=<idle|scanning|done>   到达该扫描态时截图；非 idle 会先自动发起一次扫描
+ *                          （旧脚本的 WIFI_SHOT=1 等价于 WIFI_SHOT_AT=done）
+ *   WIFI_FAKE_STATE=empty  PC 后端返回 0 个 AP，配 done 出「空态」图
+ *   WIFI_KBPROBE=1         截图前打印半页控件的**渲染**绝对坐标（cases/B16）
+ *   WIFI_AUTOEXIT=1        截完立即退出 */
+static const char *shot_at(void)
+{
+    const char *s = getenv("WIFI_SHOT_AT");
+    if (s && *s) return s;
+    return getenv("WIFI_SHOT") ? "done" : NULL;
+}
+
+static void kb_probe(void)
+{
+    extern objects_t objects;
+    lv_obj_t *kb = objects.kb_main;
+    lv_obj_t *sh = objects.sheet;
+    lv_obj_t *ta = objects.pwd_ta;
+    lv_area_t a;
+    lv_obj_get_coords(kb, &a);
+    printf("[PROBE] kb abs=(%d,%d)-(%d,%d) w=%d h=%d\n",
+           (int)a.x1, (int)a.y1, (int)a.x2, (int)a.y2,
+           (int)lv_obj_get_width(kb), (int)lv_obj_get_height(kb));
+    printf("[PROBE] kb pad(top=%d bot=%d row=%d) align=%d\n",
+           (int)lv_obj_get_style_pad_top(kb, LV_PART_MAIN),
+           (int)lv_obj_get_style_pad_bottom(kb, LV_PART_MAIN),
+           (int)lv_obj_get_style_pad_row(kb, LV_PART_MAIN),
+           (int)lv_obj_get_style_align(kb, LV_PART_MAIN));
+    lv_obj_get_coords(sh, &a);
+    printf("[PROBE] sheet abs=(%d,%d)-(%d,%d) h=%d\n",
+           (int)a.x1, (int)a.y1, (int)a.x2, (int)a.y2,
+           (int)lv_obj_get_height(sh));
+    lv_obj_get_coords(ta, &a);
+    printf("[PROBE] pwd_ta abs=(%d,%d)-(%d,%d) h=%d\n",
+           (int)a.x1, (int)a.y1, (int)a.x2, (int)a.y2,
+           (int)lv_obj_get_height(ta));
+}
+
 static void headless_hooks(void)
 {
     static int scanned = 0, shot = 0, ticks = 0;
+    const char *at = shot_at();
+    int state = app_get_input_i(APP_IN_SCAN_STATE);
+    int hit = 0;
+
+    /* 自动扫一次：显式点名 WIFI_AUTOSCAN，或截图模式要求非 idle 态。
+     * （早期只认 WIFI_AUTOSCAN；若只在 at!=idle 分支里扫，
+     *   WIFI_SCROLLTEST 这类不置 SHOT_AT 的夹具会永远等不到扫描完成。） */
+    int want_scan = getenv("WIFI_AUTOSCAN") != NULL ||
+                    (at && strcmp(at, "idle") != 0);
+
     ticks++;
-    if (getenv("WIFI_AUTOSCAN") && !scanned && ticks > 40) {
+    if (!scanned && want_scan && ticks > 40) {
         extern void action_scan_start(lv_event_t * e);
         action_scan_start(NULL);
         scanned = 1;
         printf("[HOOK] autoscan fired\n");
     }
-    if (getenv("WIFI_SHOT") && scanned && !shot &&
-            app_get_input_i(APP_IN_SCAN_STATE) == 2) {
-        if (getenv("WIFI_KBPROBE")) {   /* 渲染几何探针：量绝对坐标，不是生成码字面值 */
-            extern objects_t objects;
-            lv_obj_t *kb = objects.kb_main;
-            lv_obj_t *sh = objects.sheet;
-            lv_obj_t *ta = objects.pwd_ta;
-            lv_area_t a;
-            lv_obj_get_coords(kb, &a);
-            printf("[PROBE] kb abs=(%d,%d)-(%d,%d) w=%d h=%d\n",
-                   (int)a.x1, (int)a.y1, (int)a.x2, (int)a.y2,
-                   (int)lv_obj_get_width(kb), (int)lv_obj_get_height(kb));
-            printf("[PROBE] kb pad(top=%d bot=%d row=%d) align=%d\n",
-                   (int)lv_obj_get_style_pad_top(kb, LV_PART_MAIN),
-                   (int)lv_obj_get_style_pad_bottom(kb, LV_PART_MAIN),
-                   (int)lv_obj_get_style_pad_row(kb, LV_PART_MAIN),
-                   (int)lv_obj_get_style_align(kb, LV_PART_MAIN));
-            lv_obj_get_coords(sh, &a);
-            printf("[PROBE] sheet abs=(%d,%d)-(%d,%d) h=%d\n",
-                   (int)a.x1, (int)a.y1, (int)a.x2, (int)a.y2,
-                   (int)lv_obj_get_height(sh));
-            lv_obj_get_coords(ta, &a);
-            printf("[PROBE] pwd_ta abs=(%d,%d)-(%d,%d) h=%d\n",
-                   (int)a.x1, (int)a.y1, (int)a.x2, (int)a.y2,
-                   (int)lv_obj_get_height(ta));
-        }
-        take_shot("shot_fake.bmp");
-        shot = 1;
-        if (getenv("WIFI_AUTOEXIT")) exit(0);
+    if (!at) return;
+
+    if (!strcmp(at, "idle")) {                /* 不扫描，拍首屏 */
+        hit = ticks > 60;
+    } else {
+        if (!strcmp(at, "scanning")) hit = scanned && state == 1 && ticks > 44;
+        else if (!strcmp(at, "done")) hit = scanned && state == 2;
+        else { printf("[HOOK] 未知 WIFI_SHOT_AT=%s\n", at); exit(1); }
     }
+    if (shot || !hit) return;
+
+    if (getenv("WIFI_KBPROBE")) kb_probe();
+    take_shot("shot_fake.bmp");
+    shot = 1;
+    if (getenv("WIFI_AUTOEXIT")) exit(0);
 }
 
 /* ---- 无头滚动测试：注入真实 SDL 鼠标事件，走完整 indev 链路 ---- */
@@ -207,6 +242,286 @@ static void scroll_test_hooks(void)
 #define SIM_W 480
 #define SIM_H 320
 
+/* ---- ⑦-2 导航闭环断言：注入真实 SDL 鼠标事件，走完整 indev 链路 ----
+ * 用法：WIFI_NAVTEST=1 main.exe   （FAIL 计数反映到退出码）
+ * 先自证夹具（点「刷新」真的能起扫描），再断言每条"能进能退"。 */
+static int  g_nav_pass = 0, g_nav_fail = 0;
+static void nav_check(const char *what, int cond)
+{
+    printf("[NAV] %s %s\n", cond ? "PASS" : "FAIL", what);
+    /* 无头跑法会把进程直接 kill 掉；不关行缓冲就一行断言都读不到 */
+    fflush(stdout);
+    if (cond) g_nav_pass++; else g_nav_fail++;
+}
+
+static lv_indev_t *pointer_indev(void)
+{
+    lv_indev_t *mi = lv_indev_get_next(NULL);
+    while (mi && lv_indev_get_type(mi) != LV_INDEV_TYPE_POINTER)
+        mi = lv_indev_get_next(mi);
+    return mi;
+}
+
+/* 泵 n 帧：消费 SDL 事件 → LVGL indev → 刷新 → 排空 native 命令 */
+static void pump(int n)
+{
+    for (int i = 0; i < n; i++) {
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) lv_sdl_mouse_handler(&e);
+        lv_tick_inc(2);
+        lv_timer_handler();
+        ui_tick();
+        user_io_tick();
+        SDL_Delay(4);
+    }
+}
+
+/* 在 (x,y) 按下并停留 hold 帧后抬起；返回按下期间 indev 是否真的进入 PRESSED
+ * （自证：没按到东西就报假，不允许"点了但没人收到"混过断言） */
+static int click_at(int x, int y, int hold)
+{
+    lv_indev_t *mi = pointer_indev();
+    int pressed = 0;
+
+    push_mouse(SDL_MOUSEBUTTONUP, x, y);
+    pump(3);
+    push_mouse(SDL_MOUSEBUTTONDOWN, x, y);
+    for (int w = 0; w < 20 && !pressed; w++) {
+        pump(1);
+        pressed = mi && lv_indev_get_state(mi) == LV_INDEV_STATE_PRESSED;
+    }
+    pump(hold);
+    push_mouse(SDL_MOUSEBUTTONUP, x, y);
+    /* 抬起后喂一次同坐标运动：SDL indev 是 EVENT 模式，没有新事件就不会 read，
+     * 待派发的 CLICKED 会一直挂到下一次点击（表现为"效果总晚一次点击"）。
+     * ★ 只能在抬起之后喂——按住时喂会被判成拖动，CLICKED 直接被吃掉。 */
+    push_motion(x, y);
+    pump(20);
+    return pressed;
+}
+
+/* 断言"这件事最终会发生"：最多等 max 帧，等到了才 PASS。
+ * 无头注入的派发延迟不是固定值，写死帧数会出"效果总晚一次点击"的假失败。
+ * （★ SDL indev 是 LV_INDEV_MODE_EVENT，待派发的 CLICKED 只有在新事件到达时
+ *   才会被 read 处理——所以 click_at 抬起后会补一次同坐标 MOUSEMOTION 喂读；
+ *   注意只能在**抬起之后**喂，按住时喂会被判成拖动而吃掉 CLICKED。） */
+static int wait_until(int (*pred)(void *), void *ctx, int max)
+{
+    for (int i = 0; i < max; i++) {
+        if (pred(ctx)) return 1;
+        pump(1);
+    }
+    return pred(ctx);
+}
+
+static int nav_wait(const char *what, int (*pred)(void *), void *ctx, int max)
+{
+    int ok = wait_until(pred, ctx, max);
+    nav_check(what, ok);
+    return ok;
+}
+
+static int hidden_of(lv_obj_t *o)
+{
+    return o && lv_obj_has_flag(o, LV_OBJ_FLAG_HIDDEN);
+}
+
+static int pred_sheet_visible(void *p) { (void)p; return !hidden_of(objects.overlay_root); }
+static int pred_sheet_hidden(void *p)  { (void)p; return hidden_of(objects.overlay_root); }
+static int pred_dlg_visible(void *p)   { (void)p; return !hidden_of(objects.dlg_root); }
+static int pred_dlg_hidden(void *p)    { (void)p; return hidden_of(objects.dlg_root); }
+static int pred_scanning(void *p)      { (void)p; return app_get_input_i(APP_IN_SCAN_STATE) == 1; }
+
+/* 第 index 行的屏幕中心（行是 list_box 的直接子对象） */
+static int row_center(int index, int *cx, int *cy)
+{
+    extern objects_t objects;
+    lv_obj_t *row = lv_obj_get_child(objects.list_box, index);
+    lv_area_t a;
+    if (!row) return 0;
+    lv_obj_get_coords(row, &a);
+    *cx = (a.x1 + a.x2) / 2;
+    *cy = (a.y1 + a.y2) / 2;
+    return 1;
+}
+
+/* 找第一个满足条件的行索引（条件用 io 数据判，不写死序号） */
+static int find_row(int (*pick)(const wifi_ap_t *))
+{
+    extern objects_t objects;
+    int n = (int)lv_obj_get_child_count(objects.list_box);
+    for (int i = 0; i < n; i++) {
+        const wifi_ap_t *ap = wifi_ap_at(i);
+        if (ap && pick(ap)) return i;
+    }
+    return -1;
+}
+
+static int pick_locked_unconnected(const wifi_ap_t *a) { return a->lock && !a->connected; }
+/* 长按目标要"已保存"才会出忘记对话框；同时它也得是可开半页的行，
+ * 这样才能用同一行验证"短按仍然开半页"（已连接的行按设计不开半页）。 */
+static int pick_saved(const wifi_ap_t *a) { return a->saved && a->lock && !a->connected; }
+
+static void center_of_obj(lv_obj_t *o, int *cx, int *cy)
+{
+    lv_area_t a;
+    lv_obj_get_coords(o, &a);
+    *cx = (a.x1 + a.x2) / 2;
+    *cy = (a.y1 + a.y2) / 2;
+}
+
+static void nav_test_hooks(void)
+{
+    extern objects_t objects;
+    static int stage = 0, wait = 0;
+    static int saved_row = -1;
+    int cx, cy, r;
+
+    if (!getenv("WIFI_NAVTEST")) return;
+    if (stage < 0) {                 /* 中途放弃：也要出结论并让退出码非 0 */
+        printf("[NAV] RESULT: PASS %d / FAIL %d（中途放弃）\n", g_nav_pass, g_nav_fail);
+        exit(g_nav_fail ? 1 : 0);
+    }
+
+    switch (stage) {
+    case 0:                                 /* 等首屏列表建好（未扫描） */
+        /* 注入前要先让应用稳定跑够帧数：实测 ~180ms 时压进 SDL 队列的鼠标事件
+         * 根本不会被 indev 消费（state 恒 0、point 恒 0,0），300 帧后才收。 */
+        if (++wait < 300) return;
+        /* 夹具自证：点「刷新」→ 真的进入扫描中 */
+        center_of_obj(objects.btn_refresh, &cx, &cy);
+        nav_check("夹具自证：点「刷新」按到了控件", click_at(cx, cy, 3));
+        nav_wait("点「刷新」→ 进入扫描中", pred_scanning, NULL, 200);
+        stage = 1; wait = 0;
+        return;
+    case 1:                                 /* 等扫描完成（io 侧 2s 真实计时） */
+        if (app_get_input_i(APP_IN_SCAN_STATE) == 2) { stage = 2; return; }
+        if (++wait > 2000) { nav_check("扫描在 2000 帧内完成", 0); stage = -1; }
+        return;
+    case 2: {
+        nav_check("扫描完成且列表有行",
+                  lv_obj_get_child_count(objects.list_box) > 0);
+        nav_check("初始两个模态都隐藏",
+                  hidden_of(objects.overlay_root) && hidden_of(objects.dlg_root));
+        r = find_row(pick_locked_unconnected);
+        nav_check("找到「需密码且未连接」的行", r >= 0);
+        if (r < 0) { stage = -1; return; }
+        if (!row_center(r, &cx, &cy)) { stage = -1; return; }
+        click_at(cx, cy, 3);
+        nav_wait("点带锁行 → 半页显示", pred_sheet_visible, NULL, 200);
+        nav_check("半页标题写入该 SSID",
+                  objects.lbl_pwd_ssid &&
+                  lv_label_get_text(objects.lbl_pwd_ssid)[0] != '\0');
+        stage = 3;
+        return;
+    }
+    case 3:                                 /* × 关闭 */
+        center_of_obj(objects.btn_pwd_close, &cx, &cy);
+        click_at(cx, cy, 3);
+        nav_wait("点 × → 半页隐藏", pred_sheet_hidden, NULL, 200);
+        stage = 4;
+        return;
+    case 4: {                               /* 遮罩空白处关闭（sheet 之上） */
+        if (!row_center(find_row(pick_locked_unconnected), &cx, &cy)) { stage = -1; return; }
+        click_at(cx, cy, 3);                /* 重新打开 */
+        nav_wait("再点一次带锁行 → 半页再开", pred_sheet_visible, NULL, 200);
+        click_at(240, 40, 3);               /* 遮罩区（半页从 y=96 起） */
+        nav_wait("点遮罩空白 → 半页隐藏", pred_sheet_hidden, NULL, 200);
+        stage = 5;
+        return;
+    }
+    case 5: {                               /* 长按已保存行 → 对话框 */
+        saved_row = r = find_row(pick_saved);
+        nav_check("找到「已保存」的行", r >= 0);
+        if (r < 0) { stage = -1; return; }
+        if (!row_center(r, &cx, &cy)) { stage = -1; return; }
+        /* 长按要按住超过 LV_INDEV_DEF_LONG_PRESS_TIME(400ms)。
+         * pump 每帧只把 lv_tick 推 2ms，所以按 260 帧 = 520ms 的 LVGL 时间；
+         * 按"真实毫秒"估帧数会短一截，长按根本判不出来。 */
+        click_at(cx, cy, 260);
+        nav_wait("长按已保存行 → 对话框显示", pred_dlg_visible, NULL, 200);
+        /* 补发的 CLICKED 就在这一拍之后落地，所以先静置再判"没被换成半页" */
+        pump(100);
+        nav_check("长按抬手补发的 CLICKED 没把对话框换成半页",
+                  hidden_of(objects.overlay_root));
+        nav_check("静置后对话框仍在前台", !hidden_of(objects.dlg_root));
+        stage = 6;
+        return;
+    }
+    case 6: {                               /* 取消关闭 */
+        center_of_obj(objects.btn_dlg_cancel, &cx, &cy);
+        click_at(cx, cy, 3);
+        nav_wait("点「取消」→ 对话框隐藏", pred_dlg_hidden, NULL, 200);
+
+        /* 再点一次同一行（短按）：证明"长按吞掉尾巴"不是把整条通路废掉 */
+        if (saved_row >= 0 && row_center(saved_row, &cx, &cy)) click_at(cx, cy, 3);
+        nav_wait("同一行短按仍能开半页（尾巴吞除没废掉通路）",
+                 pred_sheet_visible, NULL, 200);
+        center_of_obj(objects.btn_pwd_close, &cx, &cy);
+        click_at(cx, cy, 3);
+        nav_wait("收尾：半页关闭，两个模态都不在前台", pred_sheet_hidden, NULL, 200);
+
+        printf("[NAV] RESULT: PASS %d / FAIL %d\n", g_nav_pass, g_nav_fail);
+        stage = -1;
+        exit(g_nav_fail ? 1 : 0);
+        return;
+    }
+    default:
+        return;
+    }
+}
+
+/* ⑦-3 证据图：不翻 hiddenFlag，用真实点击走到模态再截图。
+ * 用法：WIFI_AUTOSCAN=1 WIFI_REACH=sheet|dialog WIFI_AUTOEXIT=1 */
+static void reach_shot_hooks(void)
+{
+    static int stage = 0, wait = 0;
+    const char *reach = getenv("WIFI_REACH");
+    int cx, cy, r, ok;
+
+    if (!reach || !reach[0] || stage == 2) return;
+
+    if (stage == 0) {                        /* 等扫描完成（列表要有行） */
+        if (app_get_input_i(APP_IN_SCAN_STATE) == 2) { stage = 1; return; }
+        if (++wait > 3000) {
+            printf("[REACH] FAIL 扫描没在 3000 帧内完成\n");
+            exit(1);
+        }
+        return;
+    }
+
+    if (!strcmp(reach, "sheet")) {
+        r = find_row(pick_locked_unconnected);
+        if (r < 0 || !row_center(r, &cx, &cy)) {
+            printf("[REACH] FAIL 没有「需密码且未连接」的行\n");
+            exit(1);
+        }
+        click_at(cx, cy, 3);
+        ok = wait_until(pred_sheet_visible, NULL, 300);
+    } else if (!strcmp(reach, "dialog")) {
+        r = find_row(pick_saved);
+        if (r < 0 || !row_center(r, &cx, &cy)) {
+            printf("[REACH] FAIL 没有「已保存且需密码」的行\n");
+            exit(1);
+        }
+        click_at(cx, cy, 260);               /* 长按，帧数依据见 nav 用例注释 */
+        ok = wait_until(pred_dlg_visible, NULL, 300);
+    } else {
+        printf("[REACH] FAIL 未知 WIFI_REACH=%s\n", reach);
+        exit(1);
+    }
+
+    if (!ok) {
+        printf("[REACH] FAIL 点击后 %s 没有显示\n", reach);
+        exit(1);
+    }
+    if (getenv("WIFI_KBPROBE")) kb_probe();
+    take_shot("shot_fake.bmp");
+    printf("[REACH] shot after real %s click\n", reach);
+    stage = 2;
+    if (getenv("WIFI_AUTOEXIT")) exit(0);
+}
+
 static lv_display_t * hal_init(int32_t w, int32_t h)
 {
     lv_group_set_default(lv_group_create());
@@ -240,9 +555,16 @@ int main(int argc, char **argv)
     (void)argv;
 
     lv_init();
+    /* 无头跑法经常直接 kill 进程：行缓冲会让所有断言行一起丢，必须关缓冲 */
+    setvbuf(stdout, NULL, _IONBF, 0);
     hal_init(SIM_W, SIM_H);
 
     ui_init();
+    {   /* ⑤ 逐状态出图：先裁剪假世界，再初始化 io（io_init 会发布初始文案） */
+        const char *fs = getenv("WIFI_FAKE_STATE");
+        extern void io_fake_set_ap_count(int n);
+        if (fs && !strcmp(fs, "empty")) io_fake_set_ap_count(0);
+    }
     user_io_init();      /* 扫描状态机 / 契约状态（必须在 ui_init 之后：要拿 objects） */
 
     while (1) {
@@ -251,6 +573,8 @@ int main(int argc, char **argv)
         ui_tick();
         user_io_tick();   /* 排空命令 + 推进扫描 + 同步 10 个槽 */
         scroll_test_hooks();
+        nav_test_hooks();
+        reach_shot_hooks();
         headless_hooks();
         usleep(4000);
     }

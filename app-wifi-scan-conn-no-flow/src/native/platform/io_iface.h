@@ -25,6 +25,11 @@ void io_init(void);                 /* 一次性初始化 */
 void io_sample_inputs(void);        /* 采样外部世界 -> app_set_input_*() */
 void io_wifi_scan(int v);           /* v=1 发起一次扫描 */
 
+/* 假世界规模裁剪（PC 仿真专用，⑤ 逐状态出图要能指定"扫到 0 个 AP"这类边界结果；
+ * 真机后端不实现这两个符号——PC_SIM 的 CMake 已排除 io_esp.cpp，链接不会缺）。 */
+void io_fake_set_ap_count(int n);
+int  io_fake_ap_count(void);
+
 const wifi_ap_t *wifi_ap_at(int index);  /* 已按 RSSI 降序排好 */
 int  wifi_ap_count(void);           /* 扫描结果总数 */
 int  wifi_ap_gen(void);             /* 代数：内容变化 +1，UI 据此重建 */

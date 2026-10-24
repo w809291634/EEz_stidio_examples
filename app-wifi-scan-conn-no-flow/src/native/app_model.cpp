@@ -5,6 +5,7 @@
 #include "app_model.h"
 #include "platform/io_iface.h"
 #include "wifi_ui_sync.h"
+#include <stdio.h>
 #include <string.h>
 
 static int32_t g_in_i[APP_IN_COUNT];
@@ -72,11 +73,17 @@ void user_io_tick(void)
     while (app_pop_output(&id, &v)) {
         switch (id) {
         case APP_OUT_WIFI_SCAN: io_wifi_scan(v.i); break;
-        /* 第⑤步才接线（后端已定：真实 Windows WLAN）*/
-        case APP_OUT_WIFI_CONNECT: break;   /* TODO(⑤): io_wifi_connect(ssid, pwd) */
-        case APP_OUT_PWD_CANCEL:   break;   /* TODO(⑤): 半页显隐 */
-        case APP_OUT_DLG_FORGET:   break;   /* TODO(⑤): io_wifi_forget(ssid) */
-        case APP_OUT_DLG_CANCEL:   break;   /* TODO(⑤): 对话框显隐 */
+        /* ⑦-1 只做导航闭环：关闭类命令在这里落地；
+         * 需要后端的（真连/真忘记）仍留 TODO，但要先让界面退得出去。 */
+        case APP_OUT_WIFI_CONNECT:            /* TODO(⑦-4): io_wifi_connect(ssid, pwd) */
+            printf("[CMD] wifi_connect（后端未接，⑦-4）\n");
+            break;
+        case APP_OUT_PWD_CANCEL: wifi_ui_close_sheet(); break;
+        case APP_OUT_DLG_FORGET:                      /* TODO(⑦-4): io_wifi_forget(ssid) */
+            printf("[CMD] dlg_forget（后端未接，⑦-4）\n");
+            wifi_ui_close_dialog();
+            break;
+        case APP_OUT_DLG_CANCEL: wifi_ui_close_dialog(); break;
         default: break;
         }
     }

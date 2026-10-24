@@ -16,7 +16,11 @@ static wifi_ap_t s_aps[AP_MAX];
 static int  s_cnt = 0;
 static int  s_gen = 0;
 static int  s_scan_state = 0;      /* 0 空闲 1 扫描中 2 完成 */
+static int  s_fake_n = -1;         /* -1 = 用全表；>=0 = 只报前 n 个（⑤ 逐状态出图） */
 static clock_t s_t0 = 0;
+
+void io_fake_set_ap_count(int n) { s_fake_n = n; }
+int  io_fake_ap_count(void)      { return s_fake_n; }
 
 typedef struct {
     const char *ssid;
@@ -59,6 +63,7 @@ static int cmp_ap(const void *a, const void *b)
 static void publish(void)
 {
     s_cnt = (int)(sizeof(FAKE) / sizeof(FAKE[0]));
+    if (s_fake_n >= 0) s_cnt = s_fake_n;      /* ⑤ 逐状态出图的裁剪 */
     if (s_cnt > AP_MAX) s_cnt = AP_MAX;
 
     for (int i = 0; i < s_cnt; i++) {
