@@ -180,8 +180,9 @@ def group_label(s, y, label, trailing=None):
 HEAD_BTN = (W - PAD - 64, 14, 64, 26)   # 与 build_example.HEAD_BTN 同值
 EMPTY_BTN = (170, 256, 140, 34)
 DIALOG_BOX = (70, 90, 340, 140)
-DIALOG_BTN_L = (90, 182, 140, 32)
-DIALOG_BTN_R = (250, 182, 140, 32)
+DIALOG_BTN_L = (90, 182, 92, 32)
+DIALOG_BTN_M = (186, 182, 92, 32)
+DIALOG_BTN_R = (282, 182, 92, 32)
 
 
 def header(s, sub, btn="刷新", busy=False):
@@ -730,9 +731,9 @@ def sc_password_flow(s):
 
 # ---------------- 连接半页（方案 C，几何与实现逐像素一致）----------------
 SHEET_Y, SHEET_H = 96, 224
-SHEET_TA = (8, 43, 364, 36)          # x,y,w,h（相对 sheet）
-SHEET_BTN = (396, 43, 76, 36)
-SHEET_KB = (8, 92, 464, 132)
+SHEET_TA = (8, 43, 364, 35)          # x,y,w,h（相对 sheet）
+SHEET_BTN = (393, 42, 76, 36)
+SHEET_KB = (8, 86, 464, 132)
 SHEET_KB_GAP = 4                     # 键间距（与 build_example.py 同值）
 
 
@@ -813,12 +814,16 @@ def sc_menu(s):
     s.text(DX + 20, DY + 32, "忘记此网络？", 14, T1, weight="500")
     s.text(DX + 20, DY + 54, "1号楼6层WiFi · WPA3 · -63 dBm", 11, T2)
     s.text(DX + 20, DY + 74, "将删除已保存的密码，下次连接需重新输入。", 10.5, T3)
-    # 左右两个按钮
-    # 左：忘记（危险）；右：取消（用户定的顺序，与常规相反，别＜顺手＞调回去）
+    # 三个按钮：左忘记（危险）/ 中断开 / 右取消（用户定的顺序，别＜顺手＞调回去）
     s.rect(*DIALOG_BTN_L, FAIL_BG, rx=8, stroke=FAIL_EDGE, sw=0.6)
-    s.text(DX + 90, DY + 113, "忘记", 11.5, FAIL, anchor="middle")
+    s.text(DIALOG_BTN_L[0] + DIALOG_BTN_L[2] / 2, DY + 113, "忘记", 11.5, FAIL,
+           anchor="middle")
+    s.rect(*DIALOG_BTN_M, "#1B2438", rx=8, stroke=LINE, sw=0.5)
+    s.text(DIALOG_BTN_M[0] + DIALOG_BTN_M[2] / 2, DY + 113, "断 开", 11.5, T2,
+           anchor="middle")
     s.rect(*DIALOG_BTN_R, "#1B2438", rx=8, stroke=LINE, sw=0.5)
-    s.text(DX + 250, DY + 113, "取 消", 11.5, T2, anchor="middle")
+    s.text(DIALOG_BTN_R[0] + DIALOG_BTN_R[2] / 2, DY + 113, "取 消", 11.5, T2,
+           anchor="middle")
 
 
 def lvgl_keyboard(s, top, key_h=29, gap=4, x0=8, width=464, ok_text="OK"):

@@ -61,6 +61,10 @@ void user_io_tick(void)
             wifi_busy_show(busy);
             break;
         }
+        case APP_OUT_WIFI_DISCONNECT:
+            io_wifi_disconnect(app_get_input_s(APP_IN_SEL_SSID));
+            wifi_nav_close_dialog();
+            break;
         case APP_OUT_PWD_CANCEL: wifi_nav_close_sheet(); break;
         case APP_OUT_DLG_FORGET:
             io_wifi_forget(app_get_input_s(APP_IN_SEL_SSID));

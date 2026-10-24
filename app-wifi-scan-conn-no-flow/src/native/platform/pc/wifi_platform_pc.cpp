@@ -253,6 +253,25 @@ void io_wifi_forget(const char *ssid)
     printf("[IO] forgotten: %s\n", target);
 }
 
+// 函数作用：断开指定网络（假世界：只清 connected 位）。 参数：ssid。 返回值：无。
+void io_wifi_disconnect(const char *ssid)
+{
+    wifi_ap_t *ap;
+    char target[33];
+
+    if (s_real) { win_io_disconnect(ssid); return; }
+    ap = find_ap(ssid);
+    if (!ap || !ap->connected) {
+        set_status("未连接 %s", ssid ? ssid : "");
+        return;
+    }
+    strncpy(target, ap->ssid, sizeof(target) - 1);   /* 重排前抄走 */
+    target[sizeof(target) - 1] = '\0';
+    ap->connected = false;
+    resort_and_publish();
+    set_status("已断开 %s", target);
+}
+
 // 函数作用：推进扫描计时并把状态回写 model。 参数：无。 返回值：无。
 void io_sample_inputs(void)
 {

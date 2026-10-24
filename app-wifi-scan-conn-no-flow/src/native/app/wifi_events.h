@@ -22,6 +22,7 @@ void action_dlg_cancel(lv_event_t *e);
 /* ---- native 手势复用入口 ---- */
 void wifi_events_select(const char *ssid);      /* 记下本次操作针对哪个网络 */
 void wifi_events_request_connect(void);         /* 投递「连接」命令 */
+void wifi_events_request_disconnect(void);      /* 投递「断开」命令 */
 
 #ifdef __cplusplus
 }

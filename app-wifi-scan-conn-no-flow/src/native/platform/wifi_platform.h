@@ -42,6 +42,8 @@ void io_wifi_scan(int v);           /* v=1 发起一次扫描 */
  *   收到 2/3 收圈——所以"点了没反应"在这层不可能重现。 */
 void io_wifi_connect(const char *ssid, const char *password);
 void io_wifi_forget(const char *ssid);
+/* 断开：只在目标确实是当前连接时才动手（WlanDisconnect 是整口断，不认 SSID）。 */
+void io_wifi_disconnect(const char *ssid);
 
 const wifi_ap_t *wifi_ap_at(int index);  /* 已按「已连接→RSSI→SSID」排好 */
 int  wifi_ap_count(void);           /* 扫描结果总数 */

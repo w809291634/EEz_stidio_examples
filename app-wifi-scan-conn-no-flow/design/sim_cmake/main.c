@@ -478,6 +478,15 @@ static int pred_status_connecting(void *p)
     snprintf(want, sizeof(want), "正在连接 %s…", s_target);
     return strstr(app_get_input_s(APP_IN_SCAN_STATUS), want) != NULL;
 }
+/* 断开用例：目标必须从"已连接"变成"未连接"，文案点名到这条 SSID */
+static int pred_target_disconnected(void *p) { (void)p; return ap_flag_is(1) == 0; }
+static int pred_status_disconnected(void *p)
+{
+    char want[80];
+    (void)p;
+    snprintf(want, sizeof(want), "已断开 %s", s_target);
+    return strstr(app_get_input_s(APP_IN_SCAN_STATUS), want) != NULL;
+}
 static int pred_conn_state_idle(void *p)
 {
     (void)p;
@@ -701,7 +710,35 @@ static void nav_test_hooks(void)
         stage = 11;
         return;
     }
-    case 11: {                              /* 收尾 */
+    case 11: {                              /* 长按菜单中间那颗：断开 */
+        nav_check("断开用例：目标仍是已连接", ap_flag_is(1) == 1);
+        if (!target_row_center(s_target, &cx, &cy)) { stage = 12; return; }
+        click_at(cx, cy, 260);              /* 长按 */
+        nav_wait("长按已连接行 → 对话框显示", pred_dlg_visible, NULL, 300);
+        nav_check("对话框里有「断开」按钮", objects.btn_dlg_disconnect != NULL);
+        nav_check("三颗按钮同高同宽、从左到右排",
+                  objects.btn_dlg_forget && objects.btn_dlg_disconnect &&
+                  objects.btn_dlg_cancel &&
+                  lv_obj_get_height(objects.btn_dlg_forget) ==
+                      lv_obj_get_height(objects.btn_dlg_disconnect) &&
+                  lv_obj_get_width(objects.btn_dlg_forget) ==
+                      lv_obj_get_width(objects.btn_dlg_disconnect) &&
+                  lv_obj_get_y(objects.btn_dlg_forget) ==
+                      lv_obj_get_y(objects.btn_dlg_disconnect) &&
+                  lv_obj_get_x(objects.btn_dlg_forget) <
+                      lv_obj_get_x(objects.btn_dlg_disconnect) &&
+                  lv_obj_get_x(objects.btn_dlg_disconnect) <
+                      lv_obj_get_x(objects.btn_dlg_cancel));
+        center_of_obj(objects.btn_dlg_disconnect, &cx, &cy);
+        click_at(cx, cy, 3);
+        nav_wait("点「断开」→ 对话框隐藏", pred_dlg_hidden, NULL, 300);
+        nav_wait("这条真的断开了（connected 清零）", pred_target_disconnected, NULL, 300);
+        nav_wait("文案点名「已断开 <这条 SSID>」", pred_status_disconnected, NULL, 300);
+        nav_check("断开后全表没有已连接行", connected_count() == 0);
+        stage = 12;
+        return;
+    }
+    case 12: {                              /* 收尾 */
         if (!hidden_of(objects.overlay_root)) {
             center_of_obj(objects.btn_pwd_close, &cx, &cy);
             click_at(cx, cy, 3);

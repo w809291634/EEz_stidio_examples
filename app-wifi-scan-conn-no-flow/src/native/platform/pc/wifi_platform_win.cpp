@@ -807,6 +807,26 @@ void win_io_forget(const char *ssid)
     if (query()) publish_found();
 }
 
+// 函数作用：断开指定网络；只有它确实是当前连接时才动（整口断开不认 SSID）。
+//          参数：ssid：目标网络。 返回值：无。
+void win_io_disconnect(const char *ssid)
+{
+    win_ap_t *t = find_by_ssid(ssid);
+    char target[33];
+    DWORD rr;
+
+    if (!s_h) return;
+    if (!t || !t->ap.connected) { set_status("未连接 %s", ssid ? ssid : ""); return; }
+    strncpy(target, t->ap.ssid, sizeof(target) - 1);
+    target[sizeof(target) - 1] = '\0';
+
+    rr = WlanDisconnect(s_h, &s_guid, NULL);
+    printf("[WIN] WlanDisconnect %s -> rr=%lu\n", target, (unsigned long)rr);
+    if (rr != ERROR_SUCCESS) { set_status("断开失败 %s", target); return; }
+    query();                                  /* 立刻回查，列表状态跟上 */
+    set_status("已断开 %s", target);
+}
+
 const wifi_ap_t *win_io_ap_at(int index)
 {
     if (index < 0 || index >= s_cnt) return NULL;

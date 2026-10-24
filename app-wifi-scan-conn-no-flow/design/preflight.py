@@ -147,6 +147,7 @@ def check_geometry():
              ("SHEET_KB_GAP", BE.SHEET_KB_GAP, MG.SHEET_KB_GAP),
              ("DIALOG_BOX", BE.DIALOG_BOX, MG.DIALOG_BOX),
              ("DIALOG_BTN_L", BE.DIALOG_BTN_L, MG.DIALOG_BTN_L),
+             ("DIALOG_BTN_M", BE.DIALOG_BTN_M, MG.DIALOG_BTN_M),
              ("DIALOG_BTN_R", BE.DIALOG_BTN_R, MG.DIALOG_BTN_R),
              ("HEAD_BTN", BE.HEAD_BTN, MG.HEAD_BTN)]
     # 空态「重新扫描」只存在于设计图/标注（EEZ 里空态由 native 画），不进这份对账
@@ -185,10 +186,16 @@ def check_geometry():
         ("dlg_card", BE.DIALOG_BOX),
         ("btn_dlg_forget",
          (BE.DIALOG_BTN_L[0] - BE.DIALOG_BOX[0],
-          BE.DIALOG_BTN_L[1] - BE.DIALOG_BOX[1], 140, 32)),
+          BE.DIALOG_BTN_L[1] - BE.DIALOG_BOX[1],
+          BE.DIALOG_BTN_L[2], BE.DIALOG_BTN_L[3])),
+        ("btn_dlg_disconnect",
+         (BE.DIALOG_BTN_M[0] - BE.DIALOG_BOX[0],
+          BE.DIALOG_BTN_M[1] - BE.DIALOG_BOX[1],
+          BE.DIALOG_BTN_M[2], BE.DIALOG_BTN_M[3])),
         ("btn_dlg_cancel",
          (BE.DIALOG_BTN_R[0] - BE.DIALOG_BOX[0],
-          BE.DIALOG_BTN_R[1] - BE.DIALOG_BOX[1], 140, 32)),
+          BE.DIALOG_BTN_R[1] - BE.DIALOG_BOX[1],
+          BE.DIALOG_BTN_R[2], BE.DIALOG_BTN_R[3])),
     ]
     for ident, expect in checks:
         got = geo(ident)

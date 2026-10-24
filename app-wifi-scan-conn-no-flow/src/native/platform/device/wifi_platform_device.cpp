@@ -66,6 +66,13 @@ void io_wifi_forget(const char *ssid)
     printf("[IO] io_wifi_forget 未实现（⑦-2）\n");
 }
 
+// 函数作用：断开指定网络。 参数：ssid。 返回值：无。
+void io_wifi_disconnect(const char *ssid)
+{
+    (void)ssid;
+    /* TODO(⑦-2): 断开当前连接；注意整口断开不认 SSID，先比对当前 SSID */
+}
+
 // 函数作用：拉取扫描结果并回写 model。 参数：无。 返回值：无。
 void io_sample_inputs(void)
 {

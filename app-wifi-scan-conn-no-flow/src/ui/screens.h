@@ -41,8 +41,10 @@ typedef struct _objects_t {
     lv_obj_t *lbl_dlg_hint;
     lv_obj_t *btn_dlg_forget;
     lv_obj_t *obj3;
-    lv_obj_t *btn_dlg_cancel;
+    lv_obj_t *btn_dlg_disconnect;
     lv_obj_t *obj4;
+    lv_obj_t *btn_dlg_cancel;
+    lv_obj_t *obj5;
 } objects_t;
 
 extern objects_t objects;

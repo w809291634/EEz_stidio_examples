@@ -19,6 +19,7 @@ void win_io_scan(void);                 /* 发起真扫描（WlanScan）并置�
 void win_io_sample(void);               /* 推进扫描/连接计时，到点就重新查询 */
 void win_io_connect(const char *ssid, const char *password);
 void win_io_forget(const char *ssid);
+void win_io_disconnect(const char *ssid);
 
 const wifi_ap_t *win_io_ap_at(int index);
 int  win_io_ap_count(void);

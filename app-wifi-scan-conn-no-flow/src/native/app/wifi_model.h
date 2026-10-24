@@ -35,6 +35,7 @@ typedef enum {
     APP_OUT_WIFI_CONNECT,    /* 半页点「连接」（密码由 UI 层读 pwd_ta）*/
     APP_OUT_PWD_CANCEL,      /* 关闭半页 */
     APP_OUT_DLG_FORGET,      /* 忘记已保存网络 */
+    APP_OUT_WIFI_DISCONNECT, /* 断开选中网络（长按菜单中间那颗） */
     APP_OUT_DLG_CANCEL,      /* 关闭对话框 */
     APP_OUT_COUNT
 } app_output_id_t;

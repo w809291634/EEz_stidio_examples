@@ -55,10 +55,12 @@
     <text x="90" y="122" fill="#F0F4FC" font-size="14" font-weight="500">忘记此网络？</text>
     <text x="90" y="144" fill="#8A99B3" font-size="11">1号楼6层WiFi · WPA3 · -63 dBm</text>
     <text x="90" y="164" fill="#5C6A85" font-size="10.5">将删除已保存的密码，下次连接需重新输入。</text>
-    <rect x="90" y="182" width="140" height="32" fill="#2A1620" rx="8" stroke="#7A3B46" stroke-width="0.6"/>
-    <text x="160" y="203" fill="#E06A6A" font-size="11.5" text-anchor="middle">忘记</text>
-    <rect x="250" y="182" width="140" height="32" fill="#1B2438" rx="8" stroke="#26314A" stroke-width="0.5"/>
-    <text x="320" y="203" fill="#8A99B3" font-size="11.5" text-anchor="middle">取 消</text>
+    <rect x="90" y="182" width="92" height="32" fill="#2A1620" rx="8" stroke="#7A3B46" stroke-width="0.6"/>
+    <text x="136" y="203" fill="#E06A6A" font-size="11.5" text-anchor="middle">忘记</text>
+    <rect x="186" y="182" width="92" height="32" fill="#1B2438" rx="8" stroke="#26314A" stroke-width="0.5"/>
+    <text x="232" y="203" fill="#8A99B3" font-size="11.5" text-anchor="middle">断 开</text>
+    <rect x="282" y="182" width="92" height="32" fill="#1B2438" rx="8" stroke="#26314A" stroke-width="0.5"/>
+    <text x="328" y="203" fill="#8A99B3" font-size="11.5" text-anchor="middle">取 消</text>
   </g>
   <text x="40" y="472" fill="#7C8AA5" font-size="12">11 忘记确认对话框：左忘记、右取消（用户定序）；不放『记住密码』开关</text>
 </svg>

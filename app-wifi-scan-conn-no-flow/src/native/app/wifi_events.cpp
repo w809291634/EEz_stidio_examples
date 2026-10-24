@@ -26,6 +26,14 @@ void wifi_events_request_connect(void)
     app_set_output(APP_OUT_WIFI_CONNECT, v);
 }
 
+// 函数作用：投递「断开选中网络」命令。 参数：无。 返回值：无。
+void wifi_events_request_disconnect(void)
+{
+    app_value_t v;
+    v.i = 0;
+    app_set_output(APP_OUT_WIFI_DISCONNECT, v);
+}
+
 // 函数作用：投递「开始扫描」命令。 参数：e：LVGL 事件（未使用）。 返回值：无。
 void action_scan_start(lv_event_t *e)
 {
@@ -58,6 +66,13 @@ void action_dlg_forget(lv_event_t *e)
     app_value_t v;
     v.i = 0;
     app_set_output(APP_OUT_DLG_FORGET, v);
+}
+
+// 函数作用：对话框「断 开」→ 投递断开命令。 参数：e：未使用。 返回值：无。
+void action_wifi_disconnect(lv_event_t *e)
+{
+    (void)e;
+    wifi_events_request_disconnect();
 }
 
 // 函数作用：投递「关闭对话框」命令。 参数：e：未使用。 返回值：无。

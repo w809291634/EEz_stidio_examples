@@ -243,6 +243,7 @@ FAIL 反映到退出码；反向测试见 `tmp/_negtest_nav.py`（掐掉长按�
 | 长按 | 已保存 | 开「忘记此网络」对话框 |
 | 对话框 | 忘记 / 取消 | 忘记＝清 `saved`（之后同一条重新要密码）；取消＝只关窗不改状态 |
 | 半页「连接」 | 密码为空（纯空格也算空） | **不发起连接、不转圈、半页不收**，标题栏提示「请输入密码」 |
+| 长按对话框 | 断开 | 只断开**这条若是当前连接**；不是当前连接就只提示「未连接 X」（`WlanDisconnect` 是整口断，不认 SSID） |
 
 后端（PC 假世界）负责状态：`io_wifi_connect()` 清掉别人的 `connected`、置目标为唯一已连接，
 有锁且给了密码才置 `saved`；`io_wifi_forget()` 只清 `saved`（对齐 Windows 删 profile 不断连）。
@@ -425,6 +426,25 @@ ANSI(GBK) 码页存成 profile 的 SSID 字节**。中文 SSID 于是与空口�
   （`main.c:env_u8`，`WIFI_REACH_TARGET=<SSID>` 用它）。
 
 留了口子的话记得自己清：本机现在多了一条坏 profile「YJT-1号楼办公 2」（本轮排查产物）。
+
+### 5.15 ⑦-3 长按菜单加「断开」（2026-10-25 本轮）
+
+用户口径：长按菜单（原「忘记此网络？」对话框）**中间加一颗「断 开」**，三颗等宽：忘记 / 断开 / 取消。
+
+- 设计源：`DIALOG_BTN_L/M/R = (90|186|282, 182, 92, 32)`，三颗同高同宽、间距 4；
+  新增 native 动作 `wifi_disconnect`、控件 `btn_dlg_disconnect`。
+- 链路：按钮 → `APP_OUT_WIFI_DISCONNECT` → `wifi_logic` → `io_wifi_disconnect(选中 SSID)` → 关对话框。
+  假世界清 `connected` 位并重排（gen+1）；真接口走 `WlanDisconnect`。
+- **真接口的语义坑**：`WlanDisconnect` 断的是**整个接口**，不认 SSID。
+  所以真接口先查"目标是不是当前连接"，不是就只提示「未连接 X」，绝不去断别人的网。
+- 成功后标题栏「已断开 X」；列表里该条回到未连接、全表 `connected` 归零。
+
+证据：`[NAV] RESULT: PASS 57 / FAIL 0`（新增 8 条）；反向测试（掐掉 `io_wifi_disconnect`）→ 3 条红、rc=1；
+几何门禁三颗按钮出码=设计=`(20|116|212, 92, 92, 32)`（相对卡片）。出图 `build/sim_shots/dialog_open.png`，
+设计图 `mockup_08_forget_confirm.svg`。
+
+待用户定文案：对话框提示仍是「将删除已保存的密码，下次连接需重新输入。」，只解释了「忘记」；
+要不要改成同时说明「断开」，等口径。
 
 ### 5.13 ⑦-2f 半页入场动画（2026-10-24 本轮）
 

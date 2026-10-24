@@ -90,7 +90,8 @@ python design\preflight.py --with-sim
 双击 `design\sim_cmake\run_sim.bat` 就是真网卡：列表是本机扫到的真网络（隐藏网络不列），
 点「已保存」的行是真的 `WlanConnect`——半页收起、全屏转圈、期间点不动，
 结果出来才收圈（**换网会先断掉原来连着的**，连不上就两头空，标题写「连接失败 X」），
-长按「忘记」是真的 `WlanDeleteProfile`（会真删掉系统里存的密码，删了就得重新输）。
+长按已保存的行会出三按钮菜单：**忘记**（真删系统里的密码）/ **断开**（只断当前这条连接）/ **取消**。
+`WlanDisconnect` 断的是整口、不认 SSID，所以「断开」只在目标确实是当前连接时才动手，否则只提示「未连接 X」。
 失败时标题栏会带上系统给的原因（如「连接失败 X（特定的网络不可用）」），原因码翻不出文案时显示「错误码 N」；
 要深挖就先分清"系统也连不上"还是"我们没下发"：
 `Get-WinEvent -ProviderName Microsoft-Windows-WLAN-AutoConfig`（8002 给失败原因）

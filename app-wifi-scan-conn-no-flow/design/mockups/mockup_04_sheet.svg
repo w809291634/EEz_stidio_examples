@@ -55,90 +55,90 @@
     <rect x="224" y="102" width="32" height="3" fill="#26314A" rx="1.5"/>
     <text x="16" y="125" fill="#F0F4FC" font-size="13" font-weight="500">1号楼6层WiFi</text>
     <text x="450" y="125" fill="#8A99B3" font-size="15" text-anchor="middle">×</text>
-    <rect x="8" y="139" width="364" height="36" fill="#101A28" rx="8" stroke="#26314A" stroke-width="0.8"/>
+    <rect x="8" y="139" width="364" height="35" fill="#101A28" rx="8" stroke="#26314A" stroke-width="0.8"/>
     <text x="20" y="162" fill="#5C6A85" font-size="12">输入密码</text>
-    <rect x="396" y="139" width="76" height="36" fill="#5B8CFF" rx="8"/>
-    <text x="434" y="162" fill="#0A1020" font-size="11" text-anchor="middle">连 接</text>
-    <rect x="8" y="188" width="45.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="31" y="207" fill="#F0F4FC" font-size="10" text-anchor="middle">1#</text>
-    <rect x="57.9" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="74.3" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">q</text>
-    <rect x="94.8" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="111.2" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">w</text>
-    <rect x="131.6" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="148" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">e</text>
-    <rect x="168.4" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="184.8" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">r</text>
-    <rect x="205.2" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="221.6" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">t</text>
-    <rect x="242" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="258.4" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">y</text>
-    <rect x="278.8" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="295.2" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">u</text>
-    <rect x="315.6" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="332" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">i</text>
-    <rect x="352.4" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="368.8" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">o</text>
-    <rect x="389.2" y="188" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="405.7" y="207" fill="#F0F4FC" font-size="11" text-anchor="middle">p</text>
-    <rect x="426.1" y="188" width="45.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="449" y="207" fill="#F0F4FC" font-size="10" text-anchor="middle">del</text>
-    <rect x="8" y="222" width="50.3" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="33.2" y="241" fill="#F0F4FC" font-size="10" text-anchor="middle">ABC</text>
-    <rect x="62.3" y="222" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="80.3" y="241" fill="#F0F4FC" font-size="11" text-anchor="middle">a</text>
-    <rect x="102.2" y="222" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="120.2" y="241" fill="#F0F4FC" font-size="11" text-anchor="middle">s</text>
-    <rect x="142.2" y="222" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="160.1" y="241" fill="#F0F4FC" font-size="11" text-anchor="middle">d</text>
-    <rect x="182.1" y="222" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="200.1" y="241" fill="#F0F4FC" font-size="11" text-anchor="middle">f</text>
-    <rect x="222" y="222" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="240" y="241" fill="#F0F4FC" font-size="11" text-anchor="middle">g</text>
-    <rect x="262" y="222" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="279.9" y="241" fill="#F0F4FC" font-size="11" text-anchor="middle">h</text>
-    <rect x="301.9" y="222" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="319.9" y="241" fill="#F0F4FC" font-size="11" text-anchor="middle">j</text>
-    <rect x="341.8" y="222" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="359.8" y="241" fill="#F0F4FC" font-size="11" text-anchor="middle">k</text>
-    <rect x="381.8" y="222" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="399.7" y="241" fill="#F0F4FC" font-size="11" text-anchor="middle">l</text>
-    <rect x="421.7" y="222" width="50.3" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="446.8" y="241" fill="#F0F4FC" font-size="10" text-anchor="middle">ret</text>
-    <rect x="8" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="25.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">_</text>
-    <rect x="47" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="64.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">-</text>
-    <rect x="86" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="103.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">z</text>
-    <rect x="125" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="142.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">x</text>
-    <rect x="164" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="181.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">c</text>
-    <rect x="203" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="220.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">v</text>
-    <rect x="242" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="259.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">b</text>
-    <rect x="281" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="298.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">n</text>
-    <rect x="320" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="337.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">m</text>
-    <rect x="359" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="376.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">.</text>
-    <rect x="398" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="415.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">,</text>
-    <rect x="437" y="256" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="454.5" y="275" fill="#F0F4FC" font-size="11" text-anchor="middle">:</text>
-    <rect x="8" y="290" width="64" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="40" y="309" fill="#F0F4FC" font-size="10" text-anchor="middle">键盘</text>
-    <rect x="76" y="290" width="40" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="96" y="309" fill="#F0F4FC" font-size="11" text-anchor="middle">&lt;</text>
-    <rect x="120" y="290" width="240" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <rect x="192" y="303" width="96" height="4" fill="#2C3852" rx="2"/>
-    <rect x="364" y="290" width="40" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
-    <text x="384" y="309" fill="#F0F4FC" font-size="11" text-anchor="middle">&gt;</text>
-    <rect x="408" y="290" width="64" height="30" fill="#5B8CFF" rx="5"/>
-    <text x="440" y="309" fill="#0A1020" font-size="10" text-anchor="middle">OK</text>
+    <rect x="393" y="138" width="76" height="36" fill="#5B8CFF" rx="8"/>
+    <text x="431" y="161" fill="#0A1020" font-size="11" text-anchor="middle">连 接</text>
+    <rect x="8" y="182" width="45.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="31" y="201" fill="#F0F4FC" font-size="10" text-anchor="middle">1#</text>
+    <rect x="57.9" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="74.3" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">q</text>
+    <rect x="94.8" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="111.2" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">w</text>
+    <rect x="131.6" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="148" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">e</text>
+    <rect x="168.4" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="184.8" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">r</text>
+    <rect x="205.2" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="221.6" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">t</text>
+    <rect x="242" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="258.4" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">y</text>
+    <rect x="278.8" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="295.2" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">u</text>
+    <rect x="315.6" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="332" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">i</text>
+    <rect x="352.4" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="368.8" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">o</text>
+    <rect x="389.2" y="182" width="32.8" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="405.7" y="201" fill="#F0F4FC" font-size="11" text-anchor="middle">p</text>
+    <rect x="426.1" y="182" width="45.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="449" y="201" fill="#F0F4FC" font-size="10" text-anchor="middle">del</text>
+    <rect x="8" y="216" width="50.3" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="33.2" y="235" fill="#F0F4FC" font-size="10" text-anchor="middle">ABC</text>
+    <rect x="62.3" y="216" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="80.3" y="235" fill="#F0F4FC" font-size="11" text-anchor="middle">a</text>
+    <rect x="102.2" y="216" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="120.2" y="235" fill="#F0F4FC" font-size="11" text-anchor="middle">s</text>
+    <rect x="142.2" y="216" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="160.1" y="235" fill="#F0F4FC" font-size="11" text-anchor="middle">d</text>
+    <rect x="182.1" y="216" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="200.1" y="235" fill="#F0F4FC" font-size="11" text-anchor="middle">f</text>
+    <rect x="222" y="216" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="240" y="235" fill="#F0F4FC" font-size="11" text-anchor="middle">g</text>
+    <rect x="262" y="216" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="279.9" y="235" fill="#F0F4FC" font-size="11" text-anchor="middle">h</text>
+    <rect x="301.9" y="216" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="319.9" y="235" fill="#F0F4FC" font-size="11" text-anchor="middle">j</text>
+    <rect x="341.8" y="216" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="359.8" y="235" fill="#F0F4FC" font-size="11" text-anchor="middle">k</text>
+    <rect x="381.8" y="216" width="35.9" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="399.7" y="235" fill="#F0F4FC" font-size="11" text-anchor="middle">l</text>
+    <rect x="421.7" y="216" width="50.3" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="446.8" y="235" fill="#F0F4FC" font-size="10" text-anchor="middle">ret</text>
+    <rect x="8" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="25.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">_</text>
+    <rect x="47" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="64.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">-</text>
+    <rect x="86" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="103.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">z</text>
+    <rect x="125" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="142.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">x</text>
+    <rect x="164" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="181.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">c</text>
+    <rect x="203" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="220.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">v</text>
+    <rect x="242" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="259.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">b</text>
+    <rect x="281" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="298.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">n</text>
+    <rect x="320" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="337.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">m</text>
+    <rect x="359" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="376.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">.</text>
+    <rect x="398" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="415.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">,</text>
+    <rect x="437" y="250" width="35" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="454.5" y="269" fill="#F0F4FC" font-size="11" text-anchor="middle">:</text>
+    <rect x="8" y="284" width="64" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="40" y="303" fill="#F0F4FC" font-size="10" text-anchor="middle">键盘</text>
+    <rect x="76" y="284" width="40" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="96" y="303" fill="#F0F4FC" font-size="11" text-anchor="middle">&lt;</text>
+    <rect x="120" y="284" width="240" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <rect x="192" y="297" width="96" height="4" fill="#2C3852" rx="2"/>
+    <rect x="364" y="284" width="40" height="30" fill="#282B30" rx="5" stroke="#212B42" stroke-width="0.5"/>
+    <text x="384" y="303" fill="#F0F4FC" font-size="11" text-anchor="middle">&gt;</text>
+    <rect x="408" y="284" width="64" height="30" fill="#5B8CFF" rx="5"/>
+    <text x="440" y="303" fill="#0A1020" font-size="10" text-anchor="middle">OK</text>
   </g>
   <text x="40" y="472" fill="#7C8AA5" font-size="12">04 连接半页：sheet 480×224（把手6+标题20+输入行36+间距30+键盘132），overlay 挂 screen 根</text>
 </svg>

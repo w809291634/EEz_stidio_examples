@@ -35,7 +35,9 @@ settings.build.generateSourceCodeForEezFramework=False（见本文件 README）�
 """
 import json
 import os
+import shutil
 import sys
+import time
 
 # Windows 控制台默认 GBK：打印字体丢弃字符（如 U+30FB）或检查名里的符号
 # 会 UnicodeEncodeError 把流程本身打断 —— 编不出的字符替换掉，不中断。
@@ -73,19 +75,21 @@ HEAD_BTN = (400, 14, 64, 26)
 
 # ---- 连接半页几何（与 design/mockup_gen.py 同值，preflight 会对账）----
 SHEET_Y, SHEET_H = 96, 224
-SHEET_TA = (8, 43, 364, 36)          # 相对 sheet
-SHEET_BTN = (396, 43, 76, 36)
-SHEET_KB = (8, 92, 464, 132)
+SHEET_TA = (8, 43, 364, 35)          # 相对 sheet（用户 EEZ 手改：35 高 + 左内边距 8）
+SHEET_BTN = (393, 42, 76, 36)
+SHEET_KB = (8, 86, 464, 132)
 SHEET_KB_GAP = 4                     # 键间距；4 行 = (132-3*4)/4 = 30 px/行
 # one-line 输入框的真实高度 = 行高 + 上下 pad（探针实测 cn14 行高 19，不是字号 14）
 TA_LINE_H = 19
 SHEET_TA_PAD = (SHEET_TA[3] - TA_LINE_H) // 2
-SHEET_CLOSE = (436, 15, 28, 20)      # 相对 sheet
+SHEET_CLOSE = (418, 12, 28, 20)      # 相对 sheet（用户 EEZ 手改）
 
 # ---- 忘记确认对话框（绝对坐标）----
 DIALOG_BOX = (70, 90, 340, 140)
-DIALOG_BTN_L = (90, 182, 140, 32)
-DIALOG_BTN_R = (250, 182, 140, 32)
+# 三个按钮等宽：左「忘记」/ 中「断开」/ 右「取消」（用户 2026-10-25 定）
+DIALOG_BTN_L = (90, 182, 92, 32)
+DIALOG_BTN_M = (186, 182, 92, 32)
+DIALOG_BTN_R = (282, 182, 92, 32)
 
 FONT_FILE = "fonts/simhei.ttf"   # 全量黑体（相对工程目录，P-0035）
 FONT_NAME = "cn14"
@@ -225,8 +229,21 @@ def bar(x, y, w, h, identifier):
     )
 
 
+def _btn_style(bg, outline):
+    """按钮 MAIN 样式。描边按 EEZ 手改时的书写顺序发（opa→width→color），
+    这样重生成与用户手改的 screens.c 逐行一致。"""
+    st = dict(ZERO_PAD, bg_color=bg, bg_opa=255, radius=8)
+    if outline:
+        st.pop("outline_width", None)      # ZERO_PAD 里那个 0 挪到后面，保持顺序
+        st["outline_opa"] = outline[2]
+        st["outline_width"] = outline[0]
+        st["outline_color"] = outline[1]
+    return st
+
+
 def button(x, y, w, h, text, action, identifier, bg=ELEVATED,
-           text_color="0xFFFFFF"):
+           text_color="0xFFFFFF", outline=None):
+    """outline=(宽度, 颜色, 不透明度) 可选；用户在 EEZ 里给按钮加过描边。"""
     """按钮：子 label 用 EEZ 原生新建按钮形态（content 尺寸 + align
     CENTER，官方 defaultValue 逐字段一致——P-0164 坑 20 定论）。"""
     lbl = {
@@ -244,8 +261,7 @@ def button(x, y, w, h, text, action, identifier, bg=ELEVATED,
     return widget(
         "LVGLButtonWidget", x, y, w, h,
         identifier=identifier,
-        local={"MAIN": {"DEFAULT": dict(ZERO_PAD, bg_color=bg,
-                                        bg_opa=255, radius=8)}},
+        local={"MAIN": {"DEFAULT": _btn_style(bg, outline)}},
         children=[lbl],
         eventHandlers=[{"objID": oid(), "eventName": "CLICKED",
                         "handlerType": "action", "action": action,
@@ -375,7 +391,8 @@ def build_project():
                                                    bg_opa=255, radius=2)}}),
             label(16, 15, 400, 20, "", TEXT1, "lbl_pwd_ssid"),
             button(SHEET_CLOSE[0], SHEET_CLOSE[1], SHEET_CLOSE[2], SHEET_CLOSE[3],
-                   "×", "pwd_cancel", "btn_pwd_close"),
+                   "×", "pwd_cancel", "btn_pwd_close",
+                   outline=(1, "0x0151ac", 150)),
             widget("LVGLTextareaWidget", SHEET_TA[0], SHEET_TA[1],
                    SHEET_TA[2], SHEET_TA[3],
                    identifier="pwd_ta",
@@ -383,7 +400,7 @@ def build_project():
                    #   （lv_textarea.c:557），36 的设计高度只能靠上下 pad 撑：
                    #   探针实测渲染高 = 行高 19 + 2×SHEET_TA_PAD。
                    local={"MAIN": {"DEFAULT": dict(
-                       ZERO_PAD, pad_top=SHEET_TA_PAD,
+                       ZERO_PAD, pad_left=8, pad_top=SHEET_TA_PAD,
                        pad_bottom=SHEET_TA_PAD,
                        bg_color=ROW_BG,
                        bg_opa=255, radius=8,
@@ -444,10 +461,14 @@ def build_project():
                   TEXT2, "lbl_dlg_hint"),
             button(DIALOG_BTN_L[0] - DIALOG_BOX[0], DIALOG_BTN_L[1] - DIALOG_BOX[1],
                    DIALOG_BTN_L[2], DIALOG_BTN_L[3], "忘 记", "dlg_forget",
-                   "btn_dlg_forget", bg=FAIL_BG),
+                   "btn_dlg_forget", bg=FAIL_BG,
+                   outline=(1, "0x000000", 100)),
+            button(DIALOG_BTN_M[0] - DIALOG_BOX[0], DIALOG_BTN_M[1] - DIALOG_BOX[1],
+                   DIALOG_BTN_M[2], DIALOG_BTN_M[3], "断 开", "wifi_disconnect",
+                   "btn_dlg_disconnect", outline=(1, "0x000000", 100)),
             button(DIALOG_BTN_R[0] - DIALOG_BOX[0], DIALOG_BTN_R[1] - DIALOG_BOX[1],
                    DIALOG_BTN_R[2], DIALOG_BTN_R[3], "取 消", "dlg_cancel",
-                   "btn_dlg_cancel"),
+                   "btn_dlg_cancel", outline=(1, "0x000000", 100)),
         ],
     )
     dlg = widget(
@@ -541,6 +562,9 @@ def build_project():
             {"objID": oid(), "name": "dlg_forget",
              "description": "wifi: forget saved network", "implementationType": "native",
              "userProperties": []},
+            {"objID": oid(), "name": "wifi_disconnect",
+             "description": "wifi: disconnect selected network", "implementationType": "native",
+             "userProperties": []},
             {"objID": oid(), "name": "dlg_cancel",
              "description": "wifi: close dialog", "implementationType": "native",
              "userProperties": []}
@@ -573,8 +597,22 @@ BUILD_TEMPLATES = {
 }
 
 
+def backup_existing():
+    """覆盖前先存一份现有工程：EEZ Studio 里手改过的版本不能被无声抹掉。"""
+    if not os.path.isfile(PROJECT_FILE):
+        return None
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    dst_dir = os.path.join(os.path.dirname(PROJECT_FILE), "tmp", "eez_backup")
+    os.makedirs(dst_dir, exist_ok=True)
+    dst = os.path.join(dst_dir, "%s-%s" % (stamp, os.path.basename(PROJECT_FILE)))
+    shutil.copy2(PROJECT_FILE, dst)
+    print("backup : %s" % dst)
+    return dst
+
+
 def main():
     data = build_project()
+    backup_existing()
     with open(PROJECT_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
