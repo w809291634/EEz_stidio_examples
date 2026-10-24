@@ -29,6 +29,7 @@
 #include "screens.h"        /* objects_t：全局对象表（list_box 等） */
 #include "app/wifi_model.h"      /* native 契约：app_get_input_i / APP_IN_SCAN_STATE */
 #include "platform/wifi_platform.h"   /* wifi_ap_at / wifi_ap_count：按 io 数据挑测试行 */
+#include "widgets/wifi_busy/wifi_busy.h"  /* 连接中的全屏转圈：断言"期间不可操作" */
 
 extern void ui_init(void);
 extern void ui_tick(void);
@@ -474,6 +475,9 @@ static int pred_conn_state_idle(void *p)
     (void)p;
     return app_get_input_i(APP_IN_CONN_STATE) == 0;
 }
+/* 转圈遮罩：它存在且可见＝期间列表/半页/对话框都点不到（用户 2026-10-24 定的交互） */
+static int pred_busy_visible(void *p)   { (void)p; return  wifi_busy_visible(); }
+static int pred_busy_hidden(void *p)    { (void)p; return !wifi_busy_visible(); }
 static int pred_sheet_title_target(void *p)
 {
     (void)p;
@@ -559,11 +563,17 @@ static void nav_test_hooks(void)
         set_target(wifi_ap_at(r)->ssid);
         if (!row_center(r, &cx, &cy)) { stage = -1; return; }
         click_at(cx, cy, 3);
-        /* 连接是异步的（⑦-2b）：先看到「正在连接」，再看到 connected */
+        /* 连接是异步的（⑦-2b）：先转圈锁住，再看到 connected */
         nav_wait("点开放网络 → 标题先写「正在连接 X…」",
                  pred_status_connecting, NULL, 300);
+        nav_wait("连接期间全屏转圈盖住", pred_busy_visible, NULL, 100);
+        /* 转圈期间再点一条带锁行：这一笔必须被遮罩吃掉，半页不许开 */
+        if (row_center(find_row(pick_locked_unsaved), &cx, &cy)) click_at(cx, cy, 3);
+        nav_check("转圈期间点带锁行不生效（输入被锁住）",
+                  hidden_of(objects.overlay_root));
         nav_wait("后端真的连上了（connected 置位）",
                  pred_target_connected, NULL, 1500);
+        nav_wait("结果出来后转圈收起", pred_busy_hidden, NULL, 300);
         nav_wait("状态文案点名「已连接 <这条 SSID>」", pred_status_connected, NULL, 300);
         nav_wait("标题 label 上真的写着这句（渲染层）",
                  pred_status_label_connected, NULL, 300);
@@ -642,11 +652,12 @@ static void nav_test_hooks(void)
         click_at(cx, cy, 3);
         nav_wait("点「连接」→ 标题先写「正在连接 X…」",
                  pred_status_connecting, NULL, 300);
-        nav_check("连接中半页仍在前台（不是一点就关）",
-                  !hidden_of(objects.overlay_root));
-        nav_wait("后端报成功 → 半页自动关闭", pred_sheet_hidden, NULL, 1500);
+        nav_wait("点「连接」→ 半页收起", pred_sheet_hidden, NULL, 300);
+        nav_wait("改由全屏转圈接管（期间不可操作）", pred_busy_visible, NULL, 100);
+        nav_wait("后端报成功 → 转圈收起", pred_busy_hidden, NULL, 1500);
         nav_wait("这条真的 connected", pred_target_connected, NULL, 300);
-        nav_check("半页流程走完，对话框也不在前台", hidden_of(objects.dlg_root));
+        nav_check("走完之后两个模态都不在前台",
+                  hidden_of(objects.dlg_root) && hidden_of(objects.overlay_root));
         stage = 11;
         return;
     }
@@ -669,7 +680,7 @@ static void nav_test_hooks(void)
 }
 
 /* ⑦-3 证据图：不翻 hiddenFlag，用真实点击走到模态再截图。
- * 用法：WIFI_AUTOSCAN=1 WIFI_REACH=sheet|dialog|connect WIFI_AUTOEXIT=1
+ * 用法：WIFI_AUTOSCAN=1 WIFI_REACH=sheet|dialog|busy|connect WIFI_AUTOEXIT=1
  * connect＝点第一条「已保存」行走免密直连；真后端（默认）是真的下发
  * WlanConnect，假后端（WIFI_PC_FAKE=1）只改内存，所以这条也是真接口的取证入口。 */
 static void reach_shot_hooks(void)
@@ -705,6 +716,16 @@ static void reach_shot_hooks(void)
         }
         click_at(cx, cy, 260);               /* 长按，帧数依据见 nav 用例注释 */
         ok = wait_until(pred_dlg_visible, NULL, 300);
+    } else if (!strcmp(reach, "busy")) {
+        /* 「连接中」那一屏的证据图：点已保存行 → 等遮罩盖上来 → 立刻拍 */
+        r = find_row(pick_saved);
+        if (r < 0 || !row_center(r, &cx, &cy)) {
+            printf("[REACH] FAIL 没有「已保存且未连接」的行\n");
+            harness_stop(1);
+        }
+        set_target(wifi_ap_at(r)->ssid);
+        click_at(cx, cy, 3);
+        ok = wait_until(pred_busy_visible, NULL, 300);
     } else if (!strcmp(reach, "connect")) {
         r = find_row(pick_saved);
         if (r < 0 || !row_center(r, &cx, &cy)) {

@@ -41,7 +41,7 @@
 | ②′ 同上（**Flow 版差异**） | 母工程还多发 `ui.c` 里的 `assets[588]` + `actions[]` 表 | 同一 `cli_build` | 同上 |
 | ③ 执行模型（**本变体：无 Flow 运行时**） | `ui_init() = create_screens() + loadScreen()`、`ui_tick() = tick_screen(currentScreen)`；**不发射 `eez-flow.cpp/h`**，`src/ui/` 只有 12 个模板文件 | EEZ 生成 | 不改 |
 | ③′ 执行模型（**Flow 版**） | `eez-flow.cpp`（**9,923 行 / 369,589 B，生成进 src/ui**）+ `Value`/`ArrayValue` + `eez_flow_init` / `eez_flow_tick`（母工程 v4 未用 Struct 数组） | EEZ 生成（不是外部库） | 不改；已编进二进制 |
-| ④ native 层 | `platform/wifi_platform.h`（契约）· `app/wifi_model·view·events·logic`（平铺四组）· `widgets/wifi_list/wifi_list.cpp`（★ 唯一画列表处）· `navigation/wifi_nav.cpp`（模态显隐）· `platform/pc|device/`（宏二选一） | **人写** | 唯一允许业务改动的地方 |
+| ④ native 层 | `platform/wifi_platform.h`（契约）· `app/wifi_model·view·events·logic`（平铺四组）· `widgets/wifi_list/wifi_list.cpp`（★ 唯一画列表处）· `widgets/wifi_busy/`（连接中整屏遮罩）· `navigation/wifi_nav.cpp`（模态显隐）· `platform/pc|device/`（宏二选一） | **人写** | 唯一允许业务改动的地方 |
 | ⑤ 硬件 | esp_wifi + NVS / Windows WLAN API / 假数据 | 平台 | — |
 
 ## 2. 三处关键边界（架构真正的"接缝"）
@@ -77,8 +77,8 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
    → wifi_logic 每拍排空命令环 → io_wifi_connect(ssid, pwd) / io_wifi_forget(ssid)
    → platform 落地：假世界改 s_aps[]（全表唯一 connected、给密码才 saved）；
      真接口（默认，WIFI_PC_FAKE=1 才退回假）下发 WlanSetProfile/WlanConnect/WlanDeleteProfile
-   → 后端异步报进度 APP_IN_CONN_STATE：下发即 1（标题「正在连接 X…」），
-     回查真值后 2 成功 / 3 超时失败；wifi_logic 收到 2 才关半页，收到 3 留着改密码
+   → 后端异步报进度 APP_IN_CONN_STATE：下发即 1（标题「正在连接 X…」+ 收半页 +
+     全屏转圈锁住操作），回查真值后 2 成功 / 3 超时失败，logic 收到 2/3 收圈
    → 重排 + gen++ → wifi_view_sync 回显标题文案 + wifi_list_rebuild 重画行
 ```
 - 还没做：半页内的红字错误行（`mockup_05/07` 有，④ 没生成该控件——失败提示现在只在标题栏）、
@@ -145,6 +145,7 @@ app-wifi-scan-conn-no-flow/
     │   └── wifi_logic.{h,cpp}    user_io_init / user_io_tick（不读 objects.*）
     ├── navigation/wifi_nav.{h,cpp}   模态显隐与互斥；不持业务状态
     ├── widgets/wifi_list/wifi_list.{h,cpp}  ★ 唯一画列表处 + 行手势
+    ├── widgets/wifi_busy/wifi_busy.{h,cpp}   连接中的整屏遮罩 + 转圈（CLICKABLE 锁操作）
     └── platform/             硬件边界：接口一份，实现按平台分文件
         ├── wifi_platform.h       窄接口（不引用 LVGL / objects.*）
         ├── pc/wifi_platform_pc.cpp        #ifndef WIFI_PLATFORM_DEVICE；分发器 + 假世界

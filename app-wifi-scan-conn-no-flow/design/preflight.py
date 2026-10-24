@@ -243,6 +243,7 @@ def check_layers():
             "app/wifi_events.cpp", "app/wifi_logic.h", "app/wifi_logic.cpp",
             "navigation/wifi_nav.h", "navigation/wifi_nav.cpp",
             "widgets/wifi_list/wifi_list.h", "widgets/wifi_list/wifi_list.cpp",
+            "widgets/wifi_busy/wifi_busy.h", "widgets/wifi_busy/wifi_busy.cpp",
             "platform/wifi_platform.h",
             "platform/pc/wifi_platform_pc.cpp",
             "platform/pc/wifi_platform_win.cpp",

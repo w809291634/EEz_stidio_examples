@@ -27,8 +27,8 @@
 
 #define WIN_AP_MAX        48
 #define SCAN_WAIT_MS      2000     /* WlanScan 是异步的，2s 后再取表 */
-#define CONNECT_POLL_MS   1000     /* WlanConnect 也是异步的：每秒回查一次真值 */
-#define CONNECT_GIVEUP_MS 15000    /* 15s 还没连上就判失败 */
+#define CONNECT_POLL_MS    500     /* WlanConnect 也是异步的：每 0.5s 回查一次真值 */
+#define CONNECT_GIVEUP_MS 10000    /* 10s 还没连上就判失败 */
 #define PROF_NAME_CHARS   256
 
 /* WLAN_AVAILABLE_NETWORK.dwFlags 的两个位，mingw 头里没给，值取自 MSDN */
@@ -148,6 +148,17 @@ static win_ap_t *find_by_ssid(const char *ssid)
     return NULL;
 }
 
+// 函数作用：该 SSID 在系统 profile 库里是否存在。 参数：pl：profile 列表；ssid：UTF-8 名。 返回值：1/0。
+static int profile_list_has(PWLAN_PROFILE_INFO_LIST pl, const char *ssid)
+{
+    WCHAR w[33];
+    if (!pl || !ssid || !ssid[0]) return 0;
+    if (!u8_to_w(ssid, w, (int)(sizeof(w) / sizeof(WCHAR)))) return 0;
+    for (DWORD i = 0; i < pl->dwNumberOfItems; i++)
+        if (!wcscmp(pl->ProfileInfo[i].strProfileName, w)) return 1;
+    return 0;
+}
+
 /******************** 查询：把系统真表搬进快照 ********************/
 
 // 函数作用：查一次真接口（可用网络 + BSS 信号），排序后刷新快照与代数。
@@ -156,6 +167,7 @@ static int query(void)
 {
     PWLAN_AVAILABLE_NETWORK_LIST p_net = NULL;
     PWLAN_BSS_LIST p_bss = NULL;
+    PWLAN_PROFILE_INFO_LIST p_prof = NULL;
     int n = 0;
 
     if (!s_h) return 0;
@@ -163,6 +175,9 @@ static int query(void)
         printf("[WIN] 取可用网络列表失败\n");
         return 0;
     }
+    /* profile 库是"已保存"的唯一真值；取不到就退回用条目标志位 */
+    if (WlanGetProfileList(s_h, &s_guid, NULL, &p_prof) != ERROR_SUCCESS)
+        p_prof = NULL;
     /* BSS 表只用来拿 dBm 与频点；拿不到也要能出列表，所以不判返回值 */
     if (WlanGetNetworkBssList(s_h, &s_guid, NULL, dot11_BSS_type_any, FALSE,
                               NULL, &p_bss) != ERROR_SUCCESS)
@@ -188,6 +203,9 @@ static int query(void)
             memcpy(s_aps[n].ap.ssid, s_aps[n].raw, s_aps[n].raw_len);
             s_aps[n].ap.ssid[s_aps[n].raw_len] = '\0';
         }
+        /* 隐藏网络广播的 SSID 是全零字节（netsh 里就显示成空名字），
+         * 收进来就是一行没有名字的空白行——不列出来。 */
+        if (!s_aps[n].ap.ssid[0]) continue;
         if (an->strProfileName[0])
             copy_w(an->strProfileName, s_aps[n].profile, PROF_NAME_CHARS);
         else
@@ -209,7 +227,12 @@ static int query(void)
                         : freq >= 4900000 ? "5 GHz" : "2.4 GHz",
                 sizeof(s_aps[n].ap.band) - 1);
         s_aps[n].ap.lock = an->bSecurityEnabled != FALSE;
-        s_aps[n].ap.saved = (an->dwFlags & AWN_HAS_PROFILE) || an->strProfileName[0];
+        /* "已保存"以 **profile 库** 为准：可用网络条目的 HAS_PROFILE 位在真机上会漏报
+         * （实测 profile 明明在，整表却一条 saved 都没有）。照它显示，已保存的网络
+         * 会被当成"没存过密码"弹半页，用户输错一次就把好 profile 覆盖掉。 */
+        s_aps[n].ap.saved = profile_list_has(p_prof, s_aps[n].ap.ssid);
+        if (!s_aps[n].ap.saved)
+            s_aps[n].ap.saved = (an->dwFlags & AWN_HAS_PROFILE) || an->strProfileName[0];
         s_aps[n].ap.connected = (an->dwFlags & AWN_CONNECTED) != 0;
         strncpy(s_aps[n].ap.auth, auth_str(an->dot11DefaultAuthAlgorithm),
                 sizeof(s_aps[n].ap.auth) - 1);
@@ -240,11 +263,28 @@ static int query(void)
 
     WlanFreeMemory(p_net);
     if (p_bss) WlanFreeMemory(p_bss);
+    if (p_prof) WlanFreeMemory(p_prof);
 
     s_cnt = n;
     qsort(s_aps, (size_t)n, sizeof(s_aps[0]), cmp_ap);
     s_gen++;
     printf("[WIN] query: %d 个网络（gen=%d）\n", s_cnt, s_gen);
+    /* 排查用：WIFI_WIN_DUMP=1 把每一行连 profile 名一起打出来 */
+    if (getenv("WIFI_WIN_DUMP")) {
+        for (int i = 0; i < s_cnt; i++) {
+            char hex[3 * DOT11_SSID_MAX_LENGTH + 1];
+            int o = 0;
+            for (ULONG b = 0; b < s_aps[i].raw_len && o < (int)sizeof(hex) - 3; b++)
+                o += snprintf(hex + o, sizeof(hex) - o, "%02x", s_aps[i].raw[b]);
+            hex[o] = '\0';
+            printf("[WIN] #%d \"%s\" %d dBm %s auth=%s lock=%d saved=%d conn=%d "
+                   "rawlen=%lu raw=%s\n",
+                   i, s_aps[i].ap.ssid, s_aps[i].ap.rssi, s_aps[i].ap.band,
+                   s_aps[i].ap.auth, (int)s_aps[i].ap.lock,
+                   (int)s_aps[i].ap.saved, (int)s_aps[i].ap.connected,
+                   (unsigned long)s_aps[i].raw_len, hex);
+        }
+    }
     return 1;
 }
 

@@ -287,17 +287,16 @@ FAIL 反映到退出码；反向测试见 `tmp/_negtest_nav.py`（掐掉长按�
 链接方式：`run_sim.bat` 传 `-DCMAKE_CXX_STANDARD_LIBRARIES=-lwlanapi`，**共享的 PC_SIM 脚本一行没改**。
 不能用 `CMAKE_EXE_LINKER_FLAGS`——它落在目标文件**之前**，GNU ld 从左往右解析，wlanapi 符号会报未定义。
 
-证据（真机，不是假表）：真扫描出 8 条真网络（`build/sim_shots/real_scan.png`）；
+证据（真机，不是假表）：真扫描出真网络列表（`build/sim_shots/real_scan.png`，隐藏网络不列的口径见 §5.10）；
 `WIFI_AUTOSCAN=1 WIFI_REACH=connect` 注入点击 →
 `[WIN] WlanConnect 已下发：YJT-1号楼办公` → 系统侧独立回读
 `netsh wlan show interfaces` 给 `状态: 已连接 / SSID: YJT-1号楼办公 / 通道 36`，
 界面同步出「已连接」胶囊与标题文案（`build/sim_shots/real_connect.png`）。
 假世界门禁回归 `[NAV] PASS 30 / FAIL 0`、`preflight` 全绿。
 
-未做：真「忘记」没在你机器上试（`WlanDeleteProfile` 会真删系统里存的密码，要你点名才跑）；
-连接中 / 失败三态目前只是"5s 后一次回查"的文案，⑦-2b 的进度态与错误码文案未做。
+未做：真「忘记」没在你机器上试（`WlanDeleteProfile` 会真删系统里存的密码，要你点名才跑）。
 
-### 5.9 ⑦-2b 连接三态 + 真接口改成默认（2026-10-24 本轮）
+### 5.9 ⑦-2b 连接三态 + 真接口改成默认（2026-10-24 交付 · 连接中交互已被 §5.10 取代）
 
 用户报的两件事是同一个根因链：「点另一个已保存的 WiFi，硬件没切换，也没看到连接中提示」。
 
@@ -323,6 +322,49 @@ FAIL 反映到退出码；反向测试见 `tmp/_negtest_nav.py`（掐掉长按�
 **换网失败会连原来连着的网一起掉**（`WlanConnect` 先断后连，这是 Windows 的行为不是本层缺陷），
 测试后已用 `netsh wlan connect name="1号楼6层WiFi"` 恢复。
 `yjt_dev_2.4G` 这条在本机存着 profile 但连不上（大概率密码已失效），界面上会看到它报"连接失败"。
+
+### 5.10 ⑦-2c 连接中改成全屏转圈（2026-10-24 本轮）
+
+用户口径（推翻 §5.9 的"半页留作连接中背景"）：**点「连接」→ 半页收起 → 全屏圆圈动画 → 期间不可操作**。
+
+- 新控件在 `widgets/wifi_busy/`（懒建的整屏遮罩 + `lv_spinner` + 一行文案）。
+  它是运行时的过程态，EEZ 侧没有控件、也不持有变量，所以按"动态内容可原生"的口径放在 widgets 层。
+- **锁操作只靠一件事**：遮罩是整屏 `LV_OBJ_FLAG_CLICKABLE` 的子对象且建在最后面，
+  LVGL 的 hit test 停在这层，下面的列表/半页/对话框一律收不到事件——不去逐个禁用控件。
+- `wifi_logic`：发完连接命令就 `wifi_nav_close_sheet()` + `wifi_busy_show("正在连接 X…")`；
+  `APP_IN_CONN_STATE` 变 2/3 时 `wifi_busy_hide()`。真接口回查改成 0.5s 一次、10s 判失败（原来 1s/15s）。
+
+本轮抓到的三个问题：
+
+1. **遮罩其实是 0×0**：`lv_obj_remove_style_all()` 会把 local style 一起删掉，而 `width/height`
+   就是 local style——先 `set_size` 再 `remove_style_all`，尺寸就被清没了，点击全部穿透。
+   修法是把 `remove_style_all` 放到最前。反向测试（退回原顺序）→
+   `[NAV] FAIL 转圈期间点带锁行不生效（输入被锁住）` 等 8 条、rc=1。
+2. **隐藏网络画成空白行**：`WlanGetAvailableNetworkList` 对隐藏网给的 `dot11Ssid` 是全零字节，
+   列表里就多出一行没有名字的条目（用户截图里第一行）。修法：显示名为空就不收进列表。
+   真扫描从 8 条变 7 条，空白行消失（`build/sim_shots/real_scan.png`）。
+3. **"总是连接失败"不是本层缺陷**：系统日志 `Microsoft-Windows-WLAN-AutoConfig` 给的是
+   `Id 8002 失败原因: 特定的网络不可用，RSSI: 255`；脱离仿真器用
+   `netsh wlan connect name="YJT-1号楼办公"` 单连一次得到**同一个错误**，
+   而 profile 里密钥确实存在（`netsh wlan show profile ... key=clear`）。
+   → 判据：连接失败先分"系统也连不上"还是"我们没下发成功"，别先改代码。
+   顺带发现期间有 profile 被删过（`1号楼6层WiFi`、`yjt_dev` 已不在 `show profiles` 里），
+   所以"已保存"胶囊与系统真实状态可能不一致——刷新一次即重扫真值。
+
+4. **「已保存」判错了**：原来用可用网络条目的 `AWN_HAS_PROFILE` 位判，真机上会漏报——
+   profile 明明在（`netsh wlan show profiles` 有），整张表却一条 `saved=1` 都没有。
+   后果不是"显示错"这么轻：点已保存的网络会被当成"没存过密码"**弹半页**，
+   用户输一次错的就把好 profile 覆盖了，之后越连越失败。
+   修法：`WlanGetProfileList()` 一次取 profile 库，按名字匹配 SSID 判 `saved`，
+   条目标志位只作兜底。修完 `[WIN] #3 "YJT-1号楼办公" ... saved=1`，点它直接连、不再弹半页。
+   排查入口：`WIFI_WIN_DUMP=1` 会把每一行连 profile 名一起打出来。
+
+证据：`[NAV] RESULT: PASS 44 / FAIL 0`（新增转圈可见、期间点击不生效、结果后收起等 4 条）、
+`preflight` 全绿；连接中那一屏出图 `build/sim_shots/busy.png`；
+六屏既有态 SHA1 与改动前**逐字节一致**（遮罩默认隐藏不影响既有截图）。
+
+设计侧待办：`mockup_06_connecting` 画的是"半页仍在 + 标题栏正在连接"，与本轮定的
+"收半页 + 全屏转圈"已不一致——**要不要重画这张交付图等你点名**，本轮没动 `design/mockups/`。
 
 ---
 

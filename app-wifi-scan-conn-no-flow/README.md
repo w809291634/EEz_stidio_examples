@@ -87,10 +87,13 @@ python design\preflight.py --with-sim
 
 ### 仿真器默认走**真** WiFi（wlanapi）
 
-双击 `design\sim_cmake\run_sim.bat` 就是真网卡：列表是本机扫到的真网络，
-点「已保存」的行是真的 `WlanConnect`（**换网会先断掉原来连着的**，连不上就两头空，
-界面会走「正在连接 X…」→「连接失败 X」），长按「忘记」是真的 `WlanDeleteProfile`
-（会真删掉系统里存的密码，删了就得重新输）。
+双击 `design\sim_cmake\run_sim.bat` 就是真网卡：列表是本机扫到的真网络（隐藏网络不列），
+点「已保存」的行是真的 `WlanConnect`——半页收起、全屏转圈、期间点不动，
+结果出来才收圈（**换网会先断掉原来连着的**，连不上就两头空，标题写「连接失败 X」），
+长按「忘记」是真的 `WlanDeleteProfile`（会真删掉系统里存的密码，删了就得重新输）。
+连不上时先分清"系统也连不上"还是"我们没下发"：
+`Get-WinEvent -ProviderName Microsoft-Windows-WLAN-AutoConfig`（8002 给失败原因）
+与 `netsh wlan connect name="<SSID>"` 各跑一次即可裁决。
 
 要回到可复现的假世界（12 条假 AP，门禁与出图用的就是它）：
 
