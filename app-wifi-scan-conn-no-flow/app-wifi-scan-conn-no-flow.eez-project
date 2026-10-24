@@ -1063,7 +1063,7 @@
                 }
               ],
               "widgetFlags": "",
-              "hiddenFlag": false,
+              "hiddenFlag": true,
               "hiddenFlagType": "literal",
               "clickableFlagType": "literal",
               "flagScrollbarMode": "OFF",
