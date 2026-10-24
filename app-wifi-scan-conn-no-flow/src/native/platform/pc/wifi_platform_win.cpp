@@ -51,6 +51,7 @@ typedef struct {
     WCHAR     profile[PROF_NAME_CHARS]; /* Windows 侧 profile 名，连接/删除用它 */
     UCHAR     raw[DOT11_SSID_MAX_LENGTH];
     ULONG     raw_len;
+    int       has_profile;              /* 系统里是否已有它的 profile */
 } win_ap_t;
 
 static win_ap_t  s_aps[WIN_AP_MAX];
@@ -488,6 +489,9 @@ static int query(void)
          * 会被当成"没存过密码"弹半页，用户输错一次就把好 profile 覆盖掉。 */
         {
             prof_map_t *pm = find_profile(map, map_n, s_aps[n].ap.ssid);
+            s_aps[n].has_profile = pm != NULL ||
+                                   (an->dwFlags & AWN_HAS_PROFILE) ||
+                                   an->strProfileName[0] != 0;
             if (getenv("WIFI_WIN_DUMP"))
                 printf("[WIN]   cmp ssid=\"%s\" len=%d map_n=%d hit=%d\n",
                        s_aps[n].ap.ssid, (int)strlen(s_aps[n].ap.ssid), map_n,
@@ -592,7 +596,8 @@ int win_io_open(void)
             s_guid = li->InterfaceInfo[i].InterfaceGuid;
             break;
         }
-    printf("[WIN] 用接口 %S（%u 个接口）\n", li->InterfaceInfo[0].strInterfaceDescription, n);
+    printf("[WIN] 用接口 %S（%u 个接口）\n",
+           li->InterfaceInfo[0].strInterfaceDescription, (unsigned)n);
     WlanFreeMemory(li);
 
     /* 订阅 ACM 通知：只有它能给出"为什么连不上"的系统文案（WlanReasonCodeToString）；
@@ -706,35 +711,55 @@ void win_io_connect(const char *ssid, const char *password)
     copy_w(t->profile, prof, PROF_NAME_CHARS);
     if (!prof[0] && !u8_to_w(t->ap.ssid, prof, PROF_NAME_CHARS)) return;
 
-    if (password && password[0]) {
+    /* 没有现成 profile（开放网络 / 系统里被删了）→ 必须先建一个；
+     * 给了密码（用户要改密码）→ 覆盖重建；否则直接拿已有的 profile 连。 */
+    if (!t->has_profile || (password && password[0])) {
         char sname[160], spwd[128], xml[1600], shex[3 * DOT11_SSID_MAX_LENGTH + 1];
         WCHAR xmlW[1600];
         DWORD reason = 0;
-        int o = 0;
+        int o = 0, psk = (password && password[0]) != 0;
         xml_esc(t->ap.ssid, sname, (int)sizeof(sname));
-        xml_esc(password, spwd, (int)sizeof(spwd));
+        xml_esc(psk ? password : "", spwd, (int)sizeof(spwd));
         /* ★ 必须写 <hex>：只给 <name> 时 Windows 会把这个名字按 ANSI(GBK) 码页
          *   存成 SSID 字节——中文 SSID 就与空口那串 UTF-8 对不上，之后永远
          *   "找不到可见接入点"。hex 直接填空口原始字节，名字只用于显示。 */
         for (ULONG b = 0; b < t->raw_len && o < (int)sizeof(shex) - 3; b++)
             o += snprintf(shex + o, sizeof(shex) - o, "%02X", t->raw[b]);
         shex[o] = '\0';
-        snprintf(xml, sizeof(xml),
-            "<?xml version=\"1.0\"?>\n"
-            "<WLANProfile xmlns=\"http://www.microsoft.com/networking/"
-            "WLAN/profile/v1\">\n"
-            "  <name>%s</name>\n"
-            "  <SSIDConfig><SSID><hex>%s</hex><name>%s</name></SSID></SSIDConfig>\n"
-            "  <connectionType>ESS</connectionType>\n"
-            "  <connectionMode>manual</connectionMode>\n"
-            "  <MSM><security>\n"
-            "    <authEncryption><authentication>WPA2PSK</authentication>\n"
-            "      <encryption>AES</encryption><useOneX>false</useOneX>"
-            "</authEncryption>\n"
-            "    <sharedKey><keyType>passPhrase</keyType><protected>false"
-            "</protected><keyMaterial>%s</keyMaterial></sharedKey>\n"
-            "  </security></MSM>\n"
-            "</WLANProfile>\n", sname, shex, sname, spwd);
+        if (psk) {
+            snprintf(xml, sizeof(xml),
+                "<?xml version=\"1.0\"?>\n"
+                "<WLANProfile xmlns=\"http://www.microsoft.com/networking/"
+                "WLAN/profile/v1\">\n"
+                "  <name>%s</name>\n"
+                "  <SSIDConfig><SSID><hex>%s</hex><name>%s</name></SSID></SSIDConfig>\n"
+                "  <connectionType>ESS</connectionType>\n"
+                "  <connectionMode>manual</connectionMode>\n"
+                "  <MSM><security>\n"
+                "    <authEncryption><authentication>WPA2PSK</authentication>\n"
+                "      <encryption>AES</encryption><useOneX>false</useOneX>"
+                "</authEncryption>\n"
+                "    <sharedKey><keyType>passPhrase</keyType><protected>false"
+                "</protected><keyMaterial>%s</keyMaterial></sharedKey>\n"
+                "  </security></MSM>\n"
+                "</WLANProfile>\n", sname, shex, sname, spwd);
+        } else {
+            /* 开放网络：没有 sharedKey，authentication=open / encryption=none */
+            snprintf(xml, sizeof(xml),
+                "<?xml version=\"1.0\"?>\n"
+                "<WLANProfile xmlns=\"http://www.microsoft.com/networking/"
+                "WLAN/profile/v1\">\n"
+                "  <name>%s</name>\n"
+                "  <SSIDConfig><SSID><hex>%s</hex><name>%s</name></SSID></SSIDConfig>\n"
+                "  <connectionType>ESS</connectionType>\n"
+                "  <connectionMode>manual</connectionMode>\n"
+                "  <MSM><security>\n"
+                "    <authEncryption><authentication>open</authentication>"
+                "<encryption>none</encryption><useOneX>false</useOneX>"
+                "</authEncryption>\n"
+                "  </security></MSM>\n"
+                "</WLANProfile>\n", sname, shex, sname);
+        }
         if (!u8_to_w(xml, xmlW, (int)(sizeof(xmlW) / sizeof(WCHAR)))) {
             try_fail(t->ap.ssid);
             return;
