@@ -21,6 +21,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>         /* 只为"按 UTF-8 读环境变量"（中文 SSID 要它） */
 
 #include "lvgl.h"
 #include "SDL2/SDL.h"
@@ -478,6 +482,13 @@ static int pred_conn_state_idle(void *p)
 /* 转圈遮罩：它存在且可见＝期间列表/半页/对话框都点不到（用户 2026-10-24 定的交互） */
 static int pred_busy_visible(void *p)   { (void)p; return  wifi_busy_visible(); }
 static int pred_busy_hidden(void *p)    { (void)p; return !wifi_busy_visible(); }
+/* 连接有结论了：连上，或标题已写成「连接失败 …（原因）」 */
+static int pred_conn_done(void *p)
+{
+    (void)p;
+    return pred_target_connected(NULL) ||
+           strstr(app_get_input_s(APP_IN_SCAN_STATUS), "连接失败") != NULL;
+}
 static int pred_sheet_title_target(void *p)
 {
     (void)p;
@@ -497,6 +508,18 @@ static void center_of_obj(lv_obj_t *o, int *cx, int *cy)
     lv_obj_get_coords(o, &a);
     *cx = (a.x1 + a.x2) / 2;
     *cy = (a.y1 + a.y2) / 2;
+}
+
+/* 环境变量按 UTF-8 取：Windows 的 getenv 返回 ANSI(GBK)，中文 SSID 一进就乱码 */
+static const char *env_u8(const char *name)
+{
+    static char buf[256];
+    WCHAR wn[64], wv[256];
+    if (!name) return NULL;
+    MultiByteToWideChar(CP_UTF8, 0, name, -1, wn, 64);
+    if (!GetEnvironmentVariableW(wn, wv, 256)) return NULL;
+    WideCharToMultiByte(CP_UTF8, 0, wv, -1, buf, (int)sizeof(buf), NULL, NULL);
+    return buf;
 }
 
 static void nav_test_hooks(void)
@@ -649,6 +672,12 @@ static void nav_test_hooks(void)
         click_at(cx, cy, 3);
         nav_wait("点该行 → 半页显示", pred_sheet_visible, NULL, 200);
         center_of_obj(objects.btn_connect, &cx, &cy);
+        click_at(cx, cy, 3);                    /* ① 空密码：必须被挡住 */
+        nav_check("空密码点「连接」：半页不收", !hidden_of(objects.overlay_root));
+        nav_check("空密码点「连接」：不转圈、不发起连接", !wifi_busy_visible());
+        nav_check("空密码有提示（标题栏「请输入密码」）",
+                  strstr(app_get_input_s(APP_IN_SCAN_STATUS), "请输入密码") != NULL);
+        lv_textarea_set_text(objects.pwd_ta, "12345678");   /* ② 模拟用户真的输了密码 */
         click_at(cx, cy, 3);
         nav_wait("点「连接」→ 标题先写「正在连接 X…」",
                  pred_status_connecting, NULL, 300);
@@ -727,7 +756,14 @@ static void reach_shot_hooks(void)
         click_at(cx, cy, 3);
         ok = wait_until(pred_busy_visible, NULL, 300);
     } else if (!strcmp(reach, "connect")) {
-        r = find_row(pick_saved);
+        /* WIFI_REACH_TARGET=<SSID> 可指定目标（排查用），否则取第一条「已保存且未连接」 */
+        const char *want = env_u8("WIFI_REACH_TARGET");
+        if (want && want[0]) {
+            r = row_of_ssid(want);
+            if (r < 0) { printf("[REACH] FAIL 列表里没有 %s\n", want); harness_stop(1); }
+        } else {
+            r = find_row(pick_saved);
+        }
         if (r < 0 || !row_center(r, &cx, &cy)) {
             printf("[REACH] FAIL 没有「已保存且未连接」的行\n");
             harness_stop(1);
@@ -736,7 +772,9 @@ static void reach_shot_hooks(void)
         click_at(cx, cy, 3);
         /* 真接口的"正在连接"只能靠打印留证：无头跑不等半页，截图来不及 */
         printf("[REACH] 点下之后标题=%s\n", app_get_input_s(APP_IN_SCAN_STATUS));
-        ok = wait_until(pred_target_connected, NULL, 4000);
+        /* 连上、或者后端已判失败（标题出现"连接失败"）都算有结论，别空等 */
+        ok = wait_until(pred_conn_done, NULL, 4000);
+        ok = ok && pred_target_connected(NULL);
         printf("[REACH] connect 目标=%s 文案=%s\n", s_target,
                app_get_input_s(APP_IN_SCAN_STATUS));
     } else {
@@ -746,6 +784,7 @@ static void reach_shot_hooks(void)
 
     if (!ok) {
         printf("[REACH] FAIL 点击后 %s 没有显示\n", reach);
+        take_shot("shot_fake.bmp");        /* 失败态也要留证据，别在出图前就退 */
         harness_stop(1);
     }
     if (getenv("WIFI_KBPROBE")) kb_probe();

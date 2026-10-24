@@ -242,6 +242,7 @@ FAIL 反映到退出码；反向测试见 `tmp/_negtest_nav.py`（掐掉长按�
 | 单击 | 已保存 / 开放网络 | **直连**，不弹半页 |
 | 长按 | 已保存 | 开「忘记此网络」对话框 |
 | 对话框 | 忘记 / 取消 | 忘记＝清 `saved`（之后同一条重新要密码）；取消＝只关窗不改状态 |
+| 半页「连接」 | 密码为空（纯空格也算空） | **不发起连接、不转圈、半页不收**，标题栏提示「请输入密码」 |
 
 后端（PC 假世界）负责状态：`io_wifi_connect()` 清掉别人的 `connected`、置目标为唯一已连接，
 有锁且给了密码才置 `saved`；`io_wifi_forget()` 只清 `saved`（对齐 Windows 删 profile 不断连）。
@@ -362,6 +363,68 @@ FAIL 反映到退出码；反向测试见 `tmp/_negtest_nav.py`（掐掉长按�
 证据：`[NAV] RESULT: PASS 44 / FAIL 0`（新增转圈可见、期间点击不生效、结果后收起等 4 条）、
 `preflight` 全绿；连接中那一屏出图 `build/sim_shots/busy.png`；
 六屏既有态 SHA1 与改动前**逐字节一致**（遮罩默认隐藏不影响既有截图）。
+
+### 5.11 ⑦-2d 把失败原因显示出来（2026-10-24 本轮）
+
+用户口径（选 2）：失败别只说「连接失败 X」，把 Windows 给的原因一起写进标题栏。
+
+做法：`WlanRegisterNotification(WLAN_NOTIFICATION_SOURCE_ACM)` 订阅通知，
+收到 `connection_attempt_fail / connection_complete / disconnected` 时用
+`WlanReasonCodeToString()` 把原因码翻成系统文案，拼成
+**「连接失败 X（特定的网络不可用）」**；翻不出文案就退化成「错误码 N」。
+顺带一个收益：服务 2 秒内就判失败时，立刻收圈报错，不再干等 10 秒超时。
+
+三个坑（都写进代码注释）：
+
+1. **`sizeof(WLAN_CONNECTION_NOTIFICATION_DATA)` 比实际 payload 大**——结构体尾部是
+   `strProfileXml[1]` 的变长尾巴，实测通知 `dwDataSize=572`，用 sizeof 判"太短"会把
+   **所有**通知丢掉（第一版就是这样，日志里一条 notify 都没有）。判据改用
+   `offsetof(..., strProfileXml)`。
+2. **通知里的 `dot11Ssid` 不是空口字节**：同一条中文 SSID，空口 17 字节（UTF-8），
+   通知里只有 13 字节（ANSI 码页）。拿原始字节比对永远不相等 → 改成按
+   **profile 名（宽字符）** 认领本次尝试。
+3. 系统文案自带句号，「（特定的网络不可用。）」很难看 → 拼之前去掉尾部标点/空白。
+
+证据（真机）：点 `YJT-1号楼办公` →
+`[WIN] notify code=10 reason=163851 "特定的网络不可用"` →
+标题栏 `连接失败 YJT-1号楼办公（特定的网络不可用）`，全程 4.6 秒结束（含 2s 扫描），
+出图 `build/sim_shots/real_fail_reason.png`。假世界没有失败分支，所以这条文案
+只在真机验过；门禁仍是 `[NAV] PASS 44 / FAIL 0`。
+
+排查开关：`WIFI_WIN_DUMP=1` 会打印每个通知（src/code/size + 解析出的 ssidlen/reason/profile）。
+
+同轮补的口径（用户 2026-10-24）：**半页路径密码不能空**。守卫放在 `wifi_logic` 消费命令的那一处，用 `wifi_nav_sheet_open()` 区分上下文——半页开着就必须有可见字符，否则不发起、不转圈、不关窗，标题写「请输入密码」；直连路径（已保存/开放网络）本来就没密码可输，照旧。证据：`[NAV] PASS 47 / FAIL 0`（新增 3 条：半页不收 / 不转圈 / 有提示），反向测试（去掉守卫）rc=1 且这三条全红。
+
+### 5.12 ⑦-2e「总是连接失败」的真正根因：profile 的 SSID 存成了 GBK
+
+先说结论：**`WlanSetProfile` 的 XML 只写 `<name>` 时，Windows 会把这个名字按
+ANSI(GBK) 码页存成 profile 的 SSID 字节**。中文 SSID 于是与空口广播的 UTF-8 字节对不上，
+之后每次连接都在 2 秒内报「特定的网络不可用 / 无可见连接接入点」，`RSSI 255`——
+而我们自己的 `netsh`/事件日志/新重建 profile 全是同一个错，绕了很久。
+
+证据（导出 profile 的 XML，看 `<hex>`）：
+
+```
+旧 profile： <hex>594A542D31 BAC5C2A5B0ECB9AB 2032</hex>   ← 「号楼办公」=GBK，末尾还多了 " 2"
+空口实际： 594a542d31 e58fb7 e6a5bc e58a9e e585ac        ← 「号楼办公」=UTF-8
+```
+
+修法（`platform/pc/wifi_platform_win.cpp`）：生成 profile XML 时**同时写 `<hex>`**，
+直接把空口抓到的原始字节填进去（`<SSID><hex>…</hex><name>…</name></SSID>`），名字只用于显示。
+修完真机：`8001 已连接`、协商 `AES-CCMP`、`netsh` 回读 `SSID: YJT-1号楼办公 / 通道 36`；
+**app 自己走点击路径 4.2 秒连上**（`[REACH] connect … 文案=已连接 YJT-1号楼办公`）。
+
+同轮第二处根因：**profile 名不一定等于 SSID**——Windows 重名时会存成「SSID 2」，
+我们原来一律拿 SSID 当 profile 名去 `WlanConnect`/`WlanDeleteProfile`，名字对不上同样报"网络不可用"。
+修法：`WlanGetProfileList` + 逐个 `WlanGetProfile` 读出 XML 里的 SSID，建立
+「profile 名 ↔ SSID」对照表；`saved`、连接、忘记都用表里的**真实 profile 名**。
+
+两个附带坑：
+- 通知里的 `dot11Ssid` 是 ANSI 字节（13 字节），空口是 UTF-8（17 字节）→ 认领通知要按 profile 名比；
+- Windows 的 `getenv` 返回 ANSI，夹具读中文 SSID 的环境变量要 `GetEnvironmentVariableW` + 转 UTF-8
+  （`main.c:env_u8`，`WIFI_REACH_TARGET=<SSID>` 用它）。
+
+留了口子的话记得自己清：本机现在多了一条坏 profile「YJT-1号楼办公 2」（本轮排查产物）。
 
 设计侧待办：`mockup_06_connecting` 画的是"半页仍在 + 标题栏正在连接"，与本轮定的
 "收半页 + 全屏转圈"已不一致——**要不要重画这张交付图等你点名**，本轮没动 `design/mockups/`。

@@ -91,7 +91,8 @@ python design\preflight.py --with-sim
 点「已保存」的行是真的 `WlanConnect`——半页收起、全屏转圈、期间点不动，
 结果出来才收圈（**换网会先断掉原来连着的**，连不上就两头空，标题写「连接失败 X」），
 长按「忘记」是真的 `WlanDeleteProfile`（会真删掉系统里存的密码，删了就得重新输）。
-连不上时先分清"系统也连不上"还是"我们没下发"：
+失败时标题栏会带上系统给的原因（如「连接失败 X（特定的网络不可用）」），原因码翻不出文案时显示「错误码 N」；
+要深挖就先分清"系统也连不上"还是"我们没下发"：
 `Get-WinEvent -ProviderName Microsoft-Windows-WLAN-AutoConfig`（8002 给失败原因）
 与 `netsh wlan connect name="<SSID>"` 各跑一次即可裁决。
 

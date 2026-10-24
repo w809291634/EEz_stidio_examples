@@ -12,6 +12,16 @@
 #include "widgets/wifi_busy/wifi_busy.h"   /* 连接中的全屏转圈 */
 #include "platform/wifi_platform.h"
 
+/******************** 模块私有小工具 ********************/
+
+// 函数作用：字符串里有没有可见字符（纯空白也算空）。 参数：s。 返回值：1=有。
+static int has_visible_char(const char *s)
+{
+    for (; s && *s; s++)
+        if ((unsigned char)*s > ' ') return 1;
+    return 0;
+}
+
 /******************** 对外初始化与调度 ********************/
 
 // 函数作用：初始化平台后端（发布初始文案与扫描态）。 参数：无。 返回值：无。
@@ -36,8 +46,16 @@ void user_io_tick(void)
              * 交互口径（用户 2026-10-24 定）：点「连接」→ 收半页 → 全屏转圈锁住操作，
              * 结果出来才收圈，标题栏写「已连接 / 连接失败 X」。 */
             const char *sel = app_get_input_s(APP_IN_SEL_SSID);
+            const char *pw = wifi_view_password(pwd, (int)sizeof(pwd));
             char busy[APP_IN_STR_MAX];
-            io_wifi_connect(sel, wifi_view_password(pwd, (int)sizeof(pwd)));
+
+            /* 用户口径（2026-10-24）：半页路径密码不能空——空密码连它注定失败，
+             * 还白转一圈圈。就地提示，不关窗、不发起连接。 */
+            if (wifi_nav_sheet_open() && !has_visible_char(pw)) {
+                app_set_input_s(APP_IN_SCAN_STATUS, "请输入密码");
+                break;
+            }
+            io_wifi_connect(sel, pw);
             wifi_nav_close_sheet();
             snprintf(busy, sizeof(busy), "正在连接 %s…", sel);
             wifi_busy_show(busy);
