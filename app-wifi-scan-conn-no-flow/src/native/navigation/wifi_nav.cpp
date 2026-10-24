@@ -14,7 +14,8 @@
 
 static bool s_sheet_open = false;    /* 半页是否在前台 */
 static bool s_dlg_open = false;      /* 对话框是否在前台 */
-static bool s_animating = false;     /* 半页入场动画是否还在跑 */
+static bool s_animating = false;     /* 半页动画（入场/退场）是否还在跑 */
+static bool s_closing = false;       /* 退场动画进行中（结束时才真正隐藏） */
 static lv_opa_t s_scrim_opa = 0;     /* 遮罩目标不透明度（首次打开时记下来） */
 
 #define SHEET_ANIM_MS 200
@@ -90,6 +91,54 @@ static void sheet_anim_in(void)
     lv_anim_start(&a);
 }
 
+// 函数作用：退场动画结束——这时才真正隐藏整块模态。 参数：a：动画。 返回值：无。
+static void anim_close_ready_cb(lv_anim_t *a)
+{
+    (void)a;
+    if (objects.overlay_root) lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
+    s_closing = false;
+    s_animating = false;
+    printf("[UI] sheet hidden\n");
+}
+
+// 函数作用：半页退场——滑下去 + 遮罩淡出（与入场对称，可被打断）。 参数：无。 返回值：无。
+static void sheet_anim_out(void)
+{
+    int32_t h, from;
+    lv_anim_t a;
+
+    if (!objects.sheet || !objects.scrim) {          /* 没有控件就直接隐藏 */
+        if (objects.overlay_root) lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
+        s_closing = false;
+        s_animating = false;
+        return;
+    }
+    h = lv_obj_get_height(objects.sheet);
+    from = lv_obj_get_style_translate_y(objects.sheet, LV_PART_MAIN);
+
+    lv_anim_delete(objects.sheet, anim_y_cb);
+    lv_anim_delete(objects.scrim, anim_opa_cb);
+
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, objects.sheet);
+    lv_anim_set_values(&a, from, h);
+    lv_anim_set_duration(&a, SHEET_ANIM_MS);
+    lv_anim_set_exec_cb(&a, anim_y_cb);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_in);
+    lv_anim_set_ready_cb(&a, anim_close_ready_cb);
+    lv_anim_start(&a);
+    s_closing = true;
+    s_animating = true;
+
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, objects.scrim);
+    lv_anim_set_values(&a, (int32_t)lv_obj_get_style_bg_opa(objects.scrim, LV_PART_MAIN), 0);
+    lv_anim_set_duration(&a, SHEET_ANIM_MS);
+    lv_anim_set_exec_cb(&a, anim_opa_cb);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_in);
+    lv_anim_start(&a);
+}
+
 /******************** 对外初始化与公开接口 ********************/
 
 // 函数作用：查询半页是否在前台。 参数：无。 返回值：true 表示显示中。
@@ -111,6 +160,7 @@ void wifi_nav_open_sheet(const char *ssid)
     s_dlg_open = false;
     if (objects.dlg_root) lv_obj_add_flag(objects.dlg_root, LV_OBJ_FLAG_HIDDEN);
     s_sheet_open = true;
+    s_closing = false;                       /* 退场途中又被打开：以这次为准 */
     lv_obj_remove_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
     sheet_anim_in();
     printf("[UI] sheet open: %s\n", ssid ? ssid : "");
@@ -120,9 +170,8 @@ void wifi_nav_open_sheet(const char *ssid)
 void wifi_nav_close_sheet(void)
 {
     if (!s_sheet_open) return;
-    s_sheet_open = false;
-    sheet_reset();
-    if (objects.overlay_root) lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
+    s_sheet_open = false;                    /* 逻辑上立刻算关闭；视觉上等动画收尾 */
+    sheet_anim_out();
     printf("[UI] sheet close\n");
 }
 
@@ -132,7 +181,8 @@ void wifi_nav_open_dialog(const char *ssid)
     if (!objects.dlg_root) return;
     if (ssid && objects.lbl_dlg_ssid) lv_label_set_text(objects.lbl_dlg_ssid, ssid);
     s_sheet_open = false;
-    sheet_reset();
+    sheet_reset();                           /* 互斥切走：取消退场动画并立刻隐藏 */
+    s_closing = false;
     if (objects.overlay_root) lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
     s_dlg_open = true;
     lv_obj_remove_flag(objects.dlg_root, LV_OBJ_FLAG_HIDDEN);

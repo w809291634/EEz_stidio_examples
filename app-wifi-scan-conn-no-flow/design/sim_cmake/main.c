@@ -573,7 +573,8 @@ static void nav_test_hooks(void)
     case 3:                                 /* × 关闭 */
         center_of_obj(objects.btn_pwd_close, &cx, &cy);
         click_at(cx, cy, 3);
-        nav_wait("点 × → 半页隐藏", pred_sheet_hidden, NULL, 200);
+        nav_check("点 × 后半页正在滑下去（退场动画在跑）", wifi_nav_animating());
+        nav_wait("点 × → 半页隐藏", pred_sheet_hidden, NULL, 300);
         stage = 4;
         return;
     case 4: {                               /* 遮罩空白处关闭（sheet 之上） */
