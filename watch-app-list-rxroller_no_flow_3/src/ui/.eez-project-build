@@ -1,0 +1,30 @@
+{
+  "files": [
+    "actions.h",
+    "fonts.h",
+    "images.c",
+    "images.h",
+    "images/ui_image_ic_0.c",
+    "images/ui_image_ic_1.c",
+    "images/ui_image_ic_10.c",
+    "images/ui_image_ic_11.c",
+    "images/ui_image_ic_12.c",
+    "images/ui_image_ic_13.c",
+    "images/ui_image_ic_2.c",
+    "images/ui_image_ic_3.c",
+    "images/ui_image_ic_4.c",
+    "images/ui_image_ic_5.c",
+    "images/ui_image_ic_6.c",
+    "images/ui_image_ic_7.c",
+    "images/ui_image_ic_8.c",
+    "images/ui_image_ic_9.c",
+    "screens.c",
+    "screens.h",
+    "structs.h",
+    "styles.c",
+    "styles.h",
+    "ui.c",
+    "ui.h",
+    "vars.h"
+  ]
+}

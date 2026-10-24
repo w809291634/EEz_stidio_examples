@@ -1,0 +1,5 @@
+build/
+__pycache__/
+*.eez-project-ui-state
+tmp/
+build_rel/

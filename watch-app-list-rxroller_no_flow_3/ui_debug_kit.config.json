@@ -1,0 +1,117 @@
+{
+  "_comment": "按 kit config.template.json 填的本工程配置。屏幕 466x466 圆形；no flow 方式。",
+
+  "project": {
+    "name": "watch",
+    "platform": "LVGL 9.4 + EEZ Studio 0.29+，圆形手表 466x466，no flow 方式（EEZ_FIRST_WORKFLOW_NO_FLOW.md §2 七步）",
+    "root": ".",
+    "design_dir": "./design",
+    "design_src": "./design/design_source.py",
+    "project_file": "./watch.eez-project",
+    "gen_dir": "./src/ui",
+    "builder": "./design/build_watch_ui.py"
+  },
+
+  "screen": {
+    "w": 466,
+    "h": 466,
+    "shape": "circular",
+    "origin": "top-left",
+    "child_coords": "relative-to-parent",
+    "design_coords": "absolute",
+    "ink_threshold": 140,
+    "last_row_is_separator": false,
+    "safe_margin": 2
+  },
+
+  "runtime": {
+    "kind": "electron",
+    "exe": "C:\\Users\\yjt54\\AppData\\Local\\Programs\\eezstudio\\EEZ Studio.exe",
+    "args": ["--no-sandbox", "--disable-gpu", "--enable-unsafe-swiftshader", "--disable-dev-shm-usage"],
+    "debug_port": 9222,
+    "open_project_as_arg": true,
+    "unset_env": ["ELECTRON_RUN_AS_NODE"],
+    "exit_after_seconds": 0,
+    "capture_one_target_per_launch": true
+  },
+
+  "binaries": {
+    "python": "C:\\Users\\yjt54\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+    "node": "node"
+  },
+
+  "sim": {
+    "_comment": "机器相关路径，第⑤步双核对前必须逐项实测确认；禁止猜。",
+    "template_dir": "C:\\Users\\yjt54\\Desktop\\EEz_stidio_examples\\PC_SIM",
+    "lvgl_src": "C:\\Users\\yjt54\\Desktop\\EEz_stidio_examples\\apl_lvgl_v9_4",
+    "mingw": "",
+    "cmake": "",
+    "sdl2_bin": ""
+  },
+
+  "fonts": {
+    "device_ttf": "",
+    "icon_woff": "",
+    "icon_ttf": "",
+    "name_to_px": {},
+    "builtin_patterns": [],
+    "metrics": {},
+    "ink_offset_from_box_top": {},
+    "icon_private_ranges": [[57344, 63743], [127744, 129791]]
+  },
+
+  "theme_defaults": {
+    "container": { "dx": 0, "dy": 0 },
+    "button": { "dx": 0, "dy": 0 }
+  },
+
+  "tree_schema": {
+    "pages": ["pages"],
+    "page_name": "name",
+    "page_root": "screen",
+    "children": "children",
+    "x": "x", "y": "y", "w": "w", "h": "h",
+    "type": "type", "text": "text", "font": "font",
+    "goto": "goto", "image": "texture",
+    "type_values": { "container": "container", "button": "button", "label": "label" },
+    "nav_types": ["button"],
+    "style_key": "style",
+    "main_part": "MAIN",
+    "default_state": "DEFAULT",
+    "width_unit_key": "wUnit",
+    "content_unit_value": "content"
+  },
+
+  "checks": {
+    "gates": [],
+    "tab_bar": null,
+    "tab_pages": [],
+    "pages": [],
+    "entry_page": "",
+    "expect_dead_links": 0,
+    "expect_overflow": 0,
+    "expect_wrap": 0,
+    "diff_big_threshold": 64,
+    "diff_accept_pct": 0.05,
+    "font_symbol_prefix": "lv_font_",
+    "font_macro": "LV_FONT_%s",
+    "font_guard_aware": true,
+    "font_switch_ignore": ["^ui_font_"],
+    "color_props": [
+      "bg_color", "bg_grad_color", "border_color", "outline_color", "shadow_color",
+      "text_color", "line_color", "arc_color", "img_recolor", "img_src"
+    ],
+    "color_node_keys": [],
+    "color_value_patterns": ["^#?[0-9a-fA-F]{3,6}$", "^0[xX][0-9a-fA-F]{6}$"]
+  },
+
+  "paths": {
+    "preview_dir": "./build/preview",
+    "render_dir": "./designer",
+    "native_dir": "./src/native",
+    "work_dir": "./build/tmp",
+    "screens_c": "./src/ui/screens.c",
+    "lv_conf": "",
+    "font_c": "./src/ui/ui_font_*.c"
+  }
+}
