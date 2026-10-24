@@ -515,14 +515,14 @@ static void center_of_obj(lv_obj_t *o, int *cx, int *cy)
 }
 
 /* 环境变量按 UTF-8 取：Windows 的 getenv 返回 ANSI(GBK)，中文 SSID 一进就乱码 */
-static const char *env_u8(const char *name)
+static const char *env_u8(const char *name, char *buf, int sz)
 {
-    static char buf[256];
     WCHAR wn[64], wv[256];
-    if (!name) return NULL;
+    if (!name || !buf || sz <= 0) return NULL;
+    buf[0] = '\0';
     MultiByteToWideChar(CP_UTF8, 0, name, -1, wn, 64);
     if (!GetEnvironmentVariableW(wn, wv, 256)) return NULL;
-    WideCharToMultiByte(CP_UTF8, 0, wv, -1, buf, (int)sizeof(buf), NULL, NULL);
+    WideCharToMultiByte(CP_UTF8, 0, wv, -1, buf, sz, NULL, NULL);
     return buf;
 }
 
@@ -720,7 +720,7 @@ static void nav_test_hooks(void)
 }
 
 /* ⑦-3 证据图：不翻 hiddenFlag，用真实点击走到模态再截图。
- * 用法：WIFI_AUTOSCAN=1 WIFI_REACH=sheet|dialog|busy|connect WIFI_AUTOEXIT=1
+ * 用法：WIFI_AUTOSCAN=1 WIFI_REACH=sheet|dialog|pwd|busy|connect WIFI_AUTOEXIT=1
  * connect＝点第一条「已保存」行走免密直连；真后端（默认）是真的下发
  * WlanConnect，假后端（WIFI_PC_FAKE=1）只改内存，所以这条也是真接口的取证入口。 */
 static void reach_shot_hooks(void)
@@ -756,6 +756,35 @@ static void reach_shot_hooks(void)
         }
         click_at(cx, cy, 260);               /* 长按，帧数依据见 nav 用例注释 */
         ok = wait_until(pred_dlg_visible, NULL, 300);
+    } else if (!strcmp(reach, "pwd")) {
+        /* 半页真流程取证：点行 → 填密码（WIFI_REACH_PWD）→ 点「连接」。
+         * 用来验证"没有 profile 时由 app 建 profile 再连"这条真机路径。 */
+        static char wantbuf[256], pwdbuf[128];
+        const char *want = env_u8("WIFI_REACH_TARGET", wantbuf, (int)sizeof(wantbuf));
+        const char *pwd  = env_u8("WIFI_REACH_PWD", pwdbuf, (int)sizeof(pwdbuf));
+        if (!want || !want[0] || !pwd || !pwd[0]) {
+            printf("[REACH] FAIL pwd 模式需要 WIFI_REACH_TARGET 与 WIFI_REACH_PWD\n");
+            harness_stop(1);
+        }
+        r = row_of_ssid(want);
+        if (r < 0 || !row_center(r, &cx, &cy)) {
+            printf("[REACH] FAIL 列表里没有 %s\n", want);
+            harness_stop(1);
+        }
+        set_target(want);
+        click_at(cx, cy, 3);
+        if (!wait_until(pred_sheet_visible, NULL, 300)) {
+            printf("[REACH] FAIL 点该行没开半页\n");
+            harness_stop(1);
+        }
+        lv_textarea_set_text(objects.pwd_ta, pwd);
+        pump(5);
+        center_of_obj(objects.btn_connect, &cx, &cy);
+        click_at(cx, cy, 3);
+        printf("[REACH] pwd 点下之后标题=%s\n", app_get_input_s(APP_IN_SCAN_STATUS));
+        ok = wait_until(pred_conn_done, NULL, 4000) && pred_target_connected(NULL);
+        printf("[REACH] pwd 结果=%s 文案=%s\n", ok ? "已连接" : "失败",
+               app_get_input_s(APP_IN_SCAN_STATUS));
     } else if (!strcmp(reach, "busy")) {
         /* 「连接中」那一屏的证据图：点已保存行 → 等遮罩盖上来 → 立刻拍 */
         r = find_row(pick_saved);
@@ -768,7 +797,8 @@ static void reach_shot_hooks(void)
         ok = wait_until(pred_busy_visible, NULL, 300);
     } else if (!strcmp(reach, "connect")) {
         /* WIFI_REACH_TARGET=<SSID> 可指定目标（排查用），否则取第一条「已保存且未连接」 */
-        const char *want = env_u8("WIFI_REACH_TARGET");
+        static char wantbuf[256];
+        const char *want = env_u8("WIFI_REACH_TARGET", wantbuf, (int)sizeof(wantbuf));
         if (want && want[0]) {
             r = row_of_ssid(want);
             if (r < 0) { printf("[REACH] FAIL 列表里没有 %s\n", want); harness_stop(1); }
