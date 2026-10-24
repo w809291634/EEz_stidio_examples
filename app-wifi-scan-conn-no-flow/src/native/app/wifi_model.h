@@ -25,6 +25,7 @@ extern "C" {
 typedef enum {
     APP_IN_SCAN_STATE = 0,   /* int: 0 空闲 1 扫描中 2 完成 */
     APP_IN_SCAN_STATUS,      /* string: 标题下状态文案 */
+    APP_IN_SEL_SSID,         /* string: 本次操作针对哪个网络（行手势写入） */
     APP_IN_COUNT
 } app_input_id_t;
 

@@ -70,18 +70,19 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
    → 行内信号条/副行/状态全部 native 自绘；EEZ 不持有变量（连接中/空态文案由 native 直写）
 ```
 
-**连接**（尚未实现的设计目标 · 见母工程 `../app-wifi-scan-flow/README.md`「待做」）
+**连接 / 忘记**（⑦-2a 已落 PC 假后端；三态反馈与真机后端未做）
 ```
-行点击 → pick_index = N → pwd_open = 1（半页上滑）
-   → 连接按钮 → 写 cmd_connect=1 + pwd + remember（outputs）
-   → wifi_logic 每拍排空命令环 → io_wifi_join()
-   → 成功：wifi_state=2、conn_index=N；失败：wifi_state=3（UI 变红字，不清输入）
-   → UI 只读这些状态，不参与任何 WiFi 调用
+行手势（widgets/wifi_list）→ wifi_events_select(ssid) 记下"这条命令针对哪个网络"
+   → 有锁且没存过密码 → 开半页；已保存 / 开放 → 直接投连接命令（navigation 只管显隐）
+   → wifi_logic 每拍排空命令环 → io_wifi_connect(ssid, pwd) / io_wifi_forget(ssid)
+   → platform 改 s_aps[]（全表唯一 connected；给了密码才置 saved）→ 重排 + gen++
+   → wifi_view_sync 回显标题文案 + wifi_list_rebuild 重画行
 ```
-> 母工程原文把 `pick_index`/`pwd_open`/`wifi_state` 写成「Flow 变量」——那是 v3 口径，v4 收口后
-> **EEZ 不持有任何变量**，这些状态本来就落在 native 契约（`app/wifi_model`）上。
-> **本变体更没有 Flow**：要落这条链路，状态只能放 `app/wifi_model` 输入/输出 + `app/wifi_view` 直写控件，
-> 或者把 `flowSupport` 开回 `true`（此时才需要 Flow 变量与表达式绑定）。
+- 还没做：连接中 / 失败 / 成功三态（现在点完就关半页，`wifi_logic` 里挂着 `TODO(⑦-2b)`）、
+  真机后端（`platform/device/` 是编译期占位，接口签名已对齐）。
+- 母工程原文把 `pick_index`/`pwd_open`/`wifi_state` 写成「Flow 变量」——那是 v3 口径，v4 收口后
+  **EEZ 不持有任何变量**：目标 SSID 落在 `APP_IN_SEL_SSID`，模态显隐落在 `navigation/wifi_nav`，
+  连接结果落在 `wifi_ap_t.connected/saved`，文案落在 `APP_IN_SCAN_STATUS`。
 
 ## 4. 信息全面性（io 契约层保证）
 

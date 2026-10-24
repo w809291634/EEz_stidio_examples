@@ -8,6 +8,10 @@ extern "C" {
 
 void wifi_view_sync(void);
 
+/* 读半页密码框的当前内容，写进调用方给的缓冲。objects.* 只允许 view 层碰，
+ * 所以 wifi_logic 要密码时走这里，不直接抓 pwd_ta。 返回值：缓冲本身。 */
+const char *wifi_view_password(char *out, int out_sz);
+
 #ifdef __cplusplus
 }
 #endif

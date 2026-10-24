@@ -381,10 +381,98 @@ static int find_row(int (*pick)(const wifi_ap_t *))
     return -1;
 }
 
-static int pick_locked_unconnected(const wifi_ap_t *a) { return a->lock && !a->connected; }
-/* 长按目标要"已保存"才会出忘记对话框；同时它也得是可开半页的行，
- * 这样才能用同一行验证"短按仍然开半页"（已连接的行按设计不开半页）。 */
-static int pick_saved(const wifi_ap_t *a) { return a->saved && a->lock && !a->connected; }
+/* 行的三种点击口径（用户 2026-10-24 定）：
+ *   有锁且没存过密码 → 弹半页；已保存 / 开放 → 直连；已连接 → 无操作。
+ * 所以用例谓词按"未保存"选半页目标，按"已保存且未连接"选直连与长按目标。 */
+static int pick_locked_unsaved(const wifi_ap_t *a)
+{ return a->lock && !a->saved && !a->connected; }
+static int pick_saved(const wifi_ap_t *a)
+{ return a->lock && a->saved && !a->connected; }   /* 带锁才谈得上"忘记后要密码" */
+static int pick_open(const wifi_ap_t *a)
+{ return !a->lock && !a->connected; }
+
+/* 当前用例针对的网络（按 SSID 认，列表重排后行号会变，SSID 不会） */
+static char s_target[64];
+
+static void set_target(const char *ssid)
+{
+    strncpy(s_target, ssid, sizeof(s_target) - 1);
+    s_target[sizeof(s_target) - 1] = '\0';
+}
+
+/* 按 SSID 找行号：直连/忘记会触发重排，缓存行号必错，只认 SSID */
+static int row_of_ssid(const char *ssid)
+{
+    extern objects_t objects;
+    int n = (int)lv_obj_get_child_count(objects.list_box);
+    for (int i = 0; i < n; i++) {
+        const wifi_ap_t *ap = wifi_ap_at(i);
+        if (ap && !strcmp(ap->ssid, ssid)) return i;
+    }
+    return -1;
+}
+
+/* 取目标网络当前所在行的中心；行被滚出可视区也算失败（点了等于没点） */
+static int target_row_center(const char *ssid, int *cx, int *cy)
+{
+    int r = row_of_ssid(ssid);
+    return r < 0 ? 0 : row_center(r, cx, cy);
+}
+
+// 函数作用：查目标网络的某个状态位。 参数：which：0=saved，1=connected。 返回值：0/1，未找到 -1。
+static int ap_flag_is(int which)
+{
+    for (int i = 0; i < wifi_ap_count(); i++) {
+        const wifi_ap_t *a = wifi_ap_at(i);
+        if (a && !strcmp(a->ssid, s_target))
+            return which ? (int)a->connected : (int)a->saved;
+    }
+    return -1;
+}
+
+static int pred_target_connected(void *p) { (void)p; return ap_flag_is(1) == 1; }
+static int pred_target_unsaved(void *p)   { (void)p; return ap_flag_is(0) == 0; }
+/* 文案必须点名到"这一条"：只查"已连接"三个字，会把串台的 SSID 放过 */
+static int pred_status_connected(void *p)
+{
+    char want[80];
+    (void)p;
+    snprintf(want, sizeof(want), "已连接 %s", s_target);
+    return strstr(app_get_input_s(APP_IN_SCAN_STATUS), want) != NULL;
+}
+/* 单连接不变量：列表里永远只有一行是"已连接" */
+static int connected_count(void)
+{
+    int n = 0;
+    for (int i = 0; i < wifi_ap_count(); i++) {
+        const wifi_ap_t *a = wifi_ap_at(i);
+        if (a && a->connected) n++;
+    }
+    return n;
+}
+/* 渲染层口径：标题 label 上真的写着这句（model 槽改了≠界面改了） */
+static int pred_status_label_connected(void *p)
+{
+    extern objects_t objects;
+    char want[80];
+    (void)p;
+    snprintf(want, sizeof(want), "已连接 %s", s_target);
+    return objects.lbl_status &&
+           strstr(lv_label_get_text(objects.lbl_status), want) != NULL;
+}
+/* 半页/对话框标题就是目标 SSID：证明"操作针对哪一条"没串台 */
+static int pred_sheet_title_target(void *p)
+{
+    (void)p;
+    return objects.lbl_pwd_ssid &&
+           !strcmp(lv_label_get_text(objects.lbl_pwd_ssid), s_target);
+}
+static int pred_dlg_title_target(void *p)
+{
+    (void)p;
+    return objects.lbl_dlg_ssid &&
+           !strcmp(lv_label_get_text(objects.lbl_dlg_ssid), s_target);
+}
 
 static void center_of_obj(lv_obj_t *o, int *cx, int *cy)
 {
@@ -398,7 +486,6 @@ static void nav_test_hooks(void)
 {
     extern objects_t objects;
     static int stage = 0, wait = 0;
-    static int saved_row = -1;
     int cx, cy, r;
 
     if (!getenv("WIFI_NAVTEST")) return;
@@ -422,20 +509,18 @@ static void nav_test_hooks(void)
         if (app_get_input_i(APP_IN_SCAN_STATE) == 2) { stage = 2; return; }
         if (++wait > 2000) { nav_check("扫描在 2000 帧内完成", 0); stage = -1; }
         return;
-    case 2: {
+    case 2: {                               /* 有锁未保存 → 半页 */
         nav_check("扫描完成且列表有行",
                   lv_obj_get_child_count(objects.list_box) > 0);
         nav_check("初始两个模态都隐藏",
                   hidden_of(objects.overlay_root) && hidden_of(objects.dlg_root));
-        r = find_row(pick_locked_unconnected);
-        nav_check("找到「需密码且未连接」的行", r >= 0);
-        if (r < 0) { stage = -1; return; }
-        if (!row_center(r, &cx, &cy)) { stage = -1; return; }
+        r = find_row(pick_locked_unsaved);
+        nav_check("找到「有锁且没存过密码」的行", r >= 0);
+        if (r < 0 || !row_center(r, &cx, &cy)) { stage = -1; return; }
+        set_target(wifi_ap_at(r)->ssid);
         click_at(cx, cy, 3);
-        nav_wait("点带锁行 → 半页显示", pred_sheet_visible, NULL, 200);
-        nav_check("半页标题写入该 SSID",
-                  objects.lbl_pwd_ssid &&
-                  lv_label_get_text(objects.lbl_pwd_ssid)[0] != '\0');
+        nav_wait("点该行 → 半页显示", pred_sheet_visible, NULL, 200);
+        nav_wait("半页标题就是这条 SSID", pred_sheet_title_target, NULL, 1);
         stage = 3;
         return;
     }
@@ -446,44 +531,86 @@ static void nav_test_hooks(void)
         stage = 4;
         return;
     case 4: {                               /* 遮罩空白处关闭（sheet 之上） */
-        if (!row_center(find_row(pick_locked_unconnected), &cx, &cy)) { stage = -1; return; }
+        if (!target_row_center(s_target, &cx, &cy)) { stage = -1; return; }
         click_at(cx, cy, 3);                /* 重新打开 */
-        nav_wait("再点一次带锁行 → 半页再开", pred_sheet_visible, NULL, 200);
+        nav_wait("再点一次同一行 → 半页再开", pred_sheet_visible, NULL, 200);
         click_at(240, 40, 3);               /* 遮罩区（半页从 y=96 起） */
         nav_wait("点遮罩空白 → 半页隐藏", pred_sheet_hidden, NULL, 200);
         stage = 5;
         return;
     }
-    case 5: {                               /* 长按已保存行 → 对话框 */
-        saved_row = r = find_row(pick_saved);
-        nav_check("找到「已保存」的行", r >= 0);
+    case 5: {                               /* 开放网络：点一下直连，不弹半页 */
+        r = find_row(pick_open);
+        nav_check("找到「开放网络」的行", r >= 0);
         if (r < 0) { stage = -1; return; }
+        set_target(wifi_ap_at(r)->ssid);
+        if (!row_center(r, &cx, &cy)) { stage = -1; return; }
+        click_at(cx, cy, 3);
+        nav_wait("点开放网络 → 后端真的连上了（connected 置位）",
+                 pred_target_connected, NULL, 200);
+        nav_wait("状态文案点名「已连接 <这条 SSID>」", pred_status_connected, NULL, 1);
+        nav_wait("标题 label 上真的写着这句（渲染层）",
+                 pred_status_label_connected, NULL, 200);
+        nav_check("开放网络直连不弹半页", hidden_of(objects.overlay_root));
+        nav_check("直连后全表只剩一个「已连接」", connected_count() == 1);
+        stage = 6;
+        return;
+    }
+    case 6: {                               /* 长按已保存行 → 对话框；尾巴不能触发直连 */
+        r = find_row(pick_saved);
+        nav_check("找到「已保存且未连接」的行", r >= 0);
+        if (r < 0) { stage = -1; return; }
+        set_target(wifi_ap_at(r)->ssid);
         if (!row_center(r, &cx, &cy)) { stage = -1; return; }
         /* 长按要按住超过 LV_INDEV_DEF_LONG_PRESS_TIME(400ms)。
          * pump 每帧只把 lv_tick 推 2ms，所以按 260 帧 = 520ms 的 LVGL 时间；
          * 按"真实毫秒"估帧数会短一截，长按根本判不出来。 */
         click_at(cx, cy, 260);
-        nav_wait("长按已保存行 → 对话框显示", pred_dlg_visible, NULL, 200);
-        /* 补发的 CLICKED 就在这一拍之后落地，所以先静置再判"没被换成半页" */
+        nav_wait("长按该行 → 对话框显示", pred_dlg_visible, NULL, 200);
+        nav_wait("对话框标题就是这条 SSID", pred_dlg_title_target, NULL, 1);
+        /* LVGL 抬手必补发 CLICKED（lv_indev.c:1046 无条件送）。
+         * 现在这条尾巴的症状不再是"换成半页"，而是"顺带把网络直连了"，
+         * 所以断言改成：静置后目标仍未被连接、对话框还在前台。 */
         pump(100);
-        nav_check("长按抬手补发的 CLICKED 没把对话框换成半页",
-                  hidden_of(objects.overlay_root));
+        nav_check("长按补发的 CLICKED 被吞掉（没顺手直连）",
+                  ap_flag_is(1) == 0);
         nav_check("静置后对话框仍在前台", !hidden_of(objects.dlg_root));
-        stage = 6;
+        stage = 7;
         return;
     }
-    case 6: {                               /* 取消关闭 */
+    case 7: {                               /* 取消：只关窗，不改状态 */
         center_of_obj(objects.btn_dlg_cancel, &cx, &cy);
         click_at(cx, cy, 3);
         nav_wait("点「取消」→ 对话框隐藏", pred_dlg_hidden, NULL, 200);
-
-        /* 再点一次同一行（短按）：证明"长按吞掉尾巴"不是把整条通路废掉 */
-        if (saved_row >= 0 && row_center(saved_row, &cx, &cy)) click_at(cx, cy, 3);
-        nav_wait("同一行短按仍能开半页（尾巴吞除没废掉通路）",
+        nav_check("取消不动已保存状态（仍然 saved）", ap_flag_is(0) == 1);
+        stage = 8;
+        return;
+    }
+    case 8: {                               /* 忘记：状态真的落掉（用户 2026-10-24 报的问题） */
+        if (!target_row_center(s_target, &cx, &cy)) { stage = -1; return; }
+        click_at(cx, cy, 260);              /* 重新长按开对话框 */
+        nav_wait("重新长按 → 对话框显示", pred_dlg_visible, NULL, 200);
+        center_of_obj(objects.btn_dlg_forget, &cx, &cy);
+        click_at(cx, cy, 3);
+        nav_wait("点「忘记」→ 对话框隐藏", pred_dlg_hidden, NULL, 200);
+        nav_wait("点「忘记」→ 这条的 saved 真的清掉了", pred_target_unsaved, NULL, 200);
+        stage = 9;
+        return;
+    }
+    case 9: {                               /* 忘记生效的交叉验证：同一条现在要密码了 */
+        if (!target_row_center(s_target, &cx, &cy)) { stage = -1; return; }
+        click_at(cx, cy, 3);
+        nav_wait("忘记后再点同一条 → 改弹半页（密码不再保存）",
                  pred_sheet_visible, NULL, 200);
+        nav_wait("半页标题仍是这条 SSID", pred_sheet_title_target, NULL, 1);
+        stage = 10;
+        return;
+    }
+    case 10: {                              /* 收尾 */
         center_of_obj(objects.btn_pwd_close, &cx, &cy);
         click_at(cx, cy, 3);
         nav_wait("收尾：半页关闭，两个模态都不在前台", pred_sheet_hidden, NULL, 200);
+        nav_check("收尾：对话框也不在前台", hidden_of(objects.dlg_root));
 
         printf("[NAV] RESULT: PASS %d / FAIL %d\n", g_nav_pass, g_nav_fail);
         stage = -1;
@@ -515,9 +642,9 @@ static void reach_shot_hooks(void)
     }
 
     if (!strcmp(reach, "sheet")) {
-        r = find_row(pick_locked_unconnected);
+        r = find_row(pick_locked_unsaved);
         if (r < 0 || !row_center(r, &cx, &cy)) {
-            printf("[REACH] FAIL 没有「需密码且未连接」的行\n");
+            printf("[REACH] FAIL 没有「有锁且没存过密码」的行\n");
             harness_stop(1);
         }
         click_at(cx, cy, 3);

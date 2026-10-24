@@ -4,7 +4,6 @@
  * 分工：命令在这里分发，但**去向**交给 navigation、**回显**交给 view、
  * **硬件动作**交给 platform；本文件因此可以脱离 LVGL 单测。
  */
-#include <stdio.h>
 #include "wifi_logic.h"
 #include "wifi_model.h"
 #include "wifi_view.h"
@@ -24,17 +23,21 @@ void user_io_tick(void)
 {
     app_output_id_t id;
     app_value_t v;
+    char pwd[APP_IN_STR_MAX];
+
     while (app_pop_output(&id, &v)) {
         switch (id) {
         case APP_OUT_WIFI_SCAN: io_wifi_scan(v.i); break;
-        /* ⑦-1 只做导航闭环：关闭类命令在这里落地；
-         * 需要后端的（真连/真忘记）仍留 TODO，但要先让界面退得出去。 */
-        case APP_OUT_WIFI_CONNECT:            /* TODO(⑦-2): io_wifi_connect(ssid, pwd) */
-            printf("[CMD] wifi_connect（后端未接，⑦-2）\n");
+        case APP_OUT_WIFI_CONNECT:
+            /* 密码只能由 view 层从 objects.pwd_ta 取（本层不碰 objects）；
+             * 直连场景（已保存/开放网络）pwd 为空串，后端自己判断要不要存密码。 */
+            io_wifi_connect(app_get_input_s(APP_IN_SEL_SSID),
+                            wifi_view_password(pwd, (int)sizeof(pwd)));
+            wifi_nav_close_sheet();   /* TODO(⑦-2b): 改成"连接中→成功/失败"三态 */
             break;
         case APP_OUT_PWD_CANCEL: wifi_nav_close_sheet(); break;
-        case APP_OUT_DLG_FORGET:                      /* TODO(⑦-2): io_wifi_forget(ssid) */
-            printf("[CMD] dlg_forget（后端未接，⑦-2）\n");
+        case APP_OUT_DLG_FORGET:
+            io_wifi_forget(app_get_input_s(APP_IN_SEL_SSID));
             wifi_nav_close_dialog();
             break;
         case APP_OUT_DLG_CANCEL: wifi_nav_close_dialog(); break;

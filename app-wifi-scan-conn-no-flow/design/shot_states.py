@@ -4,7 +4,7 @@
 全部走**真实运行路径**，不再翻 hiddenFlag：
   * 主屏状态（idle / scanning / done / empty）——钩子 WIFI_SHOT_AT 到达；
   * 模态（半页 / 对话框）——钩子 WIFI_REACH 用注入鼠标点击列表行走完
-    "点带锁行 → 半页"、"长按已保存行 → 对话框"这条真通路（⑦-1 接线）。
+    "点有锁未保存行 → 半页"、"长按已保存行 → 对话框"这条真通路（⑦-1 接线）。
 所以这些图既证明"长这样"，也证明"进得去"。
 
 顺序是硬约束：build_example（写 .eez-project）→ cli_build（覆盖 src/ui，含 fonts/）

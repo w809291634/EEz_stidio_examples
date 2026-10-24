@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include "lvgl.h"
 #include "wifi_list.h"
+#include "app/wifi_events.h"               /* 输入→命令的唯一出口 */
 #include "platform/wifi_platform.h"      /* wifi_ap_at / wifi_ap_count */
 #include "navigation/wifi_nav.h"         /* 手势只决定去向 */
 #include "../../../ui/screens.h"
@@ -48,8 +49,8 @@
  *
  * ★ LVGL 对普通按钮在长按抬手后**仍会补发一次 CLICKED**
  *   （lv_indev.c:1046 只在 short_click 上做了 long_pr_sent 判断，CLICKED 无条件发）。
- *   不吞掉它，长按就会"先开对话框、再被补发的 CLICKED 换成半页"，
- *   模态互斥反而把对话框关掉。用"本次手势的行"来认这条尾巴。 */
+ *   不吞掉它，长按就会"先开对话框、再被补发的 CLICKED 顺手直连"，
+ *   用"本次手势的行"来认这条尾巴。 */
 static lv_obj_t *s_long_row = NULL;
 
 /******************** 小工具 / 坐标换算 ********************/
@@ -103,8 +104,8 @@ static lv_obj_t *row_label(lv_obj_t *row, int x, int y, int w, int h,
 
 /******************** 事件回调 ********************/
 
-// 函数作用：行手势分发——单击开半页、长按开忘记对话框、吞掉长按补发的 CLICKED。
-//          参数：e：LVGL 事件。 返回值：无。
+// 函数作用：行手势分发——有锁未保存开半页、已保存/开放直连、长按开忘记对话框、
+//          吞掉长按补发的 CLICKED。 参数：e：LVGL 事件。 返回值：无。
 static void row_event_cb(lv_event_t *e)
 {
     lv_obj_t *row = (lv_obj_t *)lv_event_get_target(e);
@@ -118,12 +119,19 @@ static void row_event_cb(lv_event_t *e)
         break;
     case LV_EVENT_CLICKED:
         if (s_long_row == row) { s_long_row = NULL; break; }   /* 尾巴，吞掉 */
-        /* 已连接的网络点开没有意义；开放网络免密直连属 ⑦-2 后端 */
-        if (ap->lock && !ap->connected) wifi_nav_open_sheet(ap->ssid);
+        if (ap->connected) break;             /* 已连接：不重复操作 */
+        wifi_events_select(ap->ssid);         /* 记下这条命令针对哪个网络 */
+        /* 用户口径（2026-10-24）：已保存密码的网络点击就直连，不再要密码；
+         * 只有"有锁且没存过"才弹半页。忘记之后 saved 清掉，才会重新要密码。 */
+        if (ap->lock && !ap->saved) wifi_nav_open_sheet(ap->ssid);
+        else wifi_events_request_connect();
         break;
     case LV_EVENT_LONG_PRESSED:
         s_long_row = row;
-        if (ap->saved) wifi_nav_open_dialog(ap->ssid);
+        if (ap->saved) {
+            wifi_events_select(ap->ssid);
+            wifi_nav_open_dialog(ap->ssid);
+        }
         break;
     default:
         break;

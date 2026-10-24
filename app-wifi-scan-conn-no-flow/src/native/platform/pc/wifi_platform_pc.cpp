@@ -109,6 +109,23 @@ static void publish(void)
 // 函数作用：设定 PC 假世界返回的 AP 条数。 参数：n：<0 用全表。 返回值：无。
 extern "C" void io_fake_set_ap_count(int n) { s_fake_n = n; }
 
+// 函数作用：按 SSID 找假世界里的条目（可变指针，后端要改它）。
+//          参数：ssid：网络名。 返回值：命中指针；空名或未扫到返回 NULL。
+static wifi_ap_t *find_ap(const char *ssid)
+{
+    if (!ssid || !ssid[0]) return NULL;
+    for (int i = 0; i < s_cnt; i++)
+        if (strcmp(s_aps[i].ssid, ssid) == 0) return &s_aps[i];
+    return NULL;
+}
+
+// 函数作用：状态变更后重排序并 +1 代数（UI 靠代数触发重建）。 参数：无。 返回值：无。
+static void resort_and_publish(void)
+{
+    qsort(s_aps, (size_t)s_cnt, sizeof(s_aps[0]), cmp_ap);
+    s_gen++;
+}
+
 /******************** 对外初始化与公开接口 ********************/
 
 // 函数作用：初始化后端并发布初始文案。 参数：无。 返回值：无。
@@ -129,6 +146,51 @@ void io_wifi_scan(int v)
     app_set_input_i(APP_IN_SCAN_STATE, 1);
     app_set_input_s(APP_IN_SCAN_STATUS, "正在扫描…");
     printf("[IO] scan start\n");
+}
+
+// 函数作用：连接指定网络；有锁且给了密码就顺带存成"已保存"。
+//          参数：ssid：目标网络；password：可为空。 返回值：无。
+void io_wifi_connect(const char *ssid, const char *password)
+{
+    wifi_ap_t *ap = find_ap(ssid);
+    if (!ap) {
+        printf("[IO] connect 跳过：找不到 %s\n", ssid ? ssid : "(空)");
+        return;
+    }
+    /* ★ ap 是指向 s_aps 槽位的指针，而 resort 会 qsort 整个数组——
+     *   重排后同一槽位住的是别的网络。所以文案/日志要用的 SSID 和 saved
+     *   必须在重排前抄进局部变量，否则「已连接 X」会报成另一个网络。 */
+    char target[sizeof(ap->ssid)];
+    memcpy(target, ap->ssid, sizeof(target));
+    int now_saved;
+
+    for (int i = 0; i < s_cnt; i++) s_aps[i].connected = false;
+    ap->connected = true;
+    if (ap->lock && password && password[0]) ap->saved = true;
+    now_saved = (int)ap->saved;
+    resort_and_publish();
+
+    char buf[APP_IN_STR_MAX];
+    snprintf(buf, sizeof(buf), "已连接 %s", target);
+    app_set_input_s(APP_IN_SCAN_STATUS, buf);
+    printf("[IO] connected: %s (saved=%d)\n", target, now_saved);
+}
+
+// 函数作用：忘记指定网络（清掉"已保存"）。 参数：ssid：目标网络。 返回值：无。
+void io_wifi_forget(const char *ssid)
+{
+    wifi_ap_t *ap = find_ap(ssid);
+    if (!ap) {
+        printf("[IO] forget 跳过：找不到 %s\n", ssid ? ssid : "(空)");
+        return;
+    }
+    /* 只清"已保存"，不动 connected：与 Windows 删 profile 的行为一致
+     * （已建立的连接不会因此断开）。 */
+    char target[sizeof(ap->ssid)];
+    memcpy(target, ap->ssid, sizeof(target));   /* 同上：重排前抄走 */
+    ap->saved = false;
+    resort_and_publish();
+    printf("[IO] forgotten: %s\n", target);
 }
 
 // 函数作用：推进扫描计时并把状态回写 model。 参数：无。 返回值：无。

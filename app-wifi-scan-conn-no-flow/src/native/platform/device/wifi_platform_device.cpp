@@ -44,6 +44,23 @@ void io_wifi_scan(int v)
     printf("[IO] io_wifi_scan 未实现（⑦-2）\n");
 }
 
+// 函数作用：连接指定网络。 参数：ssid / password。 返回值：无。
+void io_wifi_connect(const char *ssid, const char *password)
+{
+    (void)ssid; (void)password;
+    /* TODO(⑦-2): WlanConnect()；有密码时先 WlanSetProfile()
+     * 成功回调里把该条 connected 置真、重排序、代数 +1 */
+    printf("[IO] io_wifi_connect 未实现（⑦-2）\n");
+}
+
+// 函数作用：忘记指定网络。 参数：ssid。 返回值：无。
+void io_wifi_forget(const char *ssid)
+{
+    (void)ssid;
+    /* TODO(⑦-2): WlanDeleteProfile()；成功后 saved 置假、代数 +1 */
+    printf("[IO] io_wifi_forget 未实现（⑦-2）\n");
+}
+
 // 函数作用：拉取扫描结果并回写 model。 参数：无。 返回值：无。
 void io_sample_inputs(void)
 {

@@ -31,6 +31,11 @@ void io_init(void);                 /* 一次性初始化 */
 void io_sample_inputs(void);        /* 采样外部世界 -> app_set_input_*() */
 void io_wifi_scan(int v);           /* v=1 发起一次扫描 */
 
+/* 连接 / 忘记：状态变化由后端负责（改完要 +1 代数，UI 才会重画）。
+ * password 仅对"有锁且没存过密码"的网络有意义；已保存或开放网络传空串。 */
+void io_wifi_connect(const char *ssid, const char *password);
+void io_wifi_forget(const char *ssid);
+
 const wifi_ap_t *wifi_ap_at(int index);  /* 已按「已连接→RSSI→SSID」排好 */
 int  wifi_ap_count(void);           /* 扫描结果总数 */
 int  wifi_ap_gen(void);             /* 代数：内容变化 +1，UI 据此重建 */
