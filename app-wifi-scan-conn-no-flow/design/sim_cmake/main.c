@@ -461,6 +461,19 @@ static int pred_status_label_connected(void *p)
            strstr(lv_label_get_text(objects.lbl_status), want) != NULL;
 }
 /* 半页/对话框标题就是目标 SSID：证明"操作针对哪一条"没串台 */
+static int pred_status_connecting(void *p)
+{
+    char want[80];
+    (void)p;
+    /* 连接是异步的：点完必须先看到"正在连接"，否则用户以为没反应（⑦-2b） */
+    snprintf(want, sizeof(want), "正在连接 %s…", s_target);
+    return strstr(app_get_input_s(APP_IN_SCAN_STATUS), want) != NULL;
+}
+static int pred_conn_state_idle(void *p)
+{
+    (void)p;
+    return app_get_input_i(APP_IN_CONN_STATE) == 0;
+}
 static int pred_sheet_title_target(void *p)
 {
     (void)p;
@@ -546,13 +559,18 @@ static void nav_test_hooks(void)
         set_target(wifi_ap_at(r)->ssid);
         if (!row_center(r, &cx, &cy)) { stage = -1; return; }
         click_at(cx, cy, 3);
-        nav_wait("点开放网络 → 后端真的连上了（connected 置位）",
-                 pred_target_connected, NULL, 200);
-        nav_wait("状态文案点名「已连接 <这条 SSID>」", pred_status_connected, NULL, 1);
+        /* 连接是异步的（⑦-2b）：先看到「正在连接」，再看到 connected */
+        nav_wait("点开放网络 → 标题先写「正在连接 X…」",
+                 pred_status_connecting, NULL, 300);
+        nav_wait("后端真的连上了（connected 置位）",
+                 pred_target_connected, NULL, 1500);
+        nav_wait("状态文案点名「已连接 <这条 SSID>」", pred_status_connected, NULL, 300);
         nav_wait("标题 label 上真的写着这句（渲染层）",
-                 pred_status_label_connected, NULL, 200);
+                 pred_status_label_connected, NULL, 300);
         nav_check("开放网络直连不弹半页", hidden_of(objects.overlay_root));
         nav_check("直连后全表只剩一个「已连接」", connected_count() == 1);
+        nav_wait("结果已被 logic 消费（CONN_STATE 回空闲）",
+                 pred_conn_state_idle, NULL, 300);
         stage = 6;
         return;
     }
@@ -606,9 +624,37 @@ static void nav_test_hooks(void)
         stage = 10;
         return;
     }
-    case 10: {                              /* 收尾 */
-        center_of_obj(objects.btn_pwd_close, &cx, &cy);
+    case 10: {                              /* 半页全流程：连接中不关窗，成功才关（⑦-2b） */
+        int r2;
+        /* 上一段（忘记后再点）留了个开着的半页：不先收掉，这一笔会点到半页自己身上 */
+        if (!hidden_of(objects.overlay_root)) {
+            center_of_obj(objects.btn_pwd_close, &cx, &cy);
+            click_at(cx, cy, 3);
+            nav_wait("进半页全流程前先收起半页", pred_sheet_hidden, NULL, 200);
+        }
+        r2 = find_row(pick_locked_unsaved);
+        nav_check("找到「有锁且没存过密码」的行（走半页全流程）", r2 >= 0);
+        if (r2 < 0 || !row_center(r2, &cx, &cy)) { stage = 11; return; }
+        set_target(wifi_ap_at(r2)->ssid);
         click_at(cx, cy, 3);
+        nav_wait("点该行 → 半页显示", pred_sheet_visible, NULL, 200);
+        center_of_obj(objects.btn_connect, &cx, &cy);
+        click_at(cx, cy, 3);
+        nav_wait("点「连接」→ 标题先写「正在连接 X…」",
+                 pred_status_connecting, NULL, 300);
+        nav_check("连接中半页仍在前台（不是一点就关）",
+                  !hidden_of(objects.overlay_root));
+        nav_wait("后端报成功 → 半页自动关闭", pred_sheet_hidden, NULL, 1500);
+        nav_wait("这条真的 connected", pred_target_connected, NULL, 300);
+        nav_check("半页流程走完，对话框也不在前台", hidden_of(objects.dlg_root));
+        stage = 11;
+        return;
+    }
+    case 11: {                              /* 收尾 */
+        if (!hidden_of(objects.overlay_root)) {
+            center_of_obj(objects.btn_pwd_close, &cx, &cy);
+            click_at(cx, cy, 3);
+        }
         nav_wait("收尾：半页关闭，两个模态都不在前台", pred_sheet_hidden, NULL, 200);
         nav_check("收尾：对话框也不在前台", hidden_of(objects.dlg_root));
 
@@ -623,7 +669,9 @@ static void nav_test_hooks(void)
 }
 
 /* ⑦-3 证据图：不翻 hiddenFlag，用真实点击走到模态再截图。
- * 用法：WIFI_AUTOSCAN=1 WIFI_REACH=sheet|dialog WIFI_AUTOEXIT=1 */
+ * 用法：WIFI_AUTOSCAN=1 WIFI_REACH=sheet|dialog|connect WIFI_AUTOEXIT=1
+ * connect＝点第一条「已保存」行走免密直连；真后端（默认）是真的下发
+ * WlanConnect，假后端（WIFI_PC_FAKE=1）只改内存，所以这条也是真接口的取证入口。 */
 static void reach_shot_hooks(void)
 {
     static int stage = 0, wait = 0;
@@ -657,6 +705,19 @@ static void reach_shot_hooks(void)
         }
         click_at(cx, cy, 260);               /* 长按，帧数依据见 nav 用例注释 */
         ok = wait_until(pred_dlg_visible, NULL, 300);
+    } else if (!strcmp(reach, "connect")) {
+        r = find_row(pick_saved);
+        if (r < 0 || !row_center(r, &cx, &cy)) {
+            printf("[REACH] FAIL 没有「已保存且未连接」的行\n");
+            harness_stop(1);
+        }
+        set_target(wifi_ap_at(r)->ssid);
+        click_at(cx, cy, 3);
+        /* 真接口的"正在连接"只能靠打印留证：无头跑不等半页，截图来不及 */
+        printf("[REACH] 点下之后标题=%s\n", app_get_input_s(APP_IN_SCAN_STATUS));
+        ok = wait_until(pred_target_connected, NULL, 4000);
+        printf("[REACH] connect 目标=%s 文案=%s\n", s_target,
+               app_get_input_s(APP_IN_SCAN_STATUS));
     } else {
         printf("[REACH] FAIL 未知 WIFI_REACH=%s\n", reach);
         harness_stop(1);

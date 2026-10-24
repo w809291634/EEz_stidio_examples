@@ -264,6 +264,66 @@ FAIL 反映到退出码；反向测试见 `tmp/_negtest_nav.py`（掐掉长按�
 且标题要量 `lv_label_get_text`（渲染层）——model 槽改了不等于界面改了。
 用例里的目标行一律按 SSID 认（`row_of_ssid`），因为连接/忘记都会重排，缓存行号必错。
 
+### 5.8 ⑦-2 PC 真接口（wlanapi，2026-10-24 已交付）
+
+口径（用户 2026-10-24 定）：扫描 / 连接 / 忘记**全走真接口**。
+本轮交付时真接口要靠 `WIFI_PC_REAL=1` 才开，**下一轮（§5.9）已把默认翻向真接口**，
+门禁与出图改成**主动设** `WIFI_PC_FAKE=1` 才回到假世界——保护的方向跟着反了，
+但同一件事不变：**门禁环境里"走哪个后端"必须被显式写死并打印出来**
+（不写死，跑分就是一次真连真删，断言再也不可以复现）。
+
+落点：`platform/pc/wifi_platform_win.cpp`（wlanapi 实现）+ `wifi_platform_pc.cpp` 降级成分发器。
+真接口全是异步的：`WlanScan` 后 2s 回查、`WlanConnect` 后 5s 回查，
+**结论只看系统真值**——回查里目标 `connected` 才写「已连接 X」，否则写「连接失败 X」。
+
+四条口径（都写进代码注释，别再改回去）：
+
+- mingw 的 `wlanapi.h` 把 profile 名与 profile XML 都声明成**宽字符**（`LPCWSTR`），
+  照 MSDN 上看着像 ANSI 的签名直接传 UTF-8 会静默失配；本层统一 UTF-8 ↔ UTF-16。
+- 中文 SSID 优先用 Windows 已解码的 `strProfileName`，没 profile 的才按 AP 原样字节当 UTF-8 显示。
+- 写进 profile XML 的 SSID 与密码必须做 XML 转义（`& < "` 会写坏整份 profile）。
+- WPA3-SAE 在这个 API 里仍报成 RSNA，界面按 WPA2 显示（Windows 自己也这么报），日志留原始值。
+
+链接方式：`run_sim.bat` 传 `-DCMAKE_CXX_STANDARD_LIBRARIES=-lwlanapi`，**共享的 PC_SIM 脚本一行没改**。
+不能用 `CMAKE_EXE_LINKER_FLAGS`——它落在目标文件**之前**，GNU ld 从左往右解析，wlanapi 符号会报未定义。
+
+证据（真机，不是假表）：真扫描出 8 条真网络（`build/sim_shots/real_scan.png`）；
+`WIFI_AUTOSCAN=1 WIFI_REACH=connect` 注入点击 →
+`[WIN] WlanConnect 已下发：YJT-1号楼办公` → 系统侧独立回读
+`netsh wlan show interfaces` 给 `状态: 已连接 / SSID: YJT-1号楼办公 / 通道 36`，
+界面同步出「已连接」胶囊与标题文案（`build/sim_shots/real_connect.png`）。
+假世界门禁回归 `[NAV] PASS 30 / FAIL 0`、`preflight` 全绿。
+
+未做：真「忘记」没在你机器上试（`WlanDeleteProfile` 会真删系统里存的密码，要你点名才跑）；
+连接中 / 失败三态目前只是"5s 后一次回查"的文案，⑦-2b 的进度态与错误码文案未做。
+
+### 5.9 ⑦-2b 连接三态 + 真接口改成默认（2026-10-24 本轮）
+
+用户报的两件事是同一个根因链：「点另一个已保存的 WiFi，硬件没切换，也没看到连接中提示」。
+
+1. **默认后端翻向**（用户定）：双击 `run_sim.bat` 就是**真接口**；假世界改成 `WIFI_PC_FAKE=1` 才走。
+   方向一反，门禁的保护也跟着反：`check_nav()` 与 `shot_states.py` 现在**主动设**
+   `WIFI_PC_FAKE=1`（而不是只 pop 掉一个开关），并打印
+   `OK 门禁已强制假世界（WIFI_PC_FAKE=1），真接口不会被触发`。
+   不设的话，一次跑分就是一次真连网 + 真删密码，且"附近有哪些网"每次都变。
+2. **三态走契约，不靠猜**：新增 `APP_IN_CONN_STATE`（0 空闲 / 1 连接中 / 2 成功 / 3 失败），
+   后端负责写、`wifi_logic` 负责消费——**半页在"连接中"保持前台，收到 2 才自动关**
+   （设计 `mockup_06` 的口径），收到 3 不关窗（本轮定的最小方案：失败只改标题栏文案，
+   不补半页内红字控件）。假后端与真后端**同一套时序口径**，所以这条通路在门禁里可验。
+3. 真接口是每秒回查（`CONNECT_POLL_MS=1000`，15s 判失败），不再"5 秒后才看一眼"；
+   假后端用 `CONNECT_SEC=1.2` 演出同一段"正在连接"。
+
+证据：`[NAV] RESULT: PASS 40 / FAIL 0`（新增 10 条，含"点下先看到正在连接""连接中半页仍在前台"
+"成功才自动关"）。两条反向测试各自 rc=1：把 logic 退回"一点就关窗"→ 抓到 1 条；
+把假后端退回同步完成 → 抓到 3 条。
+
+真机复现与副作用（必须记下来）：不设任何变量跑 `WIFI_REACH=connect` →
+`[IO] io_init (pc REAL wlanapi)`、`[REACH] 点下之后标题=正在连接 yjt_dev_2.4G…`、
+15s 后 `[REACH] ... 文案=连接失败 yjt_dev_2.4G`，`netsh` 独立回读 `状态: 关联 → 已断开连接`。
+**换网失败会连原来连着的网一起掉**（`WlanConnect` 先断后连，这是 Windows 的行为不是本层缺陷），
+测试后已用 `netsh wlan connect name="1号楼6层WiFi"` 恢复。
+`yjt_dev_2.4G` 这条在本机存着 profile 但连不上（大概率密码已失效），界面上会看到它报"连接失败"。
+
 ---
 
 ## 6. 一次性完成：Gate 表（全绿才交付）

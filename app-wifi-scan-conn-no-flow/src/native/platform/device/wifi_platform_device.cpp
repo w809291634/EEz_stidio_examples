@@ -1,15 +1,18 @@
 /*
- * wifi_platform_device.cpp — 真机后端接入点（⑦-2 落地）
+ * wifi_platform_device.cpp — 真机（嵌入式）后端接入点
  *
  * 编译选择（kit reference/12）：PC 构建**不**定义 WIFI_PLATFORM_DEVICE，本文件整体
  * 编译为空；真机构建定义该宏后，pc/ 那份实现不再提供符号，由这里补齐同名接口。
  * 这样 app/ 只 include platform/wifi_platform.h，既没有 #ifdef 分支也不会重复定义。
  *
- * 待接（用户已定：先做 Windows WLAN 宿主侧）：
- *   io_init          → WlanOpenClient / WlanEnumInterfaces
- *   io_wifi_scan     → WlanScan()
- *   io_sample_inputs → WlanGetNetworkBssList() 拉结果、排序、发布
- *   忘记网络          → WlanDeleteProfile（对应 io_wifi_forget，⑦-2 新增端口函数）
+ * 参考实现：platform/pc/wifi_platform_win.cpp 已经把 Windows 宿主侧的真接口跑通
+ * （WlanScan / WlanGetAvailableNetworkList / WlanConnect / WlanDeleteProfile），
+ * 端口到嵌入式栈时照它的**时序与状态口径**抄，别照注释里的名字猜：
+ *   io_init          → 打开无线客户端 + 选接口；失败要有可读文案
+ *   io_wifi_scan     → 发起扫描 + 置扫描态
+ *   io_sample_inputs → 到点拉结果 → 排序 → 发布（扫描态最后才置 2）
+ *   io_wifi_connect  → 有密码先写凭据再连；连上/失败都由回查真值定结论
+ *   io_wifi_forget   → 删已存凭据；不断已建立的连接
  */
 #ifdef WIFI_PLATFORM_DEVICE
 
@@ -49,7 +52,9 @@ void io_wifi_connect(const char *ssid, const char *password)
 {
     (void)ssid; (void)password;
     /* TODO(⑦-2): WlanConnect()；有密码时先 WlanSetProfile()
-     * 成功回调里把该条 connected 置真、重排序、代数 +1 */
+     * ★ 必须按 platform/wifi_platform.h 的口径报进度：这里立即置
+     *   APP_IN_CONN_STATE=1 +「正在连接 X…」，之后在 io_sample_inputs 里
+     *   回查真值置 2/3。置不了 2，app/wifi_logic 就永远不关半页。 */
     printf("[IO] io_wifi_connect 未实现（⑦-2）\n");
 }
 

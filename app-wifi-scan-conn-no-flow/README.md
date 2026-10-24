@@ -85,6 +85,22 @@ python design\gen_font.py         rem 补烘字体（CLI 不烘，P-0140）
 python design\preflight.py --with-sim
 ```
 
+### 仿真器默认走**真** WiFi（wlanapi）
+
+双击 `design\sim_cmake\run_sim.bat` 就是真网卡：列表是本机扫到的真网络，
+点「已保存」的行是真的 `WlanConnect`（**换网会先断掉原来连着的**，连不上就两头空，
+界面会走「正在连接 X…」→「连接失败 X」），长按「忘记」是真的 `WlanDeleteProfile`
+（会真删掉系统里存的密码，删了就得重新输）。
+
+要回到可复现的假世界（12 条假 AP，门禁与出图用的就是它）：
+
+```bat
+set WIFI_PC_FAKE=1
+```
+
+没有无线接口 / `wlansvc` 没起时会自动退回假世界并打印原因。
+无头取证入口：`WIFI_AUTOSCAN=1 WIFI_REACH=connect WIFI_AUTOEXIT=1`（不设 `WIFI_PC_FAKE` 即真接口）。
+
 ## 实测账单（本次 2026-10-21，Flow 版 → no-flow 版）
 
 | 测项 | Flow 版 | no-flow 版 | 量法 |

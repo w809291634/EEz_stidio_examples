@@ -32,7 +32,13 @@ void io_sample_inputs(void);        /* 采样外部世界 -> app_set_input_*() *
 void io_wifi_scan(int v);           /* v=1 发起一次扫描 */
 
 /* 连接 / 忘记：状态变化由后端负责（改完要 +1 代数，UI 才会重画）。
- * password 仅对"有锁且没存过密码"的网络有意义；已保存或开放网络传空串。 */
+ * password 仅对"有锁且没存过密码"的网络有意义；已保存或开放网络传空串。
+ *
+ * ★ 连接是异步的，后端必须走 APP_IN_CONN_STATE 报进度（两份实现同口径）：
+ *   io_wifi_connect() 里立即置 1（连接中）并把标题写成「正在连接 X…」；
+ *   之后在 io_sample_inputs() 里回查真值，成功置 2 +「已连接 X」，
+ *   超时/被拒置 3 +「连接失败 X」。半页由 app/wifi_logic 在收到 2 时才关，
+ *   所以点完不关窗、看到"正在连接"是设计口径（mockup_06）。 */
 void io_wifi_connect(const char *ssid, const char *password);
 void io_wifi_forget(const char *ssid);
 

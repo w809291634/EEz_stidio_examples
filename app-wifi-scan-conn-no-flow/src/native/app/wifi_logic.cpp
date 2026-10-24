@@ -30,10 +30,11 @@ void user_io_tick(void)
         case APP_OUT_WIFI_SCAN: io_wifi_scan(v.i); break;
         case APP_OUT_WIFI_CONNECT:
             /* 密码只能由 view 层从 objects.pwd_ta 取（本层不碰 objects）；
-             * 直连场景（已保存/开放网络）pwd 为空串，后端自己判断要不要存密码。 */
+             * 直连场景（已保存/开放网络）pwd 为空串，后端自己判断要不要存密码。
+             * 这里**不关半页**：连接是异步的，半页要留在前台当"正在连接"的背景
+             * （设计 mockup_06），关窗由下面的 APP_IN_CONN_STATE 决定。 */
             io_wifi_connect(app_get_input_s(APP_IN_SEL_SSID),
                             wifi_view_password(pwd, (int)sizeof(pwd)));
-            wifi_nav_close_sheet();   /* TODO(⑦-2b): 改成"连接中→成功/失败"三态 */
             break;
         case APP_OUT_PWD_CANCEL: wifi_nav_close_sheet(); break;
         case APP_OUT_DLG_FORGET:
@@ -45,5 +46,19 @@ void user_io_tick(void)
         }
     }
     io_sample_inputs();
+
+    /* 后端报的连接结果在这里消费掉：成功才关半页；失败留着，用户改完密码可再点。
+     * 文案（正在连接 / 已连接 / 连接失败）由后端写 APP_IN_SCAN_STATUS，view 回显。 */
+    switch ((int)app_get_input_i(APP_IN_CONN_STATE)) {
+    case 2:
+        wifi_nav_close_sheet();
+        app_set_input_i(APP_IN_CONN_STATE, 0);
+        break;
+    case 3:
+        app_set_input_i(APP_IN_CONN_STATE, 0);
+        break;
+    default: break;
+    }
+
     wifi_view_sync();
 }

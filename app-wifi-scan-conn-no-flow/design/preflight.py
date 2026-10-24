@@ -245,6 +245,8 @@ def check_layers():
             "widgets/wifi_list/wifi_list.h", "widgets/wifi_list/wifi_list.cpp",
             "platform/wifi_platform.h",
             "platform/pc/wifi_platform_pc.cpp",
+            "platform/pc/wifi_platform_win.cpp",
+            "platform/pc/wifi_platform_win.h",
             "platform/device/wifi_platform_device.cpp"]
     miss = [p for p in need if not os.path.isfile(os.path.join(N, p))]
     print("%s native 树 %d 个必备文件齐全" % ("OK  " if not miss else "FAIL", len(need)))
@@ -312,6 +314,26 @@ def check_layers():
             ok = False
             print("      违例: " + ", ".join(bad) + "（%s）" % why)
 
+    # 硬件符号只许出现在 platform/：业务层一旦直接叫 Wlan*/esp_wifi，换后端就没人接了
+    hw = ("Wlan", "esp_wifi", "nvs_")
+    bad = []
+    for root in (N, os.path.join(ROOT, "src", "ui")):
+        for dirpath, _dirs, files in os.walk(root):
+            for f in sorted(files):
+                if not f.endswith((".c", ".cpp", ".h")):
+                    continue
+                p = os.path.join(dirpath, f)
+                if (os.sep + "platform" + os.sep) in p:
+                    continue          # 硬件边界层，命中是它的职责
+                t = io.open(p, encoding="utf-8", errors="replace").read()
+                hit = [nd for nd in hw if nd in t]
+                if hit:
+                    bad.append("%s:%s" % (os.path.relpath(p, ROOT), ",".join(hit)))
+    print("%s 硬件符号不外溢（platform 之外 0 命中）" % ("OK  " if not bad else "FAIL"))
+    if bad:
+        ok = False
+        print("      违例: " + ", ".join(bad) + "（硬件名字只属于 platform/）")
+
     # pc / device 必须宏互斥，否则真机构建会撞同名符号。
     # ★ 只认行首预处理指令：正文注释里提到过宏名不算守卫（反向测试抓到）。
     guards = [("platform/pc/wifi_platform_pc.cpp", "#ifndef WIFI_PLATFORM_DEVICE"),
@@ -334,6 +356,10 @@ def check_nav():
     env["PATH"] = env.get("PATH", "") + ";" + SDL_BIN
     env["SDL_VIDEODRIVER"] = "dummy"     # 不开桌面窗口；事件链与出图一致（P-0189）
     env["WIFI_NAVTEST"] = "1"
+    # 门禁必须跑假世界：真接口（run_sim 双击时的默认）会真连网、真删 profile，
+    # 而且"附近有哪些网/谁已连接"每次都变，断言就不可复现。设成假世界这件事要看得见。
+    env["WIFI_PC_FAKE"] = "1"
+    print("OK   门禁已强制假世界（WIFI_PC_FAKE=1），真接口不会被触发")
     try:
         q = subprocess.run([os.path.join(exe_dir, "main.exe")], cwd=exe_dir,
                            env=env, timeout=300, capture_output=True, text=True,

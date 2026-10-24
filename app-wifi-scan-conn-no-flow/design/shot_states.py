@@ -58,6 +58,8 @@ def regen():
 def run_exe(extra_env):
     env = dict(os.environ)
     env["PATH"] = env["PATH"] + ";" + SDL_BIN
+    # 出图永远走假世界：真接口会动本机网卡，图也就不可复现（P-0196）
+    env["WIFI_PC_FAKE"] = "1"
     # SDL dummy：不开桌面窗口（2026-10-24 实测六屏 SHA256 与有窗口逐字节一致）。
     # 要肉眼看窗口：SHOT_STATES_WINDOWED=windows
     env.setdefault("SDL_VIDEODRIVER",

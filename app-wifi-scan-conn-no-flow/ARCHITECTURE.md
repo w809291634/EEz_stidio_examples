@@ -70,16 +70,19 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
    → 行内信号条/副行/状态全部 native 自绘；EEZ 不持有变量（连接中/空态文案由 native 直写）
 ```
 
-**连接 / 忘记**（⑦-2a 已落 PC 假后端；三态反馈与真机后端未做）
+**连接 / 忘记**（⑦-2a 状态口径 + ⑦-2 PC 真接口；三态反馈与真机后端未做）
 ```
 行手势（widgets/wifi_list）→ wifi_events_select(ssid) 记下"这条命令针对哪个网络"
    → 有锁且没存过密码 → 开半页；已保存 / 开放 → 直接投连接命令（navigation 只管显隐）
    → wifi_logic 每拍排空命令环 → io_wifi_connect(ssid, pwd) / io_wifi_forget(ssid)
-   → platform 改 s_aps[]（全表唯一 connected；给了密码才置 saved）→ 重排 + gen++
-   → wifi_view_sync 回显标题文案 + wifi_list_rebuild 重画行
+   → platform 落地：假世界改 s_aps[]（全表唯一 connected、给密码才 saved）；
+     真接口（默认，WIFI_PC_FAKE=1 才退回假）下发 WlanSetProfile/WlanConnect/WlanDeleteProfile
+   → 后端异步报进度 APP_IN_CONN_STATE：下发即 1（标题「正在连接 X…」），
+     回查真值后 2 成功 / 3 超时失败；wifi_logic 收到 2 才关半页，收到 3 留着改密码
+   → 重排 + gen++ → wifi_view_sync 回显标题文案 + wifi_list_rebuild 重画行
 ```
-- 还没做：连接中 / 失败 / 成功三态（现在点完就关半页，`wifi_logic` 里挂着 `TODO(⑦-2b)`）、
-  真机后端（`platform/device/` 是编译期占位，接口签名已对齐）。
+- 还没做：半页内的红字错误行（`mockup_05/07` 有，④ 没生成该控件——失败提示现在只在标题栏）、
+  真机后端（`platform/device/` 是编译期占位，接口签名已对齐，可照 `pc/wifi_platform_win.cpp` 抄时序）。
 - 母工程原文把 `pick_index`/`pwd_open`/`wifi_state` 写成「Flow 变量」——那是 v3 口径，v4 收口后
   **EEZ 不持有任何变量**：目标 SSID 落在 `APP_IN_SEL_SSID`，模态显隐落在 `navigation/wifi_nav`，
   连接结果落在 `wifi_ap_t.connected/saved`，文案落在 `APP_IN_SCAN_STATUS`。
@@ -142,17 +145,20 @@ app-wifi-scan-conn-no-flow/
     │   └── wifi_logic.{h,cpp}    user_io_init / user_io_tick（不读 objects.*）
     ├── navigation/wifi_nav.{h,cpp}   模态显隐与互斥；不持业务状态
     ├── widgets/wifi_list/wifi_list.{h,cpp}  ★ 唯一画列表处 + 行手势
-    └── platform/             硬件边界：接口一份，实现二选一
+    └── platform/             硬件边界：接口一份，实现按平台分文件
         ├── wifi_platform.h       窄接口（不引用 LVGL / objects.*）
-        ├── pc/wifi_platform_pc.cpp        #ifndef WIFI_PLATFORM_DEVICE
-        └── device/wifi_platform_device.cpp #ifdef WIFI_PLATFORM_DEVICE（⑦-2 待接）
+        ├── pc/wifi_platform_pc.cpp        #ifndef WIFI_PLATFORM_DEVICE；分发器 + 假世界
+        ├── pc/wifi_platform_win.{h,cpp}   ★ 真接口（wlanapi）：**默认走它**，WIFI_PC_FAKE=1 才退回假
+        └── device/wifi_platform_device.cpp #ifdef WIFI_PLATFORM_DEVICE（真机，待接）
 ```
 
 > 母工程本文的原目录树写了 `ui_behavior.cpp` 与 `io_{win,esp}.cpp`，**两工程实际都不存在**
 > （上面按 `find src/native -type f` 实测写）。
 
 **自证判据（交付前跑）**
-1. `grep -rn "Wlan\|esp_wifi\|nvs_" src/ui src/native/app src/native/platform/pc` → **0 命中**；
+1. `grep -rn "Wlan\|esp_wifi\|nvs_" src/ui src/native/app src/native/navigation src/native/widgets`
+   → **0 命中**（硬件名字只许出现在 `platform/`；那里现在确实有 `Wlan*`，那是它的职责）
+   —— 已固化成 `preflight.py:check_layers()` 的「硬件符号不外溢」规则；
 2. 换 `platform/pc/` ↔ `platform/device/`（只切 `WIFI_PLATFORM_DEVICE` 宏），
    `src/ui/` 编译产物与 `app/` 一行不改；
 3. **Flow 版**：变量面板手改 `scan_state` / `scan_status` → UI 立即响应；**本变体（EEZ 零变量 + 无 Flow）没有这条可验**，

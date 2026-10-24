@@ -47,7 +47,10 @@ if errorlevel 1 set "GENERATOR=MinGW Makefiles"
 echo [run_sim] target    = %SIM_TARGET_PROJ_DIR%
 echo [run_sim] build dir = %BUILD_DIR%
 echo [run_sim] configuring...
-cmake -S "%PC_SIM_DIR%" -B "%BUILD_DIR%" -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=Release
+REM CMAKE_CXX_STANDARD_LIBRARIES is appended AFTER the objects on the link line.
+REM CMAKE_EXE_LINKER_FLAGS is not - GNU ld resolves left to right, so a -l placed
+REM before the objects would leave wlanapi references undefined.
+cmake -S "%PC_SIM_DIR%" -B "%BUILD_DIR%" -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD_LIBRARIES=-lwlanapi
 if errorlevel 1 (
     echo [run_sim] configure FAILED.
     exit /b 1

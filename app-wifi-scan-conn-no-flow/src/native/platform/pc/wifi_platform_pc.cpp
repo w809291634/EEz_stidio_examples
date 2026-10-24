@@ -1,8 +1,15 @@
 /*
- * wifi_platform_pc.cpp — PC 仿真后端：假 WiFi 世界（12 个 AP）+ 2s 扫描状态机。
+ * wifi_platform_pc.cpp — PC 仿真后端：默认走**真** wlanapi，假世界退到第二位。
  *
- * 结果按「已连接置顶 → RSSI 降序 → SSID 升序」排序后发布。
+ * 假世界（12 个假 AP + 2s 扫描状态机，结果按「已连接置顶 → RSSI 降序 → SSID 升序」
+ * 发布）仍然完整保留在本文件里，因为无头门禁与出图必须可复现。
  * 本层不依赖 LVGL，计时用 clock()。
+ *
+ * 后端选择（用户 2026-10-24 定：双击默认走真接口）：
+ *   默认（含双击 run_sim.bat）→ 真接口：列表是真扫到的，点了真的换网；
+ *   WIFI_PC_FAKE=1           → 假世界；打不开无线接口（没网卡 / wlansvc 没起）也退回假世界。
+ * ★ 门禁与出图必须显式设 WIFI_PC_FAKE=1（preflight.check_nav / shot_states 都做了，
+ *   并把这件事打印出来），否则跑一次分就真连一次网、真删一次密码。
  *
  * 编译选择：本文件整体包在 #ifndef WIFI_PLATFORM_DEVICE 里，与
  * platform/device/wifi_platform_device.cpp 互斥——真机定义该宏后 PC 实现不产生符号。
@@ -15,17 +22,26 @@
 #include <time.h>
 #include "app/wifi_model.h"
 #include "platform/wifi_platform.h"
+#include "wifi_platform_win.h"
 
 /******************** 模块私有状态与常量 ********************/
 
 #define AP_MAX 16
 
+static int  s_real = 0;          /* 1 = 命令转给 wlanapi 真后端 */
 static wifi_ap_t s_aps[AP_MAX];
 static int  s_cnt = 0;
 static int  s_gen = 0;
 static int  s_scan_state = 0;      /* 0 空闲 1 扫描中 2 完成 */
 static int  s_fake_n = -1;         /* -1 = 用全表；>=0 = 只报前 n 个（⑤ 逐状态出图） */
 static clock_t s_t0 = 0;
+
+#define CONNECT_SEC 1.2            /* 假世界的「连接中」时长，够 UI 画出一拍提示 */
+static int    s_trying = 0;        /* 1 = 有一次连接在等计时 */
+static clock_t s_try_t0 = 0;
+static char   s_try_ssid[33];
+static char   s_try_pwd[64];
+static bool   s_try_lock = false;
 
 typedef struct {
     const char *ssid;
@@ -109,6 +125,14 @@ static void publish(void)
 // 函数作用：设定 PC 假世界返回的 AP 条数。 参数：n：<0 用全表。 返回值：无。
 extern "C" void io_fake_set_ap_count(int n) { s_fake_n = n; }
 
+// 函数作用：把一句状态文案写进标题契约（APP_IN_SCAN_STATUS）。 参数：fmt/arg。 返回值：无。
+static void set_status(const char *fmt, const char *arg)
+{
+    char buf[APP_IN_STR_MAX];
+    snprintf(buf, sizeof(buf), fmt, arg);
+    app_set_input_s(APP_IN_SCAN_STATUS, buf);
+}
+
 // 函数作用：按 SSID 找假世界里的条目（可变指针，后端要改它）。
 //          参数：ssid：网络名。 返回值：命中指针；空名或未扫到返回 NULL。
 static wifi_ap_t *find_ap(const char *ssid)
@@ -126,14 +150,26 @@ static void resort_and_publish(void)
     s_gen++;
 }
 
-/******************** 对外初始化与公开接口 ********************/
+/******************** 对外初始化与公开接口（真接口在前，假世界在后） ********************/
 
-// 函数作用：初始化后端并发布初始文案。 参数：无。 返回值：无。
+// 函数作用：初始化后端并发布初始文案；没设 WIFI_PC_FAKE 就挂 wlanapi 真后端。
+//          参数：无。 返回值：无。
 void io_init(void)
 {
     s_scan_state = 0;
+    s_trying = 0;
     app_set_input_i(APP_IN_SCAN_STATE, 0);
+    app_set_input_i(APP_IN_CONN_STATE, 0);
     app_set_input_s(APP_IN_SCAN_STATUS, "点击刷新开始扫描");
+
+    if (!getenv("WIFI_PC_FAKE")) {
+        if (win_io_open()) {
+            s_real = 1;
+            printf("[IO] io_init (pc REAL wlanapi)\n");
+            return;
+        }
+        printf("[IO] 真接口不可用，退回假世界\n");
+    }
     printf("[IO] io_init (pc fake wifi)\n");
 }
 
@@ -141,6 +177,7 @@ void io_init(void)
 void io_wifi_scan(int v)
 {
     if (v != 1 || s_scan_state == 1) return;
+    if (s_real) { win_io_scan(); return; }
     s_scan_state = 1;
     s_t0 = clock();
     app_set_input_i(APP_IN_SCAN_STATE, 1);
@@ -150,36 +187,59 @@ void io_wifi_scan(int v)
 
 // 函数作用：连接指定网络；有锁且给了密码就顺带存成"已保存"。
 //          参数：ssid：目标网络；password：可为空。 返回值：无。
+//          连接是异步的（与真接口同口径）：这里只置"连接中"，状态变化推到
+//          io_sample_inputs 的计时里，UI 才有机会画出「正在连接 X…」（mockup_06）。
 void io_wifi_connect(const char *ssid, const char *password)
 {
-    wifi_ap_t *ap = find_ap(ssid);
+    wifi_ap_t *ap;
+    if (s_real) { win_io_connect(ssid, password); return; }
+    ap = find_ap(ssid);
     if (!ap) {
         printf("[IO] connect 跳过：找不到 %s\n", ssid ? ssid : "(空)");
+        app_set_input_i(APP_IN_CONN_STATE, 3);
+        set_status("连接失败 %s", ssid ? ssid : "");
         return;
     }
-    /* ★ ap 是指向 s_aps 槽位的指针，而 resort 会 qsort 整个数组——
-     *   重排后同一槽位住的是别的网络。所以文案/日志要用的 SSID 和 saved
-     *   必须在重排前抄进局部变量，否则「已连接 X」会报成另一个网络。 */
-    char target[sizeof(ap->ssid)];
-    memcpy(target, ap->ssid, sizeof(target));
-    int now_saved;
+    /* ★ ap 是指向 s_aps 槽位的指针，而稍后 resort 会 qsort 整个数组——
+     *   所以这里就把要用的字段抄进局部状态，别等回调时再透过 ap 去读。 */
+    strncpy(s_try_ssid, ap->ssid, sizeof(s_try_ssid) - 1);
+    s_try_ssid[sizeof(s_try_ssid) - 1] = '\0';
+    s_try_lock = ap->lock;
+    strncpy(s_try_pwd, password ? password : "", sizeof(s_try_pwd) - 1);
+    s_try_pwd[sizeof(s_try_pwd) - 1] = '\0';
+    s_trying = 1;
+    s_try_t0 = clock();
+    app_set_input_i(APP_IN_CONN_STATE, 1);
+    set_status("正在连接 %s…", s_try_ssid);
+}
 
+// 函数作用：连接计时到点——落状态、重排、报成功（假世界必成功，没有失败分支）。
+//          参数：无。 返回值：无。
+static void try_finish(void)
+{
+    wifi_ap_t *ap = find_ap(s_try_ssid);
+
+    s_trying = 0;
+    if (!ap) {
+        app_set_input_i(APP_IN_CONN_STATE, 3);
+        set_status("连接失败 %s", s_try_ssid);
+        return;
+    }
     for (int i = 0; i < s_cnt; i++) s_aps[i].connected = false;
     ap->connected = true;
-    if (ap->lock && password && password[0]) ap->saved = true;
-    now_saved = (int)ap->saved;
+    if (s_try_lock && s_try_pwd[0]) ap->saved = true;
     resort_and_publish();
-
-    char buf[APP_IN_STR_MAX];
-    snprintf(buf, sizeof(buf), "已连接 %s", target);
-    app_set_input_s(APP_IN_SCAN_STATUS, buf);
-    printf("[IO] connected: %s (saved=%d)\n", target, now_saved);
+    app_set_input_i(APP_IN_CONN_STATE, 2);
+    set_status("已连接 %s", s_try_ssid);
+    printf("[IO] connected: %s (saved=%d)\n", s_try_ssid, (int)ap->saved);
 }
 
 // 函数作用：忘记指定网络（清掉"已保存"）。 参数：ssid：目标网络。 返回值：无。
 void io_wifi_forget(const char *ssid)
 {
-    wifi_ap_t *ap = find_ap(ssid);
+    wifi_ap_t *ap;
+    if (s_real) { win_io_forget(ssid); return; }
+    ap = find_ap(ssid);
     if (!ap) {
         printf("[IO] forget 跳过：找不到 %s\n", ssid ? ssid : "(空)");
         return;
@@ -196,6 +256,7 @@ void io_wifi_forget(const char *ssid)
 // 函数作用：推进扫描计时并把状态回写 model。 参数：无。 返回值：无。
 void io_sample_inputs(void)
 {
+    if (s_real) { win_io_sample(); return; }
     if (s_scan_state == 1 && s_t0 != 0) {
         double elapsed = (double)(clock() - s_t0) / CLOCKS_PER_SEC;
         if (elapsed >= 2.0) {
@@ -203,19 +264,24 @@ void io_sample_inputs(void)
             s_scan_state = 2;
         }
     }
+    if (s_trying) {
+        double elapsed = (double)(clock() - s_try_t0) / CLOCKS_PER_SEC;
+        if (elapsed >= CONNECT_SEC) try_finish();
+    }
 }
 
 // 函数作用：取第 index 条扫描结果。 参数：index：排序后下标。 返回值：只读指针；越界返回 NULL。
 const wifi_ap_t *wifi_ap_at(int index)
 {
+    if (s_real) return win_io_ap_at(index);
     if (index < 0 || index >= s_cnt) return NULL;
     return &s_aps[index];
 }
 
 // 函数作用：结果总数。 参数：无。 返回值：AP 条数。
-int wifi_ap_count(void) { return s_cnt; }
+int wifi_ap_count(void) { return s_real ? win_io_ap_count() : s_cnt; }
 
 // 函数作用：结果代数（内容变化 +1，UI 据此重建）。 参数：无。 返回值：代数。
-int wifi_ap_gen(void)   { return s_gen; }
+int wifi_ap_gen(void)   { return s_real ? win_io_ap_gen() : s_gen; }
 
 #endif /* !WIFI_PLATFORM_DEVICE */
