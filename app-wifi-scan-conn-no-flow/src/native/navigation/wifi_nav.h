@@ -20,6 +20,8 @@ void wifi_nav_open_dialog(const char *ssid);
 void wifi_nav_close_dialog(void);
 bool wifi_nav_sheet_open(void);
 bool wifi_nav_dialog_open(void);
+/* 半页入场动画是否还在跑（夹具靠它等动画结束再点，免得点偏） */
+bool wifi_nav_animating(void);
 
 #ifdef __cplusplus
 }

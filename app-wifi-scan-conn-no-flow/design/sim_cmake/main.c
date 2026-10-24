@@ -32,7 +32,8 @@
 #include "ui.h"              /* EEZ 生成：ui_init / ui_tick（C 安全，不引入额外 C++ 头） */
 #include "screens.h"        /* objects_t：全局对象表（list_box 等） */
 #include "app/wifi_model.h"      /* native 契约：app_get_input_i / APP_IN_SCAN_STATE */
-#include "platform/wifi_platform.h"   /* wifi_ap_at / wifi_ap_count：按 io 数据挑测试行 */
+#include "platform/wifi_platform.h"
+#include "navigation/wifi_nav.h"   /* wifi_nav_animating：等入场动画 */   /* wifi_ap_at / wifi_ap_count：按 io 数据挑测试行 */
 #include "widgets/wifi_busy/wifi_busy.h"  /* 连接中的全屏转圈：断言"期间不可操作" */
 
 extern void ui_init(void);
@@ -346,7 +347,10 @@ static int hidden_of(lv_obj_t *o)
     return o && lv_obj_has_flag(o, LV_OBJ_FLAG_HIDDEN);
 }
 
-static int pred_sheet_visible(void *p) { (void)p; return !hidden_of(objects.overlay_root); }
+/* "可见"= 真正显示且入场动画已结束：动画用 translate_y 位移，
+ * 期间点的坐标会偏，夹具必须等它落位 */
+static int pred_sheet_visible(void *p)
+{ (void)p; return !hidden_of(objects.overlay_root) && !wifi_nav_animating(); }
 static int pred_sheet_hidden(void *p)  { (void)p; return hidden_of(objects.overlay_root); }
 static int pred_dlg_visible(void *p)   { (void)p; return !hidden_of(objects.dlg_root); }
 static int pred_dlg_hidden(void *p)    { (void)p; return hidden_of(objects.dlg_root); }
@@ -559,6 +563,8 @@ static void nav_test_hooks(void)
         if (r < 0 || !row_center(r, &cx, &cy)) { stage = -1; return; }
         set_target(wifi_ap_at(r)->ssid);
         click_at(cx, cy, 3);
+        /* 入场动画：点开后第一拍必须"还在跑"，否则说明动画没生效 */
+        nav_check("点开后半页正在上滑（入场动画在跑）", wifi_nav_animating());
         nav_wait("点该行 → 半页显示", pred_sheet_visible, NULL, 200);
         nav_wait("半页标题就是这条 SSID", pred_sheet_title_target, NULL, 1);
         stage = 3;
