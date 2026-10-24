@@ -6,6 +6,14 @@
  */
 #pragma once
 #include <stdbool.h>
+
+/* 半页动效的编译期开关：1 = 入场/退场动画（默认）；0 = 直接显隐。
+ * 只在编译命令行覆盖，别在 .c 里再定义一次：
+ *   g++ -DWIFI_SHEET_ANIM=0 ...
+ * 夹具（design/sim_cmake/main.c）用同一个宏决定要不要断言"动画在跑"。 */
+#ifndef WIFI_SHEET_ANIM
+#define WIFI_SHEET_ANIM 1
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif

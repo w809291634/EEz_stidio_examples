@@ -50,7 +50,13 @@ echo [run_sim] configuring...
 REM CMAKE_CXX_STANDARD_LIBRARIES is appended AFTER the objects on the link line.
 REM CMAKE_EXE_LINKER_FLAGS is not - GNU ld resolves left to right, so a -l placed
 REM before the objects would leave wlanapi references undefined.
-cmake -S "%PC_SIM_DIR%" -B "%BUILD_DIR%" -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD_LIBRARIES=-lwlanapi
+REM 可选编译宏：set SIM_DEFS=-DWIFI_SHEET_ANIM=0 可关掉半页动效（默认开）。
+REM 每次都显式传，避免 CMake 缓存里留着上一次的值。
+set "EXTRA_DEFS="
+if defined SIM_DEFS set "EXTRA_DEFS=-DCMAKE_C_FLAGS=%SIM_DEFS% -DCMAKE_CXX_FLAGS=%SIM_DEFS%"
+if not defined SIM_DEFS set "EXTRA_DEFS=-DCMAKE_C_FLAGS= -DCMAKE_CXX_FLAGS="
+if defined SIM_DEFS echo [run_sim] extra defs = %SIM_DEFS%
+cmake -S "%PC_SIM_DIR%" -B "%BUILD_DIR%" -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD_LIBRARIES=-lwlanapi %EXTRA_DEFS%
 if errorlevel 1 (
     echo [run_sim] configure FAILED.
     exit /b 1

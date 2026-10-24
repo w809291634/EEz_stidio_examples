@@ -441,6 +441,11 @@ ANSI(GBK) 码页存成 profile 的 SSID 字节**。中文 SSID 于是与空口�
 - **退场对称**：点 × / 遮罩 / 连接成功关闭时，半页滑下去 + 遮罩淡出（同 200ms，ease_in），`ready_cb` 里才真正 `HIDDEN`；逻辑状态（`wifi_nav_sheet_open`）立刻为假，所以"半页开着才要求密码"这类判据不会因为动画而误判。退场途中被重新打开 / 被对话框互斥切走时，取消动画并立刻落位。
 - 关闭/互斥切走时 `lv_anim_delete` + 复位 translate 与遮罩透明度，避免下次打开从半路开始。
 
+**编译期开关**：`WIFI_SHEET_ANIM`（默认 1，定义在 `navigation/wifi_nav.h`）整体控制入场/退场动效。
+关掉：`set SIM_DEFS=-DWIFI_SHEET_ANIM=0` 再跑 `run_sim.bat build`（脚本会把宏同时传给 C 与 C++），
+或命令行 `-DWIFI_SHEET_ANIM=0`。夹具里两条"动画在跑"的断言也用同一个宏包裹，所以两种模式门禁都绿
+（开=49 条、关=47 条）。
+
 证据：`[NAV] RESULT: PASS 49 / FAIL 0`（两条动效断言：「点开后半页正在上滑」「点 × 后半页正在滑下去」）；
 反向测试：注释掉入场 → 前者 rc=1；把关闭改回"立刻隐藏"→ 后者 rc=1。
 

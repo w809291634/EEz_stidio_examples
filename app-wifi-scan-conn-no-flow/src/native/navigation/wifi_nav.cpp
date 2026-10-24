@@ -62,6 +62,11 @@ static void sheet_anim_in(void)
     int32_t h;
     lv_anim_t a;
 
+#if !WIFI_SHEET_ANIM
+    sheet_reset();                        /* 宏关掉：直接落位，不留中间态 */
+    return;
+#endif
+
     if (!objects.sheet || !objects.scrim) return;
     if (!s_scrim_opa)                       /* 先记下设计值，再拿 0 起步 */
         s_scrim_opa = lv_obj_get_style_bg_opa(objects.scrim, LV_PART_MAIN);
@@ -106,6 +111,14 @@ static void sheet_anim_out(void)
 {
     int32_t h, from;
     lv_anim_t a;
+
+#if !WIFI_SHEET_ANIM
+    if (objects.overlay_root)             /* 宏关掉：直接隐藏 */
+        lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
+    s_closing = false;
+    s_animating = false;
+    return;
+#endif
 
     if (!objects.sheet || !objects.scrim) {          /* 没有控件就直接隐藏 */
         if (objects.overlay_root) lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
