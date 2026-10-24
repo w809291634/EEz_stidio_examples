@@ -29,6 +29,7 @@ except (AttributeError, ValueError):
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PY = sys.executable
+SDL_BIN = r"D:\Program_Files\SDL2-2.32.4\x86_64-w64-mingw32\bin"
 
 # 每一步：(名称, 命令, 工作目录, 是否必需)
 # 注意顺序：build_example → cli_build → audit → check_project → gen_font
@@ -36,7 +37,7 @@ STEPS = [
     ("生成 .eez-project", [PY, "build_example.py"], ROOT, True),
     ("EEZ CLI 构建（含 flow 守卫）", [PY, "design/cli_build.py"], ROOT, True),
     ("逐字审计（文案 ⊆ 字体）", [PY, "design/audit_chars.py"], ROOT, True),
-    ("静态自检 7 项", [PY, "design/check_project.py"], ROOT, False),
+    ("静态自检 7 项", [PY, "design/check_project.py"], ROOT, True),
     ("烘焙字库（必须在 cli_build 之后）", [PY, "design/gen_font.py"], ROOT, False),
 ]
 
@@ -227,6 +228,127 @@ def check_geometry():
     return ok
 
 
+def check_layers():
+    """[分层] native 树 == kit reference/12 轻量版（app 平铺四组 + platform 二选一）。
+
+    只查机械可判的事：目录形态、include 依赖方向、pc/device 的宏互斥。
+    分层靠嘴说，下一个改代码的人就会把业务塞进 view。"""
+    print("\n=== [分层] native 树 == kit reference/12（轻量版）===")
+    import io
+    ok = True
+    N = os.path.join(ROOT, "src", "native")
+
+    need = ["app/wifi_model.h", "app/wifi_model.cpp",
+            "app/wifi_view.h", "app/wifi_view.cpp",
+            "app/wifi_events.cpp", "app/wifi_logic.h", "app/wifi_logic.cpp",
+            "navigation/wifi_nav.h", "navigation/wifi_nav.cpp",
+            "widgets/wifi_list/wifi_list.h", "widgets/wifi_list/wifi_list.cpp",
+            "platform/wifi_platform.h",
+            "platform/pc/wifi_platform_pc.cpp",
+            "platform/device/wifi_platform_device.cpp"]
+    miss = [p for p in need if not os.path.isfile(os.path.join(N, p))]
+    print("%s native 树 %d 个必备文件齐全" % ("OK  " if not miss else "FAIL", len(need)))
+    if miss:
+        ok = False
+        print("      缺: " + "; ".join(miss))
+
+    # 新规范：app/ 保持平铺，不为功能新建子目录
+    sub_dirs = [d for d in os.listdir(os.path.join(N, "app"))
+                if os.path.isdir(os.path.join(N, "app", d))] if os.path.isdir(
+        os.path.join(N, "app")) else ["<app/ 不存在>"]
+    print("%s app/ 平铺（无功能子目录）" % ("OK  " if not sub_dirs else "FAIL"))
+    if sub_dirs:
+        ok = False
+        print("      违例: app/ 下有子目录 %s（要拆分请在 app/ 内平铺加文件）" % sub_dirs)
+
+    def targets(target):
+        """目标既可以是目录（platform/、widgets/），也可以是平铺文件前缀（app/wifi_model）。"""
+        d = os.path.join(N, target)
+        if os.path.isdir(d):
+            out = []
+            for dirpath, _dirs, files in os.walk(d):
+                out += [os.path.join(dirpath, f) for f in sorted(files)
+                        if f.endswith((".c", ".cpp", ".h"))]
+            return out
+        return [d + e for e in (".h", ".cpp") if os.path.isfile(d + e)]
+
+    import re
+
+    def includes(path):
+        """把 #include "x" 的目标规范化：既给全路径，也给裸文件名。
+        只比前缀会漏掉 `#include "../../ui/screens.h"` 这种相对写法（反向测试抓到）。"""
+        t = io.open(path, encoding="utf-8", errors="replace").read()
+        out = set()
+        for raw in re.findall(r'#\s*include\s*"([^"]+)"', t):
+            p = raw.replace("\\", "/")
+            while p.startswith("../"):
+                p = p[3:]
+            out.add(p)
+            out.add(os.path.basename(p))
+        return out
+
+    # 依赖方向
+    rules = [
+        ("platform", ("lvgl.h", "screens.h"),
+         "platform 只接命令/给快照，不得引用 LVGL 或 EEZ 对象"),
+        ("app/wifi_model", ("lvgl.h", "wifi_platform.h"),
+         "model 必须无 UI 无平台依赖，才能用无头断言验证"),
+        ("app/wifi_logic", ("screens.h",),
+         "logic 只做初始化与 tick，不读 objects.*"),
+        ("navigation", ("app/wifi_model", "wifi_platform.h"),
+         "navigation 只管去向，不读业务真值、不碰硬件接口"),
+        ("widgets", ("app/wifi_model",),
+         "widgets 读 io 快照、调 navigation，不直接改业务模型"),
+    ]
+    for target, needles, why in rules:
+        bad = []
+        for p in targets(target):
+            incs = includes(p)
+            for nd in needles:
+                if any(i == nd or i.startswith(nd) for i in incs):
+                    bad.append("%s→%s" % (os.path.relpath(p, N), nd))
+        print("%s %-16s 依赖方向合规" % ("OK  " if not bad else "FAIL", target))
+        if bad:
+            ok = False
+            print("      违例: " + ", ".join(bad) + "（%s）" % why)
+
+    # pc / device 必须宏互斥，否则真机构建会撞同名符号。
+    # ★ 只认行首预处理指令：正文注释里提到过宏名不算守卫（反向测试抓到）。
+    guards = [("platform/pc/wifi_platform_pc.cpp", "#ifndef WIFI_PLATFORM_DEVICE"),
+              ("platform/device/wifi_platform_device.cpp", "#ifdef WIFI_PLATFORM_DEVICE")]
+    for rel, needle in guards:
+        p = os.path.join(N, rel)
+        hit = os.path.isfile(p) and any(
+            ln.strip() == needle
+            for ln in io.open(p, encoding="utf-8", errors="replace"))
+        print("%s %-34s 宏互斥 %s" % ("OK  " if hit else "FAIL", rel, needle))
+        ok = ok and hit
+    return ok
+
+
+def check_nav():
+    """[⑦] 导航闭环断言：无窗口跑 main.exe，FAIL 计数直接决定门禁颜色。"""
+    print("\n=== [⑦] 导航闭环断言（无窗口）===")
+    exe_dir = os.path.join(ROOT, "design", "sim_cmake", "build_rel", "bin")
+    env = dict(os.environ)
+    env["PATH"] = env.get("PATH", "") + ";" + SDL_BIN
+    env["SDL_VIDEODRIVER"] = "dummy"     # 不开桌面窗口；事件链与出图一致（P-0189）
+    env["WIFI_NAVTEST"] = "1"
+    try:
+        q = subprocess.run([os.path.join(exe_dir, "main.exe")], cwd=exe_dir,
+                           env=env, timeout=300, capture_output=True, text=True,
+                           errors="replace")
+    except OSError as e:
+        print("FAIL: 起不了仿真可执行（先跑 --with-sim 或 run_sim.bat）：%s" % e)
+        return False
+    except subprocess.TimeoutExpired:
+        print("FAIL: 导航断言超时（进程没自己退出）")
+        return False
+    res = [ln for ln in (q.stdout or "").splitlines() if "[NAV]" in ln]
+    print("\n".join(res[-3:]) if res else "FAIL: 没有任何 [NAV] 输出")
+    return q.returncode == 0 and any("FAIL 0" in ln for ln in res)
+
+
 def main():
     skip_cli = "--skip-cli" in sys.argv
     with_sim = "--with-sim" in sys.argv
@@ -250,6 +372,8 @@ def main():
         sys.exit(1)
     if not check_geometry():
         sys.exit(1)
+    if not check_layers():
+        sys.exit(1)
 
     if with_sim:
         bat = os.path.join("design", "sim_cmake")
@@ -265,6 +389,10 @@ def main():
             print("FAIL: 仿真编译未成功")
             sys.exit(1)
         print("OK: 仿真编译通过")
+        if not check_nav():
+            print("FAIL: 导航闭环断言未全绿")
+            sys.exit(1)
+        print("OK: 导航闭环断言全绿")
 
     print("\n==== PREFLIGHT PASS ====")
     print("下一步：启动仿真截图，再跑 design/ui_check.py 与设计图对照（见 EEZ_WORKFLOW.md 第 5 节）")

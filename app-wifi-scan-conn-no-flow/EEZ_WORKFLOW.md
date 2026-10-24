@@ -64,7 +64,7 @@ set PY=C:\Users\yjt54\.workbuddy\binaries\python\envs\default\Scripts\python.exe
 | 表达式少一个右括号 | 引用检查报 `is neither input or local or global variable`（坑 5） | 生成后 grep 一次表达式括号平衡 |
 | label 缺 `width` 字段 | 发 `set_size(NaN,NaN)` 或 `(0,h)` → 文字叠成竖条 | `widthUnit:"content"`（坑 20） |
 | 自创控件结构 | 画布/真机行为分裂 | 照抄 EEZ 新建控件的默认 JSON（11 号文档 §6） |
-| 动作只在 `actions[]` 里加了名字 | 链接 `undefined reference to action_xxx`（坑 17） | 同步在 `native_actions.cpp` 实现，一个不能少 |
+| 动作只在 `actions[]` 里加了名字 | 链接 `undefined reference to action_xxx`（坑 17） | 同步在 `app/wifi_events.cpp` 实现，一个不能少 |
 | Textarea 绑 `text` 表达式 | 打字被每拍 tick 覆盖（坑 6） | 动作里 `lv_textarea_get_text(objects.xxx)` 现读 |
 
 ### 2.2 C / 头文件层
@@ -187,14 +187,23 @@ if (getenv("WIFI_SHOT")) take_shot("shot_fake.bmp");
 
 导航闭环另有断言集：`WIFI_NAVTEST=1 main.exe` → `[NAV] RESULT: PASS n / FAIL m`，
 FAIL 反映到退出码；反向测试见 `tmp/_negtest_nav.py`（掐掉长按通路 → rc=1）。
+`design/preflight.py --with-sim` 现在**自带这套断言**（编译完就跑，红就停）。
 
-注入夹具的三个实测坑（都踩过，别再猜）：
+验证默认**不开桌面窗口**：脚本给子进程设 `SDL_VIDEODRIVER=dummy`（实测六屏出图与有窗口
+逐字节一致，事件链同一条）。要肉眼看窗口：`SHOT_STATES_WINDOWED=windows`。
+
+注入夹具的五个实测坑（都踩过，别再猜）：
 1. 启动后约 300 帧（≈600ms LVGL 时间）之前压进 SDL 队列的鼠标事件不会被消费；
 2. SDL indev 是 `LV_INDEV_MODE_EVENT`，**没有新事件就不会 read**，待派发的 CLICKED
    会挂到下一次点击——抬起后补一次同坐标 MOUSEMOTION 喂读（按住时喂会被判成拖动，
    CLICKED 反而被吃掉）；
 3. `pump()` 每帧只把 `lv_tick` 推 2ms，所以"长按 400ms"要按**帧数**换算（260 帧），
-   按真实毫秒估会短一截、长按判不出来。
+   按真实毫秒估会短一截、长按判不出来；
+4. 行是 native 刚 `clean+add` 出来的，取点击坐标前必须 `lv_obj_update_layout(list)`，
+   否则 `lv_obj_get_coords` 给的是布局前旧值——实测中心算到标题区，整笔点击落空，
+   表现成"1/5~1/8 概率第一条断言假失败"；
+5. `setvbuf(stdout, NULL, _IONBF, 0)` 必须是**本进程第一次 I/O**：LVGL 已经写过 stdout
+   之后再调是未定义行为，管道场景下会把整条输出流打断。
 
 ### 5.5 ⑤ 核对结论（2026-10-23 本轮）
 

@@ -2,7 +2,6 @@
   "files": [
     "actions.h",
     "fonts.h",
-    "fonts/ui_font_cn14.c",
     "images.c",
     "images.h",
     "screens.c",

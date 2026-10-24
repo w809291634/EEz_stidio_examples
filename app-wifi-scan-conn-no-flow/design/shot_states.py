@@ -58,6 +58,10 @@ def regen():
 def run_exe(extra_env):
     env = dict(os.environ)
     env["PATH"] = env["PATH"] + ";" + SDL_BIN
+    # SDL dummy：不开桌面窗口（2026-10-24 实测六屏 SHA256 与有窗口逐字节一致）。
+    # 要肉眼看窗口：SHOT_STATES_WINDOWED=windows
+    env.setdefault("SDL_VIDEODRIVER",
+                   os.environ.get("SHOT_STATES_WINDOWED") or "dummy")
     env.update(WIFI_AUTOEXIT="1")
     env.update(extra_env)
     r = subprocess.run([os.path.join(EXE_DIR, "main.exe")], cwd=EXE_DIR, env=env,

@@ -113,7 +113,7 @@ static const app_id_t kSsidId[5] = { APP_IN_SSID_1, ..., APP_IN_SSID_5 };
 /* kAuthId / kRssiId / kBandId / kLockId / kSavedId / kConnId 同理 */
 ```
 
-`io_pc.cpp` 的假数据版就是把 `publish()` 用定时器调一次，签名字节相同 ——
+`platform/pc/wifi_platform_pc.cpp` 的假数据版就是把 `publish()` 用定时器调一次，签名字节相同 ——
 **换真机时只换这一个文件，`src/ui/` 一行不动**。
 
 ---
@@ -124,7 +124,7 @@ static const app_id_t kSsidId[5] = { APP_IN_SSID_1, ..., APP_IN_SSID_5 };
    —— 硬件符号只出现在 `platform/io_*.cpp`。
 2. **变量面板判据**：在 EEZ 里把 `scan_state` 手改成 1 或 2、把 `rssi_N` 改成 -90，
    UI 必须**立刻**变骨架 / 变列表 / 信号条减格，而不需要任何硬件动作。
-3. **后端替换判据**：`io_pc.cpp` ↔ `io_win.cpp` 互换，`src/ui/` 编译产物**逐字节相同**。
+3. **后端替换判据**：只切 `WIFI_PLATFORM_DEVICE` 宏，在 `platform/pc/` ↔ `platform/device/` 之间互换实现，`src/ui/` 编译产物与 `app/` 代码**一行不改**。
 4. **契约面判据**：扫描界面用到的输入变量恰好 = 37 个（2 + 35），多一个就说明
    有派生量被塞进了契约（§3 表里已经算过）。
 

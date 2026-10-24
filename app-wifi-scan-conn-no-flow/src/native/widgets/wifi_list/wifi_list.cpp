@@ -1,17 +1,13 @@
 /*
- * wifi_ui_sync.cpp — 把 io 层的扫描结果填进 EEZ 的 List (LVGL) 控件。
+ * wifi_list.cpp — Wi-Fi 列表行的创建与手势（父 lv_list 由 EEZ 画）
  *
  * 规则（v2 · List 方案，2026-10-21）：
- *   - EEZ 只画一个空 lv_list（objects.list_box），行全部由本文件用
- *     lv_list_add_text() 动态创建——行数 = wifi_ap_count()，天然可滚动；
- *   - 每行是一个 lv_list 行容器（add_text 返回的 label 的父对象），
- *     在行内自绘：4 根信号条 + SSID + 副行(类型·dBm·频段) + 状态文字；
+ *   - EEZ 只画一个空 lv_list（objects.list_box），行全部由本文件动态创建——
+ *     行数 = wifi_ap_count()，天然可滚动；
+ *   - 每行内自绘：4 根信号条 + SSID + 副行(类型·dBm·频段) + 状态文字；
  *   - 顺序由 io 层保证：已连接置顶 → RSSI 降序 → SSID 升序；
  *   - 数据源直接读 io 接口 wifi_ap_at()/wifi_ap_count()（数组变量已移出 EEZ，
- *     不再经 Flow 数组 aps[]，避免 EEZ LVGL 无法渲染动态列表的限制 P-0152/P-0165）；
- *   - 状态文案/按钮文字也在这里写（避免 label 表达式被 codegen 编成空串）；
- *   - 标量状态（扫描态/文案）由本文件经 app_model 契约直驱，列表代数直读 io 的
- *     wifi_ap_gen()；EEZ 不持有任何变量（native_vars.* 已删，v4 收口）。
+ *     不再经 Flow 数组 aps[]，避免 EEZ 无法渲染动态列表的限制 P-0152/P-0165）。
  *
  * 为什么不用"容器 + 固定槽"（v1 已废弃）：
  *   lv_obj_hit_test() 第一行就要求 LV_OBJ_FLAG_CLICKABLE——自建行/容器
@@ -22,13 +18,14 @@
  */
 #include <stdio.h>
 #include <stdint.h>
-#include <string.h>
 #include "lvgl.h"
-#include "app_model.h"
-#include "wifi_ui_sync.h"
-#include "platform/io_iface.h"  /* wifi_ap_at / wifi_ap_count：native 直接读 io 列表 */
-#include "../ui/screens.h"
-#include "../ui/fonts.h"
+#include "wifi_list.h"
+#include "platform/wifi_platform.h"      /* wifi_ap_at / wifi_ap_count */
+#include "navigation/wifi_nav.h"         /* 手势只决定去向 */
+#include "../../../ui/screens.h"
+#include "../../../ui/fonts.h"
+
+/******************** 模块私有状态与常量 ********************/
 
 #define C_BAR_ON   0x5B8CFF
 #define C_BAR_OFF  0x2A3550
@@ -46,58 +43,6 @@
 #define BAR_GAP    3           /* 条间距 3（宽 3 → 中心距 6） */
 #define TXT_X      44
 
-static int s_last_gen = -1;
-static int s_last_state = -1;
-
-/* ---------------- 模态显隐（⑦-1 导航闭环）---------------- */
-/* 打开只能发生在 native：列表行是 build_row 现建的，EEZ 侧没有对应控件。
- * 关闭走 EEZ 生成的 action（× / 遮罩 / 取消按钮）→ APP_OUT_* → 这里的 close。
- * 两个模态互斥：同屏只允许一个在前，避免"遮罩叠遮罩"退不出去。 */
-static bool s_sheet_open = false;
-static bool s_dlg_open = false;
-
-bool wifi_ui_sheet_open(void) { return s_sheet_open; }
-bool wifi_ui_dialog_open(void) { return s_dlg_open; }
-
-void wifi_ui_open_sheet(const char *ssid)
-{
-    if (!objects.overlay_root) return;
-    if (ssid && objects.lbl_pwd_ssid) lv_label_set_text(objects.lbl_pwd_ssid, ssid);
-    if (objects.pwd_ta) lv_textarea_set_text(objects.pwd_ta, "");
-    s_dlg_open = false;
-    if (objects.dlg_root) lv_obj_add_flag(objects.dlg_root, LV_OBJ_FLAG_HIDDEN);
-    s_sheet_open = true;
-    lv_obj_remove_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
-    printf("[UI] sheet open: %s\n", ssid ? ssid : "");
-}
-
-void wifi_ui_close_sheet(void)
-{
-    if (!s_sheet_open) return;
-    s_sheet_open = false;
-    if (objects.overlay_root) lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
-    printf("[UI] sheet close\n");
-}
-
-void wifi_ui_open_dialog(const char *ssid)
-{
-    if (!objects.dlg_root) return;
-    if (ssid && objects.lbl_dlg_ssid) lv_label_set_text(objects.lbl_dlg_ssid, ssid);
-    s_sheet_open = false;
-    if (objects.overlay_root) lv_obj_add_flag(objects.overlay_root, LV_OBJ_FLAG_HIDDEN);
-    s_dlg_open = true;
-    lv_obj_remove_flag(objects.dlg_root, LV_OBJ_FLAG_HIDDEN);
-    printf("[UI] dialog open: %s\n", ssid ? ssid : "");
-}
-
-void wifi_ui_close_dialog(void)
-{
-    if (!s_dlg_open) return;
-    s_dlg_open = false;
-    if (objects.dlg_root) lv_obj_add_flag(objects.dlg_root, LV_OBJ_FLAG_HIDDEN);
-    printf("[UI] dialog close\n");
-}
-
 /* 行的两条通路：单击=需要密码的网络开半页；长按=已保存网络开"忘记"对话框。
  * 索引存在 user_data 里，事件里回查 io（列表重建后索引与数据仍同源）。
  *
@@ -107,31 +52,9 @@ void wifi_ui_close_dialog(void)
  *   模态互斥反而把对话框关掉。用"本次手势的行"来认这条尾巴。 */
 static lv_obj_t *s_long_row = NULL;
 
-static void row_event_cb(lv_event_t *e)
-{
-    lv_obj_t *row = (lv_obj_t *)lv_event_get_target(e);
-    int idx = (int)(intptr_t)lv_obj_get_user_data(row);
-    const wifi_ap_t *ap = wifi_ap_at(idx);
-    if (!ap) return;
+/******************** 小工具 / 坐标换算 ********************/
 
-    switch (lv_event_get_code(e)) {
-    case LV_EVENT_PRESSED:                    /* 新手势开始，清掉上一次的手尾标记 */
-        s_long_row = NULL;
-        break;
-    case LV_EVENT_CLICKED:
-        if (s_long_row == row) { s_long_row = NULL; break; }   /* 长按补发的尾巴，吞掉 */
-        /* 已连接的网络点开没有意义；开放网络免密直连属 ⑦-2 后端 */
-        if (ap->lock && !ap->connected) wifi_ui_open_sheet(ap->ssid);
-        break;
-    case LV_EVENT_LONG_PRESSED:
-        s_long_row = row;
-        if (ap->saved) wifi_ui_open_dialog(ap->ssid);
-        break;
-    default:
-        break;
-    }
-}
-
+// 函数作用：把 RSSI 映射成点亮的信号格数。 参数：rssi：dBm 负值。 返回值：0..4。
 static int rssi_bars(int rssi)
 {
     /* 阈值 -85 / -75 / -65 / -55，对应点亮 1..4 格 */
@@ -142,7 +65,7 @@ static int rssi_bars(int rssi)
     return 0;
 }
 
-/* 在 lv_list 行内画一个纯色小方块（信号条） */
+// 函数作用：在行内画一个纯色小方块（信号条）。 参数：行列坐标宽高与颜色。 返回值：新建对象。
 static lv_obj_t *row_bar(lv_obj_t *row, int x, int y, int w, int h,
                          uint32_t color)
 {
@@ -160,7 +83,7 @@ static lv_obj_t *row_bar(lv_obj_t *row, int x, int y, int w, int h,
     return o;
 }
 
-/* 在行内画一个文字标签 */
+// 函数作用：在行内画一个文字标签。 参数：行列坐标宽高文本颜色。 返回值：新建 label。
 static lv_obj_t *row_label(lv_obj_t *row, int x, int y, int w, int h,
                            const char *text, uint32_t color)
 {
@@ -178,11 +101,40 @@ static lv_obj_t *row_label(lv_obj_t *row, int x, int y, int w, int h,
     return o;
 }
 
-/*
- * 把一个 ap 画成一行：行 = lv_list_add_button 建的 button（CLICKABLE，
- * 滚动链与将来的点选都靠它）。注意 add_button 默认 flex_flow=ROW，
- * 要关掉才能用绝对坐标摆信号条/副行/状态。
- */
+/******************** 事件回调 ********************/
+
+// 函数作用：行手势分发——单击开半页、长按开忘记对话框、吞掉长按补发的 CLICKED。
+//          参数：e：LVGL 事件。 返回值：无。
+static void row_event_cb(lv_event_t *e)
+{
+    lv_obj_t *row = (lv_obj_t *)lv_event_get_target(e);
+    int idx = (int)(intptr_t)lv_obj_get_user_data(row);
+    const wifi_ap_t *ap = wifi_ap_at(idx);
+    if (!ap) return;
+
+    switch (lv_event_get_code(e)) {
+    case LV_EVENT_PRESSED:                    /* 新手势开始，清掉上一次的手尾标记 */
+        s_long_row = NULL;
+        break;
+    case LV_EVENT_CLICKED:
+        if (s_long_row == row) { s_long_row = NULL; break; }   /* 尾巴，吞掉 */
+        /* 已连接的网络点开没有意义；开放网络免密直连属 ⑦-2 后端 */
+        if (ap->lock && !ap->connected) wifi_nav_open_sheet(ap->ssid);
+        break;
+    case LV_EVENT_LONG_PRESSED:
+        s_long_row = row;
+        if (ap->saved) wifi_nav_open_dialog(ap->ssid);
+        break;
+    default:
+        break;
+    }
+}
+
+/******************** 行绘制 ********************/
+
+/* 把一个 ap 画成一行：行 = lv_list_add_button 建的 button（CLICKABLE，
+ * 滚动链与点选都靠它）。add_button 默认 flex_flow=ROW，要关掉才能摆绝对坐标。 */
+// 函数作用：按 ap 数据绘制一行并挂手势。 参数：btn：行对象；ap：数据；index：行号。 返回值：无。
 static void build_row(lv_obj_t *btn, const wifi_ap_t *ap, int index)
 {
     lv_obj_set_height(btn, ROW_H);
@@ -248,29 +200,12 @@ static void build_row(lv_obj_t *btn, const wifi_ap_t *ap, int index)
         row_label(btn, 310, 14, 120, 16, txt, color);
 }
 
-void wifi_ui_sync(void)
+/******************** 对外初始化与公开接口 ********************/
+
+// 函数作用：清空并按 io 快照重建列表行。 参数：state：扫描态，2 才建行。 返回值：无。
+void wifi_list_rebuild(int state)
 {
-    if (!objects.list_box || !objects.lbl_status || !objects.btn_refresh)
-        return;
-
-    int gen = wifi_ap_gen();   /* 内容代数（io 层 publish +1） */
-    int state = (int)app_get_input_i(APP_IN_SCAN_STATE);
     int n = wifi_ap_count();                         /* io 层 AP 总数 */
-
-    /* 状态文案 + 刷新按钮（状态变化时更新一次即可） */
-    if (state != s_last_state) {
-        lv_label_set_text(objects.lbl_status, app_get_input_s(APP_IN_SCAN_STATUS));
-        lv_obj_t *bl = lv_obj_get_child(objects.btn_refresh, 0);
-        if (bl) lv_label_set_text(bl, state == 1 ? "扫描中" : "刷 新");
-        if (state == 1)
-            lv_obj_remove_flag(objects.btn_refresh, LV_OBJ_FLAG_CLICKABLE);
-        else
-            lv_obj_add_flag(objects.btn_refresh, LV_OBJ_FLAG_CLICKABLE);
-        s_last_state = state;
-    }
-
-    /* 内容没变（gen 不变）就不重建——避免每拍 clean/add 抖动 */
-    if (gen == s_last_gen) return;
 
     /* 清空旧行后按 ap_cnt 重建（lv_list 的行都是它的直接子对象） */
     lv_obj_clean(objects.list_box);
@@ -287,7 +222,6 @@ void wifi_ui_sync(void)
             shown++;
         }
     }
-    s_last_gen = gen;
     printf("[UI] list rebuilt: %d rows from io (gen=%d, count=%d)\n",
-           shown, gen, n);
+           shown, wifi_ap_gen(), n);
 }

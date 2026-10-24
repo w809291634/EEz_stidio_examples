@@ -547,17 +547,17 @@ def sc_noflow_arch(s):
            8.5, PRI_TXT)
 
     # ---------- ④ native ----------
-    band(496, 152, "④", "native 层（动态逻辑全在此 · 与母工程逐字节相同）", "零 Flow 引用")
+    band(496, 152, "④", "native 层（app 平铺四组 + navigation/widgets/platform）", "零 Flow 引用")
     nw = (608 - 20) / 3.0
     nb = [
-        ("io_iface.h", ["契约面：wifi_ap_t 7 字段", "纯头文件，零实现"], LINE),
-        ("wifi_ui_sync.cpp", ["native 直读 wifi_ap_at", "★ 唯一画列表处"], SUC),
-        ("io_pc.cpp", ["假数据 + RSSI 排序", "io_win / io_esp 未落地"], LINE),
+        ("platform/wifi_platform.h", ["契约面：wifi_ap_t 7 字段", "纯头文件，零实现"], LINE),
+        ("widgets/wifi_list/wifi_list.cpp", ["native 直读 wifi_ap_at", "★ 唯一画列表处"], SUC),
+        ("platform/pc/wifi_platform_pc.cpp", ["假数据 + RSSI 排序", "io_win / io_esp 未落地"], LINE),
     ]
     for i, (t, ls, e) in enumerate(nb):
         card(36 + i * (nw + 10), 528, nw, 62, t, ls, e)
     s.rect(36, 598, 608, 26, "#16203A", rx=6, stroke=LINE, sw=0.5)
-    s.text(48, 615, "另有 app_model.{h,cpp}（命令环 + 契约状态）· native_actions.cpp（action_scan_start → 投递命令）",
+    s.text(48, 615, "另有 app/wifi_model·view·events·logic 四组平铺业务文件 · navigation/wifi_nav.cpp（模态显隐）",
            8.8, T2)
     s.text(36, 640, "扫描态/文案/列表行都由 native 每拍比对后直写 LVGL 控件（objects.*）", 8.5, T3)
 
@@ -606,7 +606,7 @@ def sc_scan_to_ui(s):
          "actions.h 声明 + ui.c 里 ActionExecFunc actions[]", "EEZ + 你", PRI, 66),
         ("3", "C 函数写命令：cmd_scan = 1",
          "native var 的 set 指针（INTEGER）或 setGlobalVariable()", "native", SUC, 56),
-        ("4", "主循环每拍排空命令：ui_tick() → app_model_poll()",
+        ("4", "主循环每拍排空命令：ui_tick() → user_io_tick() 排空命令环",
          "main.c 调 ui_tick()；poll 读到 cmd_scan 才调 io_scan()", "native", SUC, 56),
         ("5", "发起扫描：esp_wifi_scan_start(WIFI_SCAN_ACTIVE)",
          "io_esp.cpp：异步，立即返回，不阻塞 UI", "native", SUC, 56),
@@ -614,7 +614,7 @@ def sc_scan_to_ui(s):
          "esp_wifi_scan_get_ap_records()；此处【禁止】碰 LVGL / Flow", "硬件", "#E8A25C", 52),
         ("7", "数据已在 io 静态数组（s_aps[16]），只需置 scan_state=2",
          "无 Flow 数组桥；EEZ 不持有列表，native 直读", "native", SUC, 56),
-        ("8", "ui_tick() → wifi_ui_sync 重建列表",
+        ("8", "ui_tick() → wifi_list 重建列表",
          "lv_obj_clean + 按 wifi_ap_count 循环 lv_list_add_button", "native", SUC, 80),
         ("9", "LVGL 列表行 / 标量状态文案 → 屏幕",
          "行由 native 自绘；连接中 / 空态文案走 EEZ 标量状态", "native + EEZ", PRI, 72),
@@ -649,7 +649,7 @@ def sc_scan_to_ui(s):
         s.text(40, base + 48 + i * 15, ln, 8.2, T2)
 
     s.text(28, base + 108, "EEZ 里真正的代码：screens.c（控件树+事件）· actions.h（动作声明）"
-                           "· vars.h（标量枚举）· ui.c（assets+init）；列表行由 wifi_ui_sync.cpp 自绘",
+                           "· vars.h（标量枚举）· ui.c（assets+init）；列表行由 widgets/wifi_list.cpp 自绘",
            8.5, PRI_TXT)
 
 

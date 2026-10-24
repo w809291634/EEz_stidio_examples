@@ -39,7 +39,7 @@ app-wifi-scan-conn-no-flow/
 │   └── sim_cmake/                      ← run_sim.bat + main.c + lv_conf.h（PC 仿真）
 ├── fonts/simhei.ttf
 └── src/
-    ├── native/                         ← 人写：app_model 契约 + wifi_ui_sync 画列表 + io_pc
+    ├── native/                         ← 人写：app/ 平铺四组 + navigation/ + widgets/wifi_list（画列表）+ platform/pc
     └── ui/                             ← EEZ 生成（禁手改）；★ 无 eez-flow.cpp/h
 ```
 
@@ -56,7 +56,7 @@ app-wifi-scan-conn-no-flow/
 > `design/sim_cmake/shot_{fake.bmp,final.png,scan.png}`（母工程历史截图，本变体跑仿真会重新落盘）、
 > `__pycache__/`。本目录现存过程图 **11 张**（10 张继承 + 本变体新增 `mockup_20_noflow_arch.svg`）。
 >
-> ★ `src/native/` **故意逐字节不改**（含 `app_model.h` 注释里的母工程名）——
+> ★ `src/native/` **故意逐字节不改**（含 `app/wifi_model.h` 注释里的母工程名）——
 > `diff -r ../app-wifi-scan-flow/src/native src/native` 必须为空，这正是"只删运行时、不动业务"的证据。
 
 ## 依赖版本
@@ -67,7 +67,7 @@ app-wifi-scan-conn-no-flow/
 | LVGL | 9.4.0（PC 仿真宿主 9.5） |
 | 屏幕 | 480×320，深色主题，16bpp |
 | 字体 | `ui_font_cn14`（simhei 14px，GB2312 符号区+一二级汉字 + ASCII，bpp4） |
-| 目标平台 | PC 仿真（`io_pc` 假数据）；native 契约与 `io_win`/`io_esp` 同签名 |
+| 目标平台 | PC 仿真（`platform/pc/` 假数据）；真机走 `platform/device/`，同一份 `wifi_platform.h` 接口 |
 
 ## 怎么用
 

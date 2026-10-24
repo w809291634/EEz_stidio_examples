@@ -14,7 +14,7 @@
 > **★ 修订 v4（2026-10-21 08:57）**：**数组变量移出 EEZ**（`ap_info`/`aps[]`/`ap_len` 已删，
 > `structs.h` 空壳，`ap_store` 桥删除）；标量走 EEZ native 变量。
 > **★ 修订 v4 收口（2026-10-21）**：**EEZ 不再持有任何变量**——`scan_state`/`ap_gen`/`scan_status`
-> 的 native 变量桥（`native_vars.*`）删除，`gvs=[]`；状态由 native 经 `app_model` 契约直驱，EEZ 仅画外壳。
+> 的 native 变量桥（`native_vars.*`）删除，`gvs=[]`；状态由 native 经 `app/wifi_model` 契约直驱，EEZ 仅画外壳。
 > 列表数据由 native 直读 io 接口（`wifi_ap_at`/`wifi_ap_count`），§2 第 3 条、§3 扫描链路、§4/§6 相关行已同步。
 > **修订 v2（2026-10-20 21:25）**：列表改为 **可滚动容器 + C 侧按 `ap_cnt` 建行**；
 > §4「数组 16 条 / UI 固定 5 行」、§6 槽位对比表、§9 第 3 条（16→5 容量）**作废**。
@@ -29,7 +29,7 @@
 ## 0. 一句话
 
 **界面活在 EEZ 工程里（约 85%），经 `cli_build` 生成源码；状态（扫描态/文案/代数）不进 EEZ——
-由 native 经 `app_model` 契约直驱、列表直读 io 静态数组（`wifi_ap_at`/`wifi_ap_count`/`wifi_ap_gen`）
+由 native 经 `app/wifi_model` 契约直驱、列表直读 io 静态数组（`wifi_ap_at`/`wifi_ap_count`/`wifi_ap_gen`）
 自绘 List 行（约 15%），唯一真值源是 io 静态数组。EEZ 不持有任何变量。**
 
 ## 1. 五层结构（图中 ①→⑤）
@@ -41,7 +41,7 @@
 | ②′ 同上（**Flow 版差异**） | 母工程还多发 `ui.c` 里的 `assets[588]` + `actions[]` 表 | 同一 `cli_build` | 同上 |
 | ③ 执行模型（**本变体：无 Flow 运行时**） | `ui_init() = create_screens() + loadScreen()`、`ui_tick() = tick_screen(currentScreen)`；**不发射 `eez-flow.cpp/h`**，`src/ui/` 只有 12 个模板文件 | EEZ 生成 | 不改 |
 | ③′ 执行模型（**Flow 版**） | `eez-flow.cpp`（**9,923 行 / 369,589 B，生成进 src/ui**）+ `Value`/`ArrayValue` + `eez_flow_init` / `eez_flow_tick`（母工程 v4 未用 Struct 数组） | EEZ 生成（不是外部库） | 不改；已编进二进制 |
-| ④ native 层 | `io_iface.h`（契约）· `wifi_ui_sync.cpp`（native 直读 io 画列表，唯一画列表处）· `io_esp/io_win/io_pc`（三后端） | **人写** | 唯一允许业务改动的地方 |
+| ④ native 层 | `platform/wifi_platform.h`（契约）· `app/wifi_model·view·events·logic`（平铺四组）· `widgets/wifi_list/wifi_list.cpp`（★ 唯一画列表处）· `navigation/wifi_nav.cpp`（模态显隐）· `platform/pc|device/`（宏二选一） | **人写** | 唯一允许业务改动的地方 |
 | ⑤ 硬件 | esp_wifi + NVS / Windows WLAN API / 假数据 | 平台 | — |
 
 ## 2. 三处关键边界（架构真正的"接缝"）
@@ -56,9 +56,9 @@
      ★ 实测**已经在跑 Flow**——`eez-flow.h` 自带 `#define EEZ_FOR_LVGL 1`，`eez-flow.cpp` 9,923 行一起生成，
      编出的 `main.exe` 里有 501 个 `eez::flow` 符号。所以不是"待迁移"，而是"已就位"（v4 起只承载界面渲染，不承载任何变量）。
 3. **native ↔ io 数组（v4，无桥）**：数组变量已移出 EEZ，**没有跨运行时桥**。
-   native 直接读写 io 静态数组，UI 列表行由 `wifi_ui_sync.cpp` 按 `wifi_ap_count()` 循环
+   native 直接读写 io 静态数组，UI 列表行由 `widgets/wifi_list/wifi_list.cpp` 按 `wifi_ap_count()` 循环
    `lv_list_add_button` 自绘（EEZ List 控件 wip，P-0152）。EEZ 不持有任何变量。
-   换后端（PC/ESP）时 `wifi_ui_sync.cpp` 与 EEZ 侧都不改。
+   换后端（PC/真机）时 `app/`、`widgets/` 与 EEZ 侧都不改。
 
 ## 3. 数据流（两条主链路）
 
@@ -66,7 +66,7 @@
 ```
 io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/平滑）
    → 置 APP_IN_SCAN_STATE = 2（native 契约，最后一步；无 Flow 数组桥）
-   → native wifi_ui_sync：lv_obj_clean + 按 wifi_ap_count() 循环 lv_list_add_button
+   → native wifi_list_rebuild：lv_obj_clean + 按 wifi_ap_count() 循环 lv_list_add_button
    → 行内信号条/副行/状态全部 native 自绘；EEZ 不持有变量（连接中/空态文案由 native 直写）
 ```
 
@@ -74,18 +74,18 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
 ```
 行点击 → pick_index = N → pwd_open = 1（半页上滑）
    → 连接按钮 → 写 cmd_connect=1 + pwd + remember（outputs）
-   → app_model 每拍排空命令环 → io_wifi_join()
+   → wifi_logic 每拍排空命令环 → io_wifi_join()
    → 成功：wifi_state=2、conn_index=N；失败：wifi_state=3（UI 变红字，不清输入）
    → UI 只读这些状态，不参与任何 WiFi 调用
 ```
 > 母工程原文把 `pick_index`/`pwd_open`/`wifi_state` 写成「Flow 变量」——那是 v3 口径，v4 收口后
-> **EEZ 不持有任何变量**，这些状态本来就落在 native 契约（`app_model`）上。
-> **本变体更没有 Flow**：要落这条链路，状态只能放 `app_model` 输入/输出 + `wifi_ui_sync` 直写控件，
+> **EEZ 不持有任何变量**，这些状态本来就落在 native 契约（`app/wifi_model`）上。
+> **本变体更没有 Flow**：要落这条链路，状态只能放 `app/wifi_model` 输入/输出 + `app/wifi_view` 直写控件，
 > 或者把 `flowSupport` 开回 `true`（此时才需要 Flow 变量与表达式绑定）。
 
 ## 4. 信息全面性（io 契约层保证）
 
-`wifi_ap_t`（io_iface.h）7 个字段覆盖 UI 全部信息需求：
+`wifi_ap_t`（platform/wifi_platform.h）7 个字段覆盖 UI 全部信息需求：
 
 | 字段 | 类型 | UI 用途 |
 |---|---|---|
@@ -118,11 +118,11 @@ io_esp/io_win 扫描 → s_aps[]/s_ap_cnt（io 静态数组，可排序/去重/�
 
 | 维度 | 说明 |
 |---|---|
-| EEZ 变量数 | **0**（EEZ 不持有任何变量；状态经 `app_model` 契约由 native 直驱） |
+| EEZ 变量数 | **0**（EEZ 不持有任何变量；状态经 `app/wifi_model` 契约由 native 直驱） |
 | 列表数据 | io 契约 7 字段（`wifi_ap_t`），native 直读，零拷贝进 Flow |
 | 行模板 | native 按 `wifi_ap_count()` 动态建行，行数不限、可滚动 |
-| 加字段 | `io_iface.h` 的 `wifi_ap_t` +1 字段，`build_row` 画它 |
-| 换硬件 | **只改 io_\*.cpp**（`wifi_ui_sync` 与 EEZ 侧都不动） |
+| 加字段 | `platform/wifi_platform.h` 的 `wifi_ap_t` +1 字段，`build_row` 画它 |
+| 换硬件 | **只改 `platform/pc/` 或 `platform/device/`**（`app/` 与 EEZ 侧都不动） |
 
 ## 7. 目录与归属红线
 
@@ -133,21 +133,27 @@ app-wifi-scan-conn-no-flow/
 ├── design/preflight.py       ← 全链预检 + ★ check_no_flow 门禁（本变体新增）
 ├── design/mockups/*.svg      ← 设计图（继承母工程；no-flow 架构图见 mockup_20）
 ├── src/ui/                   ← EEZ 生成（禁手改）；★ 无 eez-flow.cpp/h
-└── src/native/               ← 与母工程逐字相同（零 Flow 引用，实测 grep = 0 命中）
-    ├── app_model.{h,cpp}     ← 契约 + 命令环 + 周期任务
-    ├── native_actions.cpp    ← EEZ 动作实现（action_scan_start → 投递命令）
-    ├── wifi_ui_sync.{h,cpp}  ← ★ 唯一画列表处（native 直读 io）
-    └── platform/
-        ├── io_iface.h        ← 契约
-        └── io_pc.cpp         ← PC 假数据后端（io_win/io_esp 尚未落地）
+└── src/native/               ← 零 Flow 引用（实测 grep = 0 命中）；分层见 kit reference/12
+    ├── app/                  业务层：平铺四组，**不建功能子目录**
+    │   ├── wifi_model.{h,cpp}    契约状态 + 命令环（无 LVGL、无平台头）
+    │   ├── wifi_view.{h,cpp}     model/平台快照 → objects.*（只回显）
+    │   ├── wifi_events.cpp       EEZ 动作回调 → 投递命令
+    │   └── wifi_logic.{h,cpp}    user_io_init / user_io_tick（不读 objects.*）
+    ├── navigation/wifi_nav.{h,cpp}   模态显隐与互斥；不持业务状态
+    ├── widgets/wifi_list/wifi_list.{h,cpp}  ★ 唯一画列表处 + 行手势
+    └── platform/             硬件边界：接口一份，实现二选一
+        ├── wifi_platform.h       窄接口（不引用 LVGL / objects.*）
+        ├── pc/wifi_platform_pc.cpp        #ifndef WIFI_PLATFORM_DEVICE
+        └── device/wifi_platform_device.cpp #ifdef WIFI_PLATFORM_DEVICE（⑦-2 待接）
 ```
 
 > 母工程本文的原目录树写了 `ui_behavior.cpp` 与 `io_{win,esp}.cpp`，**两工程实际都不存在**
-> （上面是按 `find src/native -type f` 实测重写的）。
+> （上面按 `find src/native -type f` 实测写）。
 
 **自证判据（交付前跑）**
-1. `grep -rn "Wlan\|esp_wifi\|nvs_" src/ui src/native/app_model.cpp src/native/native_actions.cpp` → **0 命中**；
-2. 换 `io_pc` / `io_win`，`src/ui/` 编译产物逐字节相同；
+1. `grep -rn "Wlan\|esp_wifi\|nvs_" src/ui src/native/app src/native/platform/pc` → **0 命中**；
+2. 换 `platform/pc/` ↔ `platform/device/`（只切 `WIFI_PLATFORM_DEVICE` 宏），
+   `src/ui/` 编译产物与 `app/` 一行不改；
 3. **Flow 版**：变量面板手改 `scan_state` / `scan_status` → UI 立即响应；**本变体（EEZ 零变量 + 无 Flow）没有这条可验**，
    等价判据改成：native 写 `APP_IN_SCAN_STATUS` → `objects.lbl_status` 立即变字；
 4. `src/ui/` 里出现手工修改 → 视为缺陷（下次生成即丢）；
@@ -170,7 +176,7 @@ app-wifi-scan-conn-no-flow/
 
 > **读这张表的两变体口径**：下面凡是写 `setGlobalVariable` / 表达式 / Flow 函数表 / `assets` 的条目
 > （P0 #1、P1 #7、P1 #11、P1 #12、P2 每帧求值成本），**在本变体里不适用**——没有 Flow 运行时，
-> 对应义务直接转成 native 侧责任：状态写 `app_model` 契约 + `wifi_ui_sync` 直写控件，
+> 对应义务直接转成 native 侧责任：状态写 `app/wifi_model` 契约 + `app/wifi_view` 直写控件，
 > 文案拼接/截断/类型转换全部自己用 C 实现，也不存在"每帧表达式求值"的成本；
 > 字体不进 `assets`（走 `src/ui/fonts/ui_font_cn14.c`，5.0 MB 源文件）。
 > 其余条目（线程边界、字库覆盖、失败原因、去重、错误可见性）两变体同判。
@@ -212,7 +218,7 @@ app-wifi-scan-conn-no-flow/
 - **不适合**：需要无限滚动/动态建行、需要复杂动画、需要把 UI 逻辑放进多线程回调的场景；
 - 一旦要"任意长度列表"，必须回到 C 侧自绘（`lv_obj_create` 循环），那就退出了本架构的收益区。
 
-> **本变体的定位（对上一条的正面回应）**：v4 收口后列表已经在 C 侧动态建行（`wifi_ui_sync.cpp`），
+> **本变体的定位（对上一条的正面回应）**：v4 收口后列表已经在 C 侧动态建行（`widgets/wifi_list/wifi_list.cpp`），
 > EEZ 只剩静态外壳——母工程 §2 的"退出收益区"这条，正是本变体把 Flow 关掉的依据
 > （经验库 `P-0170` §3 第 3 条：静态控件 + 单一点击回调的页面不该为完整引擎付费）。
 > 换句话说：**本变体 = 用 EEZ Studio 画界面、逻辑全在 native C**；

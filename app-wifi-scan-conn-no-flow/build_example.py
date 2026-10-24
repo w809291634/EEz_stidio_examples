@@ -21,7 +21,7 @@ settings.build.generateSourceCodeForEezFramework=False（见本文件 README）�
         lbl_meta_N   (44,24,250,16)  类型·dBm·频段 #8a99b3
         lbl_state_N  (310,14,120,16) 状态        #8a99b3
 
-  变量：本工程 EEZ 不持有任何变量——扫描态/文案由 native 经 app_model 契约直驱，
+  变量：本工程 EEZ 不持有任何变量——扫描态/文案由 native 经 app/wifi_model 契约直驱，
         列表直接读 io 接口（wifi_ap_at/wifi_ap_count）；EEZ 仅提供静态外壳与行对象。
 
   动作（native，C 侧 action_scan_start(lv_event_t*)）：
@@ -30,7 +30,7 @@ settings.build.generateSourceCodeForEezFramework=False（见本文件 README）�
   字体：cn14 = simhei.ttf 14px，GB2312 符号区+一二级汉字 + ASCII，
         经 TTF cmap 过滤（P-0125：缺字形会让 EEZ 提取报 extraction failed）
 
-数据流：行内容全部由 src/native/wifi_ui_sync.cpp 直接写控件
+数据流：行内容全部由 src/native/widgets/wifi_list/wifi_list.cpp 直接写控件
         （不建 Flow 绑定、不投影变量）——EEZ 只提供外壳与 10 个行对象。
 """
 import json
@@ -105,7 +105,7 @@ def gb2312_charset():
 
 
 # ★ Python 'gb2312' 把 0xA1A4 解成 U+30FB「・」，而 CP936/GBK 解成 U+00B7「·」；
-#   simhei 只有后者。行内分隔符（wifi_ui_sync.cpp 的 "%s · %d dBm · %s"）用的
+#   simhei 只有后者。行内分隔符（widgets/wifi_list/wifi_list.cpp 的 "%s · %d dBm · %s"）用的
 #   是 U+00B7，不并进字符集就会烘出豆腐（⑤ 逐状态出图当场抓到）。
 NATIVE_SYMBOLS = "·"
 
@@ -255,7 +255,7 @@ def button(x, y, w, h, text, action, identifier, bg=ELEVATED,
 
 def row_slot(i):
     """第 i 行（i 从 0 起）：容器 + 4 信号条 + 3 个 label，初始 HIDDEN。
-    行内容由 C 侧 wifi_ui_sync.cpp 填（不在 EEZ 里绑变量）。"""
+    行内容由 C 侧 widgets/wifi_list/wifi_list.cpp 填（不在 EEZ 里绑变量）。"""
     y = i * ROW_PITCH
     kids = []
     for b, (bx, bh) in enumerate([(14, 5), (20, 8), (26, 11), (32, 14)]):
@@ -340,7 +340,7 @@ def build_project():
 
     # ---------------- 列表：EEZ List (LVGL) 控件 ----------------
     # lv_list 原生可滚动（SCROLLABLE + 全套 CHAIN + 子项 lv_button 带
-    # CLICKABLE）；行由 C 侧 wifi_ui_sync.cpp 用 lv_list_add_text/add_button
+    # CLICKABLE）；行由 C 侧 widgets/wifi_list/wifi_list.cpp 用 lv_list_add_text/add_button
     # 按 ap_cnt 动态填充——EEZ 只画这一个空 List。
     list_box = widget(
         "LVGLListWidget", LIST_X, LIST_Y, LIST_W, LIST_H,
@@ -460,12 +460,12 @@ def build_project():
 
     screen_children = head + [list_box, overlay, dlg]
 
-    gvs = []   # 本工程 EEZ 不持有任何变量：状态由 native 经 app_model 契约直驱
+    gvs = []   # 本工程 EEZ 不持有任何变量：状态由 native 经 app/wifi_model 契约直驱
 
     # ---- 变量策略（v4 收口）----
-    # EEZ 不持有任何变量：标量状态（扫描态/文案/内容代数）由 native 经 app_model 契约
+    # EEZ 不持有任何变量：标量状态（扫描态/文案/内容代数）由 native 经 app/wifi_model 契约
     # 直驱、列表直接读 io 接口（wifi_ap_at/wifi_ap_count/wifi_ap_gen）。EEZ 只画静态
-    # 外壳与空 lv_list，所有动态显示逻辑在 src/native/wifi_ui_sync.cpp 每帧比对后直写
+    # 外壳与空 lv_list，所有动态显示逻辑在 src/native/{app/wifi_view,widgets/wifi_list,navigation/wifi_nav} 每帧比对后直写
     # LVGL——彻底无 Flow 变量桥（native_vars.* 已删）。
     flow_vars = []
     structures = []

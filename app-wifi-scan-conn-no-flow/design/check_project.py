@@ -11,7 +11,7 @@
                    （P-0125：形态错 = 画布永远豆腐）
   4 字符集 ⊆ TTF   字符集必须被字体源 TTF 的 cmap 覆盖
                    （抓"extraction failed: doesn't have any characters in range"）
-  5 EEZ 不持有 native 变量（gvs 为空；native_vars.* 已删，状态全走 app_model 契约）
+  5 EEZ 不持有 native 变量（gvs 为空；native_vars.* 已删，状态全走 app/wifi_model 契约）
   6 C 头注释提前闭合（注释里写 xxx_*/ 的 `*/` 序列）
   7 demo 无守卫退出（main.c 的 exit(0) 必须在 WIFI_AUTOEXIT 条件保护下）
 
@@ -107,14 +107,23 @@ def walk_chars(o):
         for v in o: walk_chars(v)
 walk_chars(proj["userPages"])
 
-# C 渲染字符串（wifi_ui_sync / native_actions 等写死的显示文案）
+# C 渲染字符串（native 各层写死的显示文案 + 仿真入口）
+# ★ 必须递归：native 按 kit reference/12 分了 app/·navigation/·widgets/·platform/pc，
+#   写死文件名 + "不存在就跳过" 会在搬家当天把这项检查静默清零（P-0188）。
+def native_sources():
+    out = []
+    for dirpath, _dirs, files in os.walk(os.path.join(ROOT, "src", "native")):
+        out += [os.path.join(dirpath, f) for f in sorted(files)
+                if f.endswith((".c", ".cpp", ".h"))]
+    out.append(os.path.join(ROOT, "design", "sim_cmake", "main.c"))
+    return [q for q in out if os.path.exists(q)]
+
+
+c_srcs = native_sources()
+if len(c_srcs) < 3:
+    fail("native 源文件只找到 %d 个，C 渲染字符串这项检查已失效" % len(c_srcs))
 c_render = ""
-for fn in ("wifi_ui_sync.cpp", "native_actions.cpp", "main.c"):
-    p = os.path.join(ROOT, "src", "native", fn)
-    if fn == "main.c":
-        p = os.path.join(ROOT, "design", "sim_cmake", "main.c")
-    if not os.path.exists(p):
-        continue
+for p in c_srcs:
     src = open(p, encoding="utf-8", errors="replace").read()
     for lit in re.findall(r'lv_label_set_text\(\w+,\s*"([^"]*)"', src):
         c_render += lit
@@ -162,16 +171,12 @@ if os.path.exists(nv) and 'extern "C"' not in open(nv, encoding="utf-8").read():
     fail("native_vars.h 缺 extern \"C\"（C 侧链接必炸）")
 
 # ---------- 6 C 头注释提前闭合（xxx_*/ 模式）----------
-for fn in ("app_model.h", "app_model.cpp", "native_vars.h", "wifi_ui_sync.h",
-           "platform/io_iface.h"):
-    p = os.path.join(ROOT, "src", "native", fn)
-    if not os.path.exists(p):
-        continue
+for p in c_srcs:      # 同样递归扫，理由见上面 C 渲染字符串那条
     src = open(p, encoding="utf-8", errors="replace").read()
     for m in re.finditer(r"\w\*/", src):
         line = src[:m.start()].count("\n") + 1
         fail("注释提前闭合风险: %s:%d 含 `_*/` 序列（改为 xxx_yyy 无星号写法）"
-             % (fn, line))
+             % (os.path.relpath(p, ROOT), line))
         break
 
 # ---------- 7 demo 无守卫退出 ----------

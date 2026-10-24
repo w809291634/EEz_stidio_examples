@@ -1,17 +1,16 @@
 /*
- * app_model.h — WiFi 扫描契约头（app-wifi-scan-flow）
+ * wifi_model.h — WiFi 扫描/连接的业务真值（app 层，无 LVGL、无平台依赖）
  *
- * 职责分界：
- *   UI（EEZ 生成码）只认对象名 + 动作名，不持有变量；
- *   wifi_ui_sync.cpp 每帧经本契约读状态、直写 LVGL 对象；
- *   native_actions.cpp 的 action_* 只投递命令；
- *   platform/io_*.cpp 只认 io_* 端口函数。
+ * 职责分界（kit reference/12 轻量分层）：
+ *   wifi_events  只投递命令（APP_OUT_*）；
+ *   wifi_logic   每拍排空命令环，分发给 platform / navigation；
+ *   wifi_view    读本层输入槽 + 平台快照，写 objects.*；
+ *   platform     只认 io_* 端口函数，不引用 EEZ 对象。
  *
  * 数据通道：
- *   A 动作（一次性命令）  -> APP_OUT_*，动作函数体只投递
- *   C 输入（状态回显）    -> APP_IN_*，io_sample_inputs 发布（扫描态/文案）
- *   扫描结果列表          -> io 接口 wifi_ap_at()/wifi_ap_count()/wifi_ap_gen()
- *                            native 直接读，数组变量不进 EEZ
+ *   A 动作（一次性命令）-> APP_OUT_*，动作函数体只投递；
+ *   C 输入（状态回显）  -> APP_IN_*，由 platform 侧发布；
+ *   扫描结果列表        -> 平台接口 wifi_ap_at()/count()/gen()，数组不进 EEZ。
  */
 #pragma once
 #include <stdint.h>
@@ -52,10 +51,6 @@ const char *app_get_input_s(app_input_id_t id);
 /* ---- outputs ---- */
 void app_set_output(app_output_id_t id, app_value_t v);
 bool app_pop_output(app_output_id_t *id, app_value_t *v);
-
-/* ---- lifecycle（main.c 每循环调用）---- */
-void user_io_init(void);
-void user_io_tick(void);
 
 #ifdef __cplusplus
 }

@@ -3,7 +3,7 @@
 > **⚠ 本目录是 `app-wifi-scan-flow` 的 no-flow 变体**（`flowSupport=false`）。本文继承母工程，
 > §7 已按双口径改写（Flow 版事实 / 本变体事实并列）。**通则**：本文凡写「变量表 / 表达式绑定 /
 > `get_var_*`·`set_var_*` / 结构体数组 / Flow 运行时」的能力，本变体**一概没有**——
-> EEZ 只出静态控件树，状态走 native `app_model` 契约 + `wifi_ui_sync` 直写控件。
+> EEZ 只出静态控件树，状态走 native `app/wifi_model` 契约 + `app/wifi_view` 直写控件。
 > 需要这些能力时回母工程形态（或把两个开关改回 `true`）。
 
 > 目标：UI 层**零硬件代码**，硬件只在 io 层；两边通过「变量表」单向传数据。
@@ -84,7 +84,7 @@
 
 ### 1.4 动作（Actions）与事件绑定
 
-| 控件 | 事件 | EEZ Action | C 实现（`native_actions.cpp`） |
+| 控件 | 事件 | EEZ Action | C 实现（`app/wifi_events.cpp`） |
 |---|---|---|---|
 | 刷新 | CLICKED | `action_scan` | `app_set_output(APP_OUT_SCAN, 1)` |
 | `row_N` | CLICKED | `action_pick_N` | `APP_OUT_PICK = N` |
@@ -115,7 +115,7 @@
 ## 2. 怎么保证和硬件交互（7 条机制）
 
 1. **单出口**：所有 WiFi/NVS 调用只出现在 `src/native/platform/io_*.cpp`。
-   EEZ 生成的 UI 代码与 `native_actions.cpp` 里**不出现任何** `Wlan*` / `esp_wifi_*`。
+   EEZ 生成的 UI 代码与 `app/wifi_events.cpp` 里**不出现任何** `Wlan*` / `esp_wifi_*`。
 2. **命令环解耦**：UI 事件只写 outputs（`app_set_output`），不直接调硬件；
    `user_io_loop()` 每拍调 `sample_inputs()` 排空命令再执行 → UI 不阻塞、不重入。
 3. **单向数据流**：io 用 `app_set_input_*` 回写状态；EEZ 的变量绑定把控件自动刷新。
@@ -128,9 +128,9 @@
 7. **密码安全**：密码只在 io 内存与系统 profile/NVS 里；日志只打印长度；
    自动化测试用环境变量注入（不落盘）。
 
-**三后端等价**：`io_pc.cpp`（假数据）/ `io_win.cpp`（Windows WLAN API）/
+**三后端等价**：`platform/pc/wifi_platform_pc.cpp`（假数据）/ `io_win.cpp`（Windows WLAN API）/
 `io_esp.cpp`（esp_wifi + NVS）实现**同一组 `io_*` 签名**——换硬件只换一个文件，
-UI 与 `app_model` 一行不改。
+UI 与 `app/wifi_model` 一行不改。
 
 ---
 
@@ -139,7 +139,7 @@ UI 与 `app_model` 一行不改。
 | 步 | 做什么 | 验证 |
 |---|---|---|
 | 1 | 变量表 + 静态壳（5 槽 × 7 元素 + 连接页控件） | `cli_build` 0 错误 + 截图对照 mockup_01/04 |
-| 2 | 命令环 + `io_pc` 假数据（扫描→填槽→点行→切页） | 仿真跑起来：列表出现、点行能进连接页 |
+| 2 | 命令环（`app/wifi_model`+`wifi_logic`）+ `platform/pc/` 假数据（扫描→填槽→点行→切页） | 仿真跑起来：列表出现、点行能进连接页 |
 | 3 | 连接页键盘弹出 + 记住/忘记 + 失败反馈 | 点密码框弹键盘；空密码连接 → "请输入密码" |
 | 4 | 换 `io_win` 真 WiFi（复用 P-0164 已验证实现） | 应用日志 + `netsh wlan show interfaces` 双验证 |
 
@@ -156,7 +156,7 @@ UI 与 `app_model` 一行不改。
 >
 > **路线 B（本工程当前）**：EEZ 只有扁平标量，结构体留在 C 侧再投影。见下文 §7.4。
 > ★ **本变体连路线 A 的前提都没有**（无 Flow ⇒ 无 `Value`/`ArrayValue`/结构体数组），
->   实际形态比 B 更彻底：**EEZ 零变量**，数据只在 io 静态数组，`wifi_ui_sync` 直读直画。
+>   实际形态比 B 更彻底：**EEZ 零变量**，数据只在 io 静态数组，`app/wifi_view` 直读直画。
 >
 > 下面 §7.1 / §7.2 是「为什么默认走 B」的证据与代价，仍然有效。
 
@@ -177,7 +177,7 @@ UI 与 `app_model` 一行不改。
 `eez_flow_init/eez_flow_tick`）。
 
 > **v4 收口（2026-10-21）**：本工程**最终未采用** Flow 运行时——EEZ 不持有任何变量，
-> `native_vars.*` 已删除，状态由 native 经 `app_model` 契约直驱、列表直读 io 接口。
+> `native_vars.*` 已删除，状态由 native 经 `app/wifi_model` 契约直驱、列表直读 io 接口。
 > 上段结论描述的是 EEZ 的**能力边界**（native 标量只有 int/bool/string），非本工程现状。
 
 ### 7.2 切 Flow 要付的代价
@@ -256,7 +256,7 @@ void action_connect(lv_event_t *e) {          /* UI 任务 */
     if (n < 8) io_publish_fail(5);            /* 本地拦，不碰硬件 */
 }
 
-void app_model_poll(void) {                   /* 同一 UI 任务，每拍 */
+void app/wifi_model_poll(void) {                   /* 同一 UI 任务，每拍 */
     if (s_slot.cmd == CMD_CONNECT) {
         s_slot.cmd = 0;
         io_wifi_join(s_slot.pwd, s_slot.remember);
