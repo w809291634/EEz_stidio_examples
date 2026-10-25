@@ -105,7 +105,7 @@ def main():
                     help="目标工程的 src/ui 目录（含 screens.h / actions.h）")
     a = ap.parse_args()
     ui = os.path.abspath(a.ui)
-    print("=== [移植] 模块 ↔ EEZ 契约检查：%s" % ui)
+    print("=== [移植] 模块 <-> EEZ 契约检查：%s" % ui)
     ok = check_struct_members(ui)
     ok = check_actions(ui) and ok
     ok = check_platform() and ok

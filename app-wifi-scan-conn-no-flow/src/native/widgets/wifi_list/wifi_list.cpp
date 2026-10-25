@@ -5,7 +5,8 @@
  *   - EEZ 只画一个空 lv_list（objects.list_box），行全部由本文件动态创建——
  *     行数 = wifi_ap_count()，天然可滚动；
  *   - 每行内自绘：4 根信号条 + SSID + 副行(类型·dBm·频段) + 状态文字；
- *   - 顺序由 io 层保证：已连接置顶 → RSSI 降序 → SSID 升序；
+ *   - 顺序由 io 层保证：已连接 → 已保存（未连接）→ RSSI 降序 → SSID 升序；
+ *     前两组与"其余网络"之间插一条不可点分隔线（user_data = -1）。
  *   - 数据源直接读 io 接口 wifi_ap_at()/wifi_ap_count()（数组变量已移出 EEZ，
  *     不再经 Flow 数组 aps[]，避免 EEZ 无法渲染动态列表的限制 P-0152/P-0165）。
  *
@@ -131,6 +132,25 @@ static void row_event_cb(lv_event_t *e)
 
 /******************** 行绘制 ********************/
 
+/* 分组分隔线：不可点、不可滚，user_data = -1 供夹具与事件回调跳过。 */
+// 函数作用：在列表里插入一条分组分隔线。 参数：无。 返回值：新建对象。
+static lv_obj_t *add_separator(void)
+{
+    lv_obj_t *o = lv_obj_create(objects.list_box);
+    lv_obj_set_width(o, LV_PCT(100));
+    lv_obj_set_height(o, SEP_H);
+    lv_obj_remove_flag(o, (lv_obj_flag_t)(LV_OBJ_FLAG_CLICKABLE |
+                                      LV_OBJ_FLAG_SCROLLABLE));
+    lv_obj_set_style_bg_color(o, lv_color_hex(C_ROW_EDGE), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(o, 255, LV_PART_MAIN);
+    lv_obj_set_style_radius(o, 0, LV_PART_MAIN);
+    lv_obj_set_style_border_width(o, 0, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(o, 0, LV_PART_MAIN);
+    lv_obj_set_style_margin_bottom(o, SEP_GAP, LV_PART_MAIN);
+    lv_obj_set_user_data(o, (void *)(intptr_t)-1);
+    return o;
+}
+
 /* 把一个 ap 画成一行：行 = lv_list_add_button 建的 button（CLICKABLE，
  * 滚动链与点选都靠它）。add_button 默认 flex_flow=ROW，要关掉才能摆绝对坐标。 */
 // 函数作用：按 ap 数据绘制一行并挂手势。 参数：btn：行对象；ap：数据；index：行号。 返回值：无。
@@ -210,10 +230,17 @@ void wifi_list_rebuild(int state)
     lv_obj_clean(objects.list_box);
 
     int shown = 0;
+    int prev_tier = -1;
     if (state == 2) {
         for (int i = 0; i < n; i++) {
             const wifi_ap_t *p = wifi_ap_at(i);
             if (!p) break;
+            /* 分档：0 已连接 / 1 已保存未连接 / 2 其余。
+             * io 层已按此序排好，这里只在前两组结束处补分隔线。 */
+            int tier = p->connected ? 0 : (p->saved ? 1 : 2);
+            if (tier == 2 && prev_tier >= 0 && prev_tier < 2)
+                add_separator();
+            prev_tier = tier;
             lv_obj_t *btn = lv_list_add_button(objects.list_box, NULL,
                                                p->ssid);
             if (!btn) break;

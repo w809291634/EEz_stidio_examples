@@ -1,7 +1,7 @@
 /*
  * wifi_platform_pc.cpp — PC 仿真后端：默认走**真** wlanapi，假世界退到第二位。
  *
- * 假世界（12 个假 AP + 2s 扫描状态机，结果按「已连接置顶 → RSSI 降序 → SSID 升序」
+ * 假世界（12 个假 AP + 2s 扫描状态机，结果按「已连接 → 已保存 → 其余 → RSSI 降序 → SSID 升序」
  * 发布）仍然完整保留在本文件里，因为无头门禁与出图必须可复现。
  * 本层不依赖 LVGL，计时用 clock()。
  *
@@ -71,14 +71,18 @@ static const fake_ap_t FAKE[] = {
 
 /******************** 小工具 / 坐标换算 ********************/
 
-// 函数作用：列表排序比较键（已连接→RSSI 降序→SSID 升序）。 参数：a/b：待比元素。 返回值：符号差。
+// 函数作用：列表排序键（已连接→已保存→其余，档内 RSSI/SSID）。 参数：a/b。 返回值：符号差。
 static int cmp_ap(const void *a, const void *b)
 {
     const wifi_ap_t *x = (const wifi_ap_t *)a;
     const wifi_ap_t *y = (const wifi_ap_t *)b;
 
-    /* 已连接置顶 */
-    if (x->connected != y->connected) return x->connected ? -1 : 1;
+    /* 分档：0 已连接 → 1 已保存（未连接）→ 2 其余；档内仍按 RSSI/SSID */
+    {
+        int tx = x->connected ? 0 : (x->saved ? 1 : 2);
+        int ty = y->connected ? 0 : (y->saved ? 1 : 2);
+        if (tx != ty) return tx - ty;
+    }
     /* RSSI 降序（-40 在 -80 前） */
     if (x->rssi != y->rssi) return y->rssi - x->rssi;
     /* SSID 升序兜底，保证顺序稳定 */

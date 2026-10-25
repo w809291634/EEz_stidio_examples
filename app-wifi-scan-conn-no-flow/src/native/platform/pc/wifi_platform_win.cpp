@@ -139,7 +139,12 @@ static int cmp_ap(const void *a, const void *b)
 {
     const wifi_ap_t *x = &((const win_ap_t *)a)->ap;
     const wifi_ap_t *y = &((const win_ap_t *)b)->ap;
-    if (x->connected != y->connected) return x->connected ? -1 : 1;
+    /* 分档：0 已连接 → 1 已保存（未连接）→ 2 其余 */
+    {
+        int tx = x->connected ? 0 : (x->saved ? 1 : 2);
+        int ty = y->connected ? 0 : (y->saved ? 1 : 2);
+        if (tx != ty) return tx - ty;
+    }
     if (x->rssi != y->rssi) return y->rssi - x->rssi;
     return strcmp(x->ssid, y->ssid);
 }

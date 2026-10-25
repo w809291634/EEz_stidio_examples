@@ -19,6 +19,8 @@
 #define C_ROW_EDGE   0x26314A    /* 行描边/分隔 */
 #define C_TEXT1      0xF0F4FC    /* 主文字 */
 #define C_TEXT2      0x8A99B3    /* 次要文字 */
+#define SEP_H        1           /* 分组分隔线高度 */
+#define SEP_GAP      6           /* 分隔线下方留白 */
 
 /******************** 连接中遮罩 ********************/
 

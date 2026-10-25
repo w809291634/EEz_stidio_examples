@@ -357,7 +357,20 @@ static int pred_dlg_visible(void *p)   { (void)p; return !hidden_of(objects.dlg_
 static int pred_dlg_hidden(void *p)    { (void)p; return hidden_of(objects.dlg_root); }
 static int pred_scanning(void *p)      { (void)p; return app_get_input_i(APP_IN_SCAN_STATE) == 1; }
 
-/* 第 index 行的屏幕中心（行是 list_box 的直接子对象） */
+/* 行对象：user_data 存 AP 索引；分隔线 user_data = -1；滚动条不是按钮。
+ * ★ 不能再按"子对象序号 == AP 索引"取行：列表里多了一条分隔线。 */
+static lv_obj_t *row_obj(int index)
+{
+    extern objects_t objects;
+    uint32_t n = lv_obj_get_child_count(objects.list_box);
+    for (uint32_t i = 0; i < n; i++) {
+        lv_obj_t *c = lv_obj_get_child(objects.list_box, i);
+        if (!c || !lv_obj_has_class(c, &lv_button_class)) continue;
+        if ((int)(intptr_t)lv_obj_get_user_data(c) == index) return c;
+    }
+    return NULL;
+}
+
 /* 第 index 行的屏幕中心（行是 list_box 的直接子对象）。
  * ★ 必须先 lv_obj_update_layout：行是 wifi_list 刚 clean+add 出来的，
  *   布局没刷新时 lv_obj_get_coords 拿到的是旧值（实测中心算到标题区，
@@ -368,7 +381,7 @@ static int row_center(int index, int *cx, int *cy)
     lv_obj_t *row;
     lv_area_t a, lb;
     lv_obj_update_layout(objects.list_box);
-    row = lv_obj_get_child(objects.list_box, index);
+    row = row_obj(index);
     if (!row) return 0;
     lv_obj_get_coords(row, &a);
     lv_obj_get_coords(objects.list_box, &lb);
@@ -382,8 +395,7 @@ static int row_center(int index, int *cx, int *cy)
 /* 找第一个满足条件的行索引（条件用 io 数据判，不写死序号） */
 static int find_row(int (*pick)(const wifi_ap_t *))
 {
-    extern objects_t objects;
-    int n = (int)lv_obj_get_child_count(objects.list_box);
+    int n = wifi_ap_count();
     for (int i = 0; i < n; i++) {
         const wifi_ap_t *ap = wifi_ap_at(i);
         if (ap && pick(ap)) return i;
@@ -413,13 +425,62 @@ static void set_target(const char *ssid)
 /* 按 SSID 找行号：直连/忘记会触发重排，缓存行号必错，只认 SSID */
 static int row_of_ssid(const char *ssid)
 {
-    extern objects_t objects;
-    int n = (int)lv_obj_get_child_count(objects.list_box);
+    int n = wifi_ap_count();
     for (int i = 0; i < n; i++) {
         const wifi_ap_t *ap = wifi_ap_at(i);
         if (ap && !strcmp(ap->ssid, ssid)) return i;
     }
     return -1;
+}
+
+/* 分组口径（与 io 层排序、wifi_list 分隔线同源）：
+ * 0 已连接 / 1 已保存未连接 / 2 其余。 */
+static int ap_tier(int i)
+{
+    const wifi_ap_t *a = wifi_ap_at(i);
+    if (!a) return -1;
+    return a->connected ? 0 : (a->saved ? 1 : 2);
+}
+
+/* 分隔线正好夹在"前两档"与"其余"之间：一条，且左右紧邻。 */
+// 函数作用：核对分组排序与分隔线位置。 参数：无。 返回值：不一致的项数。
+static int grouping_mismatches(void)
+{
+    extern objects_t objects;
+    int bad = 0, n = wifi_ap_count(), last_top = -1, first_rest = -1;
+    int seps = 0, sep_seq = -1, lt_seq = -1, fr_seq = -1, seq = 0;
+
+    for (int i = 0; i < n; i++) {
+        int t = ap_tier(i);
+        if (i > 0 && t < ap_tier(i - 1)) bad++;      /* 档位必须单调不减 */
+        if (t < 2) last_top = i;
+        else if (first_rest < 0) first_rest = i;
+    }
+
+    /* 只数"行 + 分隔线"，滚动条等其它子对象不占序号 */
+    uint32_t cnt = lv_obj_get_child_count(objects.list_box);
+    for (uint32_t i = 0; i < cnt; i++) {
+        lv_obj_t *c = lv_obj_get_child(objects.list_box, i);
+        if (!c) continue;
+        intptr_t ud = (intptr_t)lv_obj_get_user_data(c);
+        if (lv_obj_has_class(c, &lv_button_class)) {
+            if (ud == last_top) lt_seq = seq;
+            if (ud == first_rest) fr_seq = seq;
+            seq++;
+        } else if (ud == -1) {
+            seps++;
+            sep_seq = seq;
+            seq++;
+        }
+    }
+
+    int want_seps = (last_top >= 0 && first_rest >= 0) ? 1 : 0;
+    if (seps != want_seps) bad++;
+    if (want_seps && !(sep_seq == lt_seq + 1 && fr_seq == sep_seq + 1)) bad++;
+    printf("[NAV] grouping: tiers=[");
+    for (int i = 0; i < n; i++) printf("%d%s", ap_tier(i), i + 1 < n ? "," : "");
+    printf("] separators=%d at item %d (want %d)\n", seps, sep_seq, want_seps);
+    return bad;
 }
 
 /* 取目标网络当前所在行的中心；行被滚出可视区也算失败（点了等于没点） */
@@ -648,6 +709,10 @@ static void nav_test_hooks(void)
         nav_check("直连后全表只剩一个「已连接」", connected_count() == 1);
         nav_wait("结果已被 logic 消费（CONN_STATE 回空闲）",
                  pred_conn_state_idle, NULL, 300);
+        nav_check("已连接行排到第一位",
+                  wifi_ap_at(0) && wifi_ap_at(0)->connected);
+        nav_check("分档顺序正确：已连接 → 已保存 → 其余，分隔线就一条",
+                  grouping_mismatches() == 0);
         stage = 6;
         return;
     }
@@ -737,6 +802,10 @@ static void nav_test_hooks(void)
         nav_wait("这条真的 connected", pred_target_connected, NULL, 300);
         nav_check("走完之后两个模态都不在前台",
                   hidden_of(objects.dlg_root) && hidden_of(objects.overlay_root));
+        nav_check("半页连上后这条排到第一位",
+                  wifi_ap_at(0) && !strcmp(wifi_ap_at(0)->ssid, s_target));
+        nav_check("半页连上后分档与分隔线仍正确",
+                  grouping_mismatches() == 0);
         stage = 11;
         return;
     }
@@ -765,6 +834,8 @@ static void nav_test_hooks(void)
         nav_wait("这条真的断开了（connected 清零）", pred_target_disconnected, NULL, 300);
         nav_wait("文案点名「已断开 <这条 SSID>」", pred_status_disconnected, NULL, 300);
         nav_check("断开后全表没有已连接行", connected_count() == 0);
+        nav_check("断开后仍按「已保存 → 其余」分档，只留一条分隔线",
+                  grouping_mismatches() == 0);
         stage = 12;
         return;
     }
