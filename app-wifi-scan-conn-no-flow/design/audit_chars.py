@@ -7,6 +7,7 @@
 比对，列出未覆盖字符。★ 字体新增/修改文案后必跑。
 
 用法：python design/audit_chars.py   （无输出缺字 = 通过）
+      python design/audit_chars.py --list   （额外打出实际用到的非 ASCII 字，移植时拿去生成最小子集）
 """
 import json
 import os
@@ -83,7 +84,11 @@ if FONT_CHARS is None:
 covered = set(FONT_CHARS) | {chr(c) for c in range(0x20, 0x7F)}
 missing = sorted(c for c in ui_chars if ord(c) > 0x7E and c not in covered)
 priv = sorted(c for c in ui_chars if 0xE000 <= ord(c) <= 0xF8FF)
-print("UI 非 ASCII 字符数:", len([c for c in ui_chars if ord(c) > 0x7E]))
+ui_non_ascii = sorted(c for c in ui_chars if ord(c) > 0x7E)
+print("UI 非 ASCII 字符数:", len(ui_non_ascii))
+if "--list" in sys.argv:
+    print("UI 非 ASCII 用字:", "".join(ui_non_ascii))
+    print("码位:", " ".join("U+%04X" % ord(c) for c in ui_non_ascii))
 if missing:
     print("★ 字体未覆盖:", "".join(missing),
           "码位:", " ".join("U+%04X" % ord(c) for c in missing))
