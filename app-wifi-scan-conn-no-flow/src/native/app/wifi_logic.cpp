@@ -11,6 +11,7 @@
 #include "wifi_view.h"
 #include "navigation/wifi_nav.h"
 #include "widgets/wifi_busy/wifi_busy.h"   /* 连接中的全屏转圈 */
+#include "widgets/wifi_eye/wifi_eye.h"     /* 密码框的眼睛 */
 #include "platform/wifi_platform.h"
 
 /******************** 模块私有小工具 ********************/
@@ -29,6 +30,7 @@ static int has_visible_char(const char *s)
 void user_io_init(void)
 {
     io_init();
+    wifi_eye_init();     /* 密码框右端的「按住看密码」 */
 }
 
 // 函数作用：每拍排空命令环、推进平台状态、请求视图刷新。 参数：无。 返回值：无。

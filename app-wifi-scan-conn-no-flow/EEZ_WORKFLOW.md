@@ -431,6 +431,26 @@ ANSI(GBK) 码页存成 profile 的 SSID 字节**。中文 SSID 于是与空口�
 
 留了口子的话记得自己清：本机现在多了一条坏 profile「YJT-1号楼办公 2」（本轮排查产物）。
 
+### 5.17 ⑦-5 密码框的「眼睛」：按住看明文（2026-10-25 本轮）
+
+用户口径：密码框右端加一个眼睛，**按住显示密码、松开恢复星号**。
+
+- 控件在 `widgets/wifi_eye/`（原生、懒建在 `objects.sheet` 里，重生成不会丢）：
+  26×26、贴在 `pwd_ta` 右端 6px；给输入框加 `pad_right=36`，文字不钻到眼睛底下。
+- **位置按输入框实测矩形算**（`get_x + get_w - EYE_W - 6`），不用 `align_to`：
+  `lv_obj_remove_style_all` 的控件 + 初始化时布局还没算，`align_to` 实测不落地
+  （eye 停在 0,0 或被放到偏左 38px）。调用前先 `lv_obj_update_layout(objects.sheet)`。
+- 行为：`LV_EVENT_PRESSED` → `lv_textarea_set_password_mode(false)` + 换闭眼图标；
+  `RELEASED / PRESS_LOST` → 恢复星号 + 睁眼图标（按住时不改输入框焦点，仍可继续输入）。
+- 图标用 LVGL 自带符号 `LV_SYMBOL_EYE_OPEN/CLOSE` + **Montserrat** 字体：
+  工程的 cn14 子集里没有这两个字形（`LV_FONT_MONTSERRAT_16=1`，已在 `lv_conf.h` 打开）。
+
+证据：`[NAV] RESULT: PASS 64 / FAIL 0`，新增 4 条（眼睛在输入框右半 / 默认星号 /
+按住变明文 / 松开回星号）；出图 `build/sim_shots/sheet_open.png`（放大可见眼睛字形不是豆腐）。
+
+待用户确认：设计图 `mockup_04/05/06/07` 里还没有这颗眼睛（本轮是原生控件），
+要不要把眼睛补进设计源与设计图，等你点头。
+
 ### 5.16 ⑦-4 密码判断 + 「点了没反应」的真凶（2026-10-25 本轮）
 
 用户报：「增加密码判断，我发现密码确认后有时候无连接反应」。

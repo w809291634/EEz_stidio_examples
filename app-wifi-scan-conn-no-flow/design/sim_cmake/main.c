@@ -34,7 +34,8 @@
 #include "app/wifi_model.h"      /* native 契约：app_get_input_i / APP_IN_SCAN_STATE */
 #include "platform/wifi_platform.h"
 #include "navigation/wifi_nav.h"   /* wifi_nav_animating：等入场动画 */   /* wifi_ap_at / wifi_ap_count：按 io 数据挑测试行 */
-#include "widgets/wifi_busy/wifi_busy.h"  /* 连接中的全屏转圈：断言"期间不可操作" */
+#include "widgets/wifi_busy/wifi_busy.h"
+#include "widgets/wifi_eye/wifi_eye.h"  /* 连接中的全屏转圈：断言"期间不可操作" */
 
 extern void ui_init(void);
 extern void ui_tick(void);
@@ -578,6 +579,29 @@ static void nav_test_hooks(void)
 #endif
         nav_wait("点该行 → 半页显示", pred_sheet_visible, NULL, 200);
         nav_wait("半页标题就是这条 SSID", pred_sheet_title_target, NULL, 1);
+        /* 眼睛：按住看明文、松开回星号（真按下→读状态→再抬起） */
+        if (wifi_eye_handle()) {
+            nav_check("眼睛控件已建在输入框右端",
+                      lv_obj_get_x(wifi_eye_handle()) >
+                          lv_obj_get_x(objects.pwd_ta) +
+                          lv_obj_get_width(objects.pwd_ta) / 2);
+            nav_check("未按眼睛时密码是星号",
+                      lv_textarea_get_password_mode(objects.pwd_ta) == true);
+            center_of_obj(wifi_eye_handle(), &cx, &cy);
+            push_mouse(SDL_MOUSEBUTTONUP, cx, cy);
+            pump(3);
+            push_mouse(SDL_MOUSEBUTTONDOWN, cx, cy);
+            pump(6);
+            nav_check("按住眼睛：密码变明文",
+                      lv_textarea_get_password_mode(objects.pwd_ta) == false);
+            push_mouse(SDL_MOUSEBUTTONUP, cx, cy);
+            push_motion(cx, cy);
+            pump(10);
+            nav_check("松开眼睛：恢复星号",
+                      lv_textarea_get_password_mode(objects.pwd_ta) == true);
+        } else {
+            nav_check("眼睛控件已创建", 0);
+        }
         stage = 3;
         return;
     }
