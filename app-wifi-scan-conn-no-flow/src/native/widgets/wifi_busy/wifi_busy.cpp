@@ -7,14 +7,13 @@
 #include <stdio.h>
 #include "lvgl.h"
 #include "wifi_busy.h"
+#include "widgets/wifi_skin.h"
 #include "../../../ui/screens.h"
 #include "../../../ui/fonts.h"
 
 /******************** 模块私有状态与常量 ********************/
 
-#define C_MASK     0x05070D      /* 与对话框遮罩同色 */
-#define C_TEXT1    0xF0F4FC
-#define C_PRI      0x5B8CFF
+/* 遮罩/转圈的参数在 widgets/wifi_skin.h */
 
 static lv_obj_t *s_root;         /* 整屏遮罩（懒建，避免和 EEZ 建屏顺序耦合） */
 static lv_obj_t *s_lbl;
@@ -35,7 +34,7 @@ static lv_obj_t *ensure_root(void)
     lv_obj_set_size(s_root, LV_HOR_RES, LV_VER_RES);
     lv_obj_set_pos(s_root, 0, 0);
     lv_obj_set_style_bg_color(s_root, lv_color_hex(C_MASK), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(s_root, LV_OPA_80, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(s_root, MASK_OPA, LV_PART_MAIN);
     lv_obj_remove_flag(s_root, LV_OBJ_FLAG_SCROLLABLE);
     /* ★ CLICKABLE 是"期间不可操作"的全部机制：hit test 停在这层，
      *   下面的列表 / 半页 / 对话框都收不到事件（不靠逐个禁用控件）。 */
@@ -45,10 +44,10 @@ static lv_obj_t *ensure_root(void)
     /* lv_spinner 的动效是"弧长伸缩 + 旋转"（起点 0→360、终点 angle→360+angle，
      * 两条曲线不同步）。angle 越大伸缩越夸张：120° 时弧长在 120~210° 之间抻，
      * 看着像一坨在变形；用户 2026-10-25 定：保留伸缩、幅度要小 → 30°（30~120°）。 */
-    lv_spinner_set_anim_params(sp, 1000, 30);
-    lv_obj_set_style_arc_width(sp, 6, LV_PART_MAIN);        /* 轨道 6px */
-    lv_obj_set_style_arc_width(sp, 6, LV_PART_INDICATOR);   /* 转动的那段同宽 */
-    lv_obj_set_size(sp, 64, 64);
+    lv_spinner_set_anim_params(sp, BUSY_SPIN_MS, BUSY_SPIN_ARC);
+    lv_obj_set_style_arc_width(sp, BUSY_SPIN_W, LV_PART_MAIN);
+    lv_obj_set_style_arc_width(sp, BUSY_SPIN_W, LV_PART_INDICATOR);
+    lv_obj_set_size(sp, BUSY_SPIN_SIZE, BUSY_SPIN_SIZE);
     lv_obj_set_style_arc_color(sp, lv_color_hex(0x26314A), LV_PART_MAIN);
     lv_obj_set_style_arc_color(sp, lv_color_hex(C_PRI), LV_PART_INDICATOR);
     lv_obj_align(sp, LV_ALIGN_CENTER, 0, -14);

@@ -22,6 +22,7 @@
 #include <windows.h>
 #include <wlanapi.h>
 #include "app/wifi_model.h"
+#include "app/wifi_text.h"
 #include "platform/wifi_platform.h"
 #include "wifi_platform_win.h"
 
@@ -284,7 +285,7 @@ static void try_fail(const char *ssid)
         snprintf(buf, sizeof(buf), "连接失败 %s（%s）",
                  ssid ? ssid : "", s_last_reason);
     else
-        snprintf(buf, sizeof(buf), "连接失败 %s", ssid ? ssid : "");
+        snprintf(buf, sizeof(buf), WIFI_TXT_CONNECT_FAIL, ssid ? ssid : "");
     utf8_cut(buf, (int)sizeof(buf));
     app_set_input_s(APP_IN_SCAN_STATUS, buf);
 }
@@ -567,9 +568,9 @@ static int query(void)
 static void publish_found(void)
 {
     char buf[APP_IN_STR_MAX];
-    snprintf(buf, sizeof(buf), "已发现 %d 个网络", s_cnt);
+    snprintf(buf, sizeof(buf), WIFI_TXT_FOUND, s_cnt);
     app_set_input_s(APP_IN_SCAN_STATUS,
-                    s_cnt > 0 ? buf : "未发现网络，请重新扫描");
+                    s_cnt > 0 ? buf : WIFI_TXT_EMPTY);
 }
 
 /******************** 对外初始化与公开接口 ********************/
@@ -624,7 +625,7 @@ void win_io_scan(void)
     s_scanning = 1;
     s_t0 = clock();
     app_set_input_i(APP_IN_SCAN_STATE, 1);
-    app_set_input_s(APP_IN_SCAN_STATUS, "正在扫描…");
+    app_set_input_s(APP_IN_SCAN_STATUS, WIFI_TXT_SCANNING);
 }
 
 // 函数作用：按已备好的 profile 名下发 WlanConnect。 参数：无。 返回值：无。
@@ -679,7 +680,7 @@ void win_io_sample(void)
             if (t && t->ap.connected) {
                 s_trying = 0;
                 app_set_input_i(APP_IN_CONN_STATE, 2);
-                set_status("已连接 %s", s_try_ssid);
+                set_status(WIFI_TXT_CONNECTED, s_try_ssid);
             } else if (since >= CONNECT_GIVEUP_MS) {
                 s_trying = 0;
                 try_fail(s_try_ssid);
@@ -785,7 +786,7 @@ void win_io_connect(const char *ssid, const char *password)
     s_try_phase = 2;
     s_trying = 1;
     app_set_input_i(APP_IN_CONN_STATE, 1);
-    set_status("正在连接 %s…", s_try_ssid);
+    set_status(WIFI_TXT_CONNECTING, s_try_ssid);
     /* 直接下发，不再预扫描：实测加了预扫描反而出现
      * 「动态密钥交换未能在配置的时间范围内成功」（四次握手被扫描拖超时）。 */
     do_connect();
@@ -813,15 +814,15 @@ void win_io_disconnect(const char *ssid)
     DWORD rr;
 
     if (!s_h) return;
-    if (!t || !t->ap.connected) { set_status("未连接 %s", ssid ? ssid : ""); return; }
+    if (!t || !t->ap.connected) { set_status(WIFI_TXT_NOT_CONNECTED, ssid ? ssid : ""); return; }
     strncpy(target, t->ap.ssid, sizeof(target) - 1);
     target[sizeof(target) - 1] = '\0';
 
     rr = WlanDisconnect(s_h, &s_guid, NULL);
     printf("[WIN] WlanDisconnect %s -> rr=%lu\n", target, (unsigned long)rr);
-    if (rr != ERROR_SUCCESS) { set_status("断开失败 %s", target); return; }
+    if (rr != ERROR_SUCCESS) { set_status(WIFI_TXT_DROP_FAIL, target); return; }
     query();                                  /* 立刻回查，列表状态跟上 */
-    set_status("已断开 %s", target);
+    set_status(WIFI_TXT_DISCONNECTED, target);
 }
 
 const wifi_ap_t *win_io_ap_at(int index)

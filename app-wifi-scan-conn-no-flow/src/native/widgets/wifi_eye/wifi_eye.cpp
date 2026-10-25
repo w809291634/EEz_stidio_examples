@@ -7,15 +7,12 @@
 #include <stdio.h>
 #include "lvgl.h"
 #include "wifi_eye.h"
+#include "widgets/wifi_skin.h"
 #include "../../../ui/screens.h"
 
 /******************** 模块私有状态与常量 ********************/
 
-#define EYE_W       26
-#define EYE_H       26
-#define EYE_PAD_R   36          /* 输入框右侧留给眼睛的宽度 */
-#define C_IDLE      0x8A99B3    /* 平时：次要文字色 */
-#define C_ACTIVE    0x5B8CFF    /* 按住：主色 */
+/* 眼睛尺寸与配色在 widgets/wifi_skin.h */
 
 static lv_obj_t *s_eye = NULL;
 static lv_obj_t *s_lbl = NULL;

@@ -21,6 +21,7 @@
 #include <string.h>
 #include <time.h>
 #include "app/wifi_model.h"
+#include "app/wifi_text.h"
 #include "platform/wifi_platform.h"
 #include "wifi_platform_win.h"
 
@@ -106,9 +107,9 @@ static void publish(void)
 
     char buf[APP_IN_STR_MAX];
     if (s_cnt > 0)
-        snprintf(buf, sizeof(buf), "已发现 %d 个网络", s_cnt);
+        snprintf(buf, sizeof(buf), WIFI_TXT_FOUND, s_cnt);
     else
-        snprintf(buf, sizeof(buf), "未发现网络，请重新扫描");
+        snprintf(buf, sizeof(buf), WIFI_TXT_EMPTY);
 
     /* 数据保留在 s_aps（本文件静态数组），app 经 wifi_ap_at()/count() 直接读；
      * 不经 Flow 数组变量（aps[] 已移出 EEZ）。 */
@@ -160,7 +161,7 @@ void io_init(void)
     s_trying = 0;
     app_set_input_i(APP_IN_SCAN_STATE, 0);
     app_set_input_i(APP_IN_CONN_STATE, 0);
-    app_set_input_s(APP_IN_SCAN_STATUS, "点击刷新开始扫描");
+    app_set_input_s(APP_IN_SCAN_STATUS, WIFI_TXT_SCAN_HINT);
 
     if (!getenv("WIFI_PC_FAKE")) {
         if (win_io_open()) {
@@ -181,7 +182,7 @@ void io_wifi_scan(int v)
     s_scan_state = 1;
     s_t0 = clock();
     app_set_input_i(APP_IN_SCAN_STATE, 1);
-    app_set_input_s(APP_IN_SCAN_STATUS, "正在扫描…");
+    app_set_input_s(APP_IN_SCAN_STATUS, WIFI_TXT_SCANNING);
     printf("[IO] scan start\n");
 }
 
@@ -210,7 +211,7 @@ void io_wifi_connect(const char *ssid, const char *password)
     s_trying = 1;
     s_try_t0 = clock();
     app_set_input_i(APP_IN_CONN_STATE, 1);
-    set_status("正在连接 %s…", s_try_ssid);
+    set_status(WIFI_TXT_CONNECTING, s_try_ssid);
 }
 
 // 函数作用：连接计时到点——落状态、重排、报成功（假世界必成功，没有失败分支）。
@@ -230,7 +231,7 @@ static void try_finish(void)
     if (s_try_lock && s_try_pwd[0]) ap->saved = true;
     resort_and_publish();
     app_set_input_i(APP_IN_CONN_STATE, 2);
-    set_status("已连接 %s", s_try_ssid);
+    set_status(WIFI_TXT_CONNECTED, s_try_ssid);
     printf("[IO] connected: %s (saved=%d)\n", s_try_ssid, (int)ap->saved);
 }
 
@@ -262,14 +263,14 @@ void io_wifi_disconnect(const char *ssid)
     if (s_real) { win_io_disconnect(ssid); return; }
     ap = find_ap(ssid);
     if (!ap || !ap->connected) {
-        set_status("未连接 %s", ssid ? ssid : "");
+        set_status(WIFI_TXT_NOT_CONNECTED, ssid ? ssid : "");
         return;
     }
     strncpy(target, ap->ssid, sizeof(target) - 1);   /* 重排前抄走 */
     target[sizeof(target) - 1] = '\0';
     ap->connected = false;
     resort_and_publish();
-    set_status("已断开 %s", target);
+    set_status(WIFI_TXT_DISCONNECTED, target);
 }
 
 // 函数作用：推进扫描计时并把状态回写 model。 参数：无。 返回值：无。

@@ -8,6 +8,7 @@
 #include <string.h>
 #include "wifi_logic.h"
 #include "wifi_model.h"
+#include "wifi_text.h"
 #include "wifi_view.h"
 #include "navigation/wifi_nav.h"
 #include "widgets/wifi_busy/wifi_busy.h"   /* 连接中的全屏转圈 */
@@ -57,17 +58,17 @@ void user_io_tick(void)
              * 2026-10-25 补长度判断：WPA/WPA2 口令 8~64 位，短口令注定握手失败。 */
             if (wifi_nav_sheet_open()) {
                 if (!has_visible_char(pw)) {
-                    app_set_input_s(APP_IN_SCAN_STATUS, "请输入密码");
+                    app_set_input_s(APP_IN_SCAN_STATUS, WIFI_TXT_NEED_PWD);
                     break;
                 }
                 if (strlen(pw) < 8 || strlen(pw) > 64) {
-                    app_set_input_s(APP_IN_SCAN_STATUS, "密码需 8-64 位");
+                    app_set_input_s(APP_IN_SCAN_STATUS, WIFI_TXT_PWD_LEN);
                     break;
                 }
             }
             io_wifi_connect(sel, pw);
             wifi_nav_close_sheet();
-            snprintf(busy, sizeof(busy), "正在连接 %s…", sel);
+            snprintf(busy, sizeof(busy), WIFI_TXT_CONNECTING, sel);
             wifi_busy_show(busy);
             break;
         }

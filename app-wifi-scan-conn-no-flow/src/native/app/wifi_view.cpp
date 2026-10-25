@@ -9,6 +9,7 @@
 #include <string.h>
 #include "wifi_view.h"
 #include "wifi_model.h"
+#include "wifi_text.h"
 #include "platform/wifi_platform.h"       /* wifi_ap_gen：列表内容代数 */
 #include "widgets/wifi_list/wifi_list.h"
 #include "../../ui/screens.h"
@@ -38,7 +39,7 @@ void wifi_view_sync(void)
         lv_label_set_text(objects.lbl_status, st);
         snprintf(s_last_status, sizeof(s_last_status), "%s", st);
         lv_obj_t *bl = lv_obj_get_child(objects.btn_refresh, 0);
-        if (bl) lv_label_set_text(bl, state == 1 ? "扫描中" : "刷 新");
+        if (bl) lv_label_set_text(bl, state == 1 ? WIFI_TXT_REFRESHING : WIFI_TXT_REFRESH);
         if (state == 1)
             lv_obj_remove_flag(objects.btn_refresh, LV_OBJ_FLAG_CLICKABLE);
         else

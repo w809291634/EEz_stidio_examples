@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include "lvgl.h"
 #include "wifi_list.h"
+#include "widgets/wifi_skin.h"
 #include "app/wifi_events.h"               /* 输入→命令的唯一出口 */
 #include "platform/wifi_platform.h"      /* wifi_ap_at / wifi_ap_count */
 #include "navigation/wifi_nav.h"         /* 手势只决定去向 */
@@ -28,17 +29,7 @@
 
 /******************** 模块私有状态与常量 ********************/
 
-#define C_BAR_ON   0x5B8CFF
-#define C_BAR_OFF  0x2A3550
-#define C_CONN     0x3DDC97
-#define C_SAVED    0x9DB8FF
-#define C_OPEN     0x5C6A85
-#define C_ROW_BG   0x101A28
-#define C_ROW_EDGE 0x26314A
-#define C_TEXT1    0xF0F4FC
-#define C_TEXT2    0x8A99B3
-
-#define ROW_H      44          /* 与设计图一致 */
+/* 行高与行内配色在 widgets/wifi_skin.h（换设计只改那里） */
 #define BAR_X0     14          /* 信号条起点（行内） */
 #define BAR_W      3
 #define BAR_GAP    3           /* 条间距 3（宽 3 → 中心距 6） */

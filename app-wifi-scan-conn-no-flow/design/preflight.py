@@ -38,6 +38,7 @@ STEPS = [
     ("EEZ CLI 构建（含 flow 守卫）", [PY, "design/cli_build.py"], ROOT, True),
     ("逐字审计（文案 ⊆ 字体）", [PY, "design/audit_chars.py"], ROOT, True),
     ("静态自检 7 项", [PY, "design/check_project.py"], ROOT, True),
+    ("移植契约（对象/动作/平台/lv_conf）", [PY, "design/port_check.py"], ROOT, True),
     ("烘焙字库（必须在 cli_build 之后）", [PY, "design/gen_font.py"], ROOT, False),
 ]
 

@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include "app/wifi_model.h"
+#include "app/wifi_text.h"
 #include "platform/wifi_platform.h"
 
 /******************** 模块私有状态与常量 ********************/
@@ -35,7 +36,7 @@ void io_init(void)
 {
     /* TODO(⑦-2): WlanOpenClient + WlanEnumInterfaces，失败时把文案置成"无线不可用" */
     app_set_input_i(APP_IN_SCAN_STATE, 0);
-    app_set_input_s(APP_IN_SCAN_STATUS, "点击刷新开始扫描");
+    app_set_input_s(APP_IN_SCAN_STATUS, WIFI_TXT_SCAN_HINT);
     printf("[IO] io_init (device, 未实现)\n");
 }
 
@@ -43,7 +44,7 @@ void io_init(void)
 void io_wifi_scan(int v)
 {
     (void)v;
-    /* TODO(⑦-2): WlanScan()；置 APP_IN_SCAN_STATE=1 与"正在扫描…" */
+    /* TODO(⑦-2): WlanScan()；置 APP_IN_SCAN_STATE=1 与WIFI_TXT_SCANNING */
     printf("[IO] io_wifi_scan 未实现（⑦-2）\n");
 }
 
