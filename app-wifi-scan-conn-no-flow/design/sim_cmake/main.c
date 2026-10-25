@@ -697,7 +697,13 @@ static void nav_test_hooks(void)
         nav_check("空密码点「连接」：不转圈、不发起连接", !wifi_busy_visible());
         nav_check("空密码有提示（标题栏「请输入密码」）",
                   strstr(app_get_input_s(APP_IN_SCAN_STATUS), "请输入密码") != NULL);
-        lv_textarea_set_text(objects.pwd_ta, "12345678");   /* ② 模拟用户真的输了密码 */
+        lv_textarea_set_text(objects.pwd_ta, "1234");       /* ② 短密码：必须被挡 */
+        click_at(cx, cy, 3);
+        nav_check("短密码点「连接」：半页不收", !hidden_of(objects.overlay_root));
+        nav_check("短密码点「连接」：不转圈", !wifi_busy_visible());
+        nav_check("短密码提示「密码需 8-64 位」",
+                  strstr(app_get_input_s(APP_IN_SCAN_STATUS), "8-64 位") != NULL);
+        lv_textarea_set_text(objects.pwd_ta, "12345678");   /* ③ 合法密码：正常发起 */
         click_at(cx, cy, 3);
         nav_wait("点「连接」→ 标题先写「正在连接 X…」",
                  pred_status_connecting, NULL, 300);
@@ -813,6 +819,11 @@ static void reach_shot_hooks(void)
         if (!wait_until(pred_sheet_visible, NULL, 300)) {
             printf("[REACH] FAIL 点该行没开半页\n");
             harness_stop(1);
+        }
+        /* 模拟真实操作顺序：先点输入框（获得焦点）→ 输入 → 点「连接」 */
+        if (objects.pwd_ta) {
+            center_of_obj(objects.pwd_ta, &cx, &cy);
+            click_at(cx, cy, 3);
         }
         lv_textarea_set_text(objects.pwd_ta, pwd);
         pump(5);

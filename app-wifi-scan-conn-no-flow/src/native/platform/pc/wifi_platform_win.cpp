@@ -31,7 +31,6 @@
 #define SCAN_WAIT_MS      2000     /* WlanScan 是异步的，2s 后再取表 */
 #define CONNECT_POLL_MS    500     /* WlanConnect 也是异步的：每 0.5s 回查一次真值 */
 #define CONNECT_GIVEUP_MS 10000    /* 10s 还没连上就判失败 */
-#define PRESCAN_WAIT_MS   1200     /* 下发前先扫一次，等驱动把 BSS 收进缓存 */
 #define PROF_NAME_CHARS   256
 
 /* WLAN_AVAILABLE_NETWORK.dwFlags 的两个位，mingw 头里没给，值取自 MSDN */
@@ -474,8 +473,10 @@ static int query(void)
             }
         }
         /* WIFI_WIN_DUMP=1：把最强那条 BSS 的 RSN IE 打出来（加密套件/PMF 要求） */
+        /* ★ ulIeOffset 是相对**这条 BSS 条目**的偏移（不是列表起点），
+         *   按 p_bss 加会读到别处（诊断一直没输出就是因为这个）。 */
         if (best_be && getenv("WIFI_WIN_DUMP") && best_be->ulIeSize >= 2)
-            dump_rsn((const UCHAR *)p_bss + best_be->ulIeOffset,
+            dump_rsn((const UCHAR *)best_be + best_be->ulIeOffset,
                      best_be->ulIeSize, s_aps[n].ap.ssid);
         s_aps[n].ap.rssi = best > -999 ? best
                                        : (int)an->wlanSignalQuality / 2 - 100;
@@ -670,15 +671,6 @@ void win_io_sample(void)
             try_fail(s_try_ssid);
             return;
         }
-        if (s_try_phase == 1) {                  /* 扫描窗口结束 → 正式下发 */
-            if (since >= PRESCAN_WAIT_MS) {
-                s_try_phase = 2;
-                s_try_t0 = clock();
-                s_try_next = clock() + (clock_t)(CONNECT_POLL_MS * CLOCKS_PER_SEC / 1000);
-                do_connect();
-            }
-            return;
-        }
         if ((double)(clock() - s_try_next) * 1000.0 / CLOCKS_PER_SEC >= 0) {
             const win_ap_t *t;
             s_try_next = clock() + (clock_t)(CONNECT_POLL_MS * CLOCKS_PER_SEC / 1000);
@@ -709,7 +701,10 @@ void win_io_connect(const char *ssid, const char *password)
 
     /* profile 名已经是宽字符，直接抄；万一为空就用 SSID 现推 */
     copy_w(t->profile, prof, PROF_NAME_CHARS);
-    if (!prof[0] && !u8_to_w(t->ap.ssid, prof, PROF_NAME_CHARS)) return;
+    if (!prof[0] && !u8_to_w(t->ap.ssid, prof, PROF_NAME_CHARS)) {
+        try_fail(t->ap.ssid);            /* 别留下"永远连接中" */
+        return;
+    }
 
     /* 没有现成 profile（开放网络 / 系统里被删了）→ 必须先建一个；
      * 给了密码（用户要改密码）→ 覆盖重建；否则直接拿已有的 profile 连。 */
@@ -771,7 +766,10 @@ void win_io_connect(const char *ssid, const char *password)
             return;
         }
         /* 新 profile 的名字就是 XML 里的 <name>＝SSID */
-        if (!u8_to_w(t->ap.ssid, prof, PROF_NAME_CHARS)) return;
+        if (!u8_to_w(t->ap.ssid, prof, PROF_NAME_CHARS)) {
+            try_fail(t->ap.ssid);
+            return;
+        }
     }
 
     copy_w(prof, s_try_prof, PROF_NAME_CHARS);
@@ -783,15 +781,14 @@ void win_io_connect(const char *ssid, const char *password)
     s_last_reason[0] = '\0';                 /* 每次尝试都从零开始记原因 */
     s_notify_fail = 0;
     s_try_t0 = clock();
-    s_try_next = 0;
-    s_try_phase = 1;
+    s_try_next = clock() + (clock_t)(CONNECT_POLL_MS * CLOCKS_PER_SEC / 1000);
+    s_try_phase = 2;
     s_trying = 1;
     app_set_input_i(APP_IN_CONN_STATE, 1);
     set_status("正在连接 %s…", s_try_ssid);
-    /* ★ 先扫一次再下发：实测错误「特定的网络不可用（RSSI 255）」是下发那一刻
-     *   驱动里没有该 SSID 的可用 BSS；先让驱动扫一遍能把这个前提补上。 */
-    if (WlanScan(s_h, &s_guid, NULL, NULL, NULL) != ERROR_SUCCESS)
-        printf("[WIN] 连接前扫描被拒（继续下发）\n");
+    /* 直接下发，不再预扫描：实测加了预扫描反而出现
+     * 「动态密钥交换未能在配置的时间范围内成功」（四次握手被扫描拖超时）。 */
+    do_connect();
 }
 
 // 函数作用：真忘记——删掉系统里存的 profile（密码），不动已建立的连接。

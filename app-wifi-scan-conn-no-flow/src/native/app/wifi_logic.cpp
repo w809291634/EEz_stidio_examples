@@ -5,6 +5,7 @@
  * **硬件动作**交给 platform；本文件因此可以脱离 LVGL 单测。
  */
 #include <stdio.h>
+#include <string.h>
 #include "wifi_logic.h"
 #include "wifi_model.h"
 #include "wifi_view.h"
@@ -50,10 +51,17 @@ void user_io_tick(void)
             char busy[APP_IN_STR_MAX];
 
             /* 用户口径（2026-10-24）：半页路径密码不能空——空密码连它注定失败，
-             * 还白转一圈圈。就地提示，不关窗、不发起连接。 */
-            if (wifi_nav_sheet_open() && !has_visible_char(pw)) {
-                app_set_input_s(APP_IN_SCAN_STATUS, "请输入密码");
-                break;
+             * 还白转一圈圈。就地提示，不关窗、不发起连接。
+             * 2026-10-25 补长度判断：WPA/WPA2 口令 8~64 位，短口令注定握手失败。 */
+            if (wifi_nav_sheet_open()) {
+                if (!has_visible_char(pw)) {
+                    app_set_input_s(APP_IN_SCAN_STATUS, "请输入密码");
+                    break;
+                }
+                if (strlen(pw) < 8 || strlen(pw) > 64) {
+                    app_set_input_s(APP_IN_SCAN_STATUS, "密码需 8-64 位");
+                    break;
+                }
             }
             io_wifi_connect(sel, pw);
             wifi_nav_close_sheet();

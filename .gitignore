@@ -7,6 +7,7 @@ build2/
 build3/
 build4/
 build_rel/
+build_alt/
 build_debug/
 build_rel_rw/
 __pycache__/
