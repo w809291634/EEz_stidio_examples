@@ -42,7 +42,12 @@ static lv_obj_t *ensure_root(void)
     lv_obj_add_flag(s_root, LV_OBJ_FLAG_CLICKABLE);
 
     lv_obj_t *sp = lv_spinner_create(s_root);
-    lv_spinner_set_anim_params(sp, 1000, 120);
+    /* lv_spinner 的动效是"弧长伸缩 + 旋转"（起点 0→360、终点 angle→360+angle，
+     * 两条曲线不同步）。angle 越大伸缩越夸张：120° 时弧长在 120~210° 之间抻，
+     * 看着像一坨在变形；用户 2026-10-25 定：保留伸缩、幅度要小 → 30°（30~120°）。 */
+    lv_spinner_set_anim_params(sp, 1000, 30);
+    lv_obj_set_style_arc_width(sp, 6, LV_PART_MAIN);        /* 轨道 6px */
+    lv_obj_set_style_arc_width(sp, 6, LV_PART_INDICATOR);   /* 转动的那段同宽 */
     lv_obj_set_size(sp, 64, 64);
     lv_obj_set_style_arc_color(sp, lv_color_hex(0x26314A), LV_PART_MAIN);
     lv_obj_set_style_arc_color(sp, lv_color_hex(C_PRI), LV_PART_INDICATOR);
