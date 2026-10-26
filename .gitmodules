@@ -1,0 +1,3 @@
+[submodule "project-reference/watch2"]
+	path = project-reference/watch2
+	url = https://github.com/w809291634/watch2.git

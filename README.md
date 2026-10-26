@@ -165,3 +165,13 @@ EEZ_stidio_examples/
    `/design/sim_cmake/...`、`/src/ui`），run_sim.bat 里已从 `%~dp0` 上跳两级，别改。
 7. **中文字体**：EEZ CLI 不烘字体 .c，需 lv_font_conv 离线生成
    （`--format lvgl --lv-font-name ui_font_cnXX`，字形表取自 TTF 子集 cmap），产物落 `src/ui/`。
+
+---
+
+## 5. 子模块（`project-reference/`）
+
+所有 git 子模块统一放 `project-reference/<仓库名>/`，父库只记录 commit 指针。
+
+- 首次克隆：`git clone --recurse-submodules <url>`；已克隆的补拉 `git submodule update --init`。
+- 更新子模块：`git submodule update --remote project-reference/<名>`，再在父库提交新指针。
+- 当前：`watch2` → <https://github.com/w809291634/watch2.git>
