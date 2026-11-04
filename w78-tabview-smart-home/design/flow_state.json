@@ -1,0 +1,5 @@
+{
+  "overview_confirmed": false,
+  "confirmed_at": "",
+  "note": "全览未确认：H5 只出全览核对态。用户点头后把 overview_confirmed 置 true 并重跑 design/export_ui.py，才出可点跳转 + AI 预估控件图。"
+}
