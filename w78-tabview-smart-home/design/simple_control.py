@@ -179,7 +179,8 @@ def tile(x, y, name, sub, value="", control="toggle", on=True, readonly=False,
         out.append(tag(x + 104, y + 16))
         out.append(t(x + 14, y + 124, "状态只读", 8, T3))
     elif scene:
-        out.append(btn(x + 14, y + 104, 196, 32, "执行", CARD2, ACCENT, 9))
+        ex, ey, ew, eh = SCENE_EXEC_BTN
+        out.append(btn(x + ex, y + ey, ew, eh, "执行", CARD2, ACCENT, 9))
     elif control == "toggle":
         out.append(toggle(x + 166, y + 104, on))
     elif control == "slider":
@@ -284,6 +285,7 @@ def room_is_scroll(room):
 
 # ---- 二级页几何（标注图 import，不手抄）----
 TILE_DETAIL_BTN = (158, 12, 52, 24)     # 设备格内「详情」按钮（相对格子原点）
+SCENE_EXEC_BTN = (14, 104, 196, 32)     # 场景格内「执行」按钮（相对格子原点）
 SUB_BACK_BOX = (40, 28, 96, 28)
 DETAIL_BOXES = {
     "power": (296, 126, 60, 32),

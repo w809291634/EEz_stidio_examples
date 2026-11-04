@@ -113,6 +113,9 @@ def main():
         fails.append("F 跳转计数不一致：设计源 %d / H5 %d / 清单 %d"
                      % (n_src_nav, n_h5_nav, n_tbl_nav))
 
+    if n_card:
+        fails.append("H 卡片残留 target %d 条（行为不是换页却登记了跳转，会把点击吞成数据操作）: %s"
+                     % (n_card, [(a, n, b) for a, k, n, b in edges if k == "card"][:4]))
     print("页 %d（根 %s，状态页 %s）" % (len(order), root, sorted(status) or "无"))
     print("权威边 %d（跳转 %d + 手势 %d）｜ 卡片残留 target %d"
           % (len(auth), len(auth) - sum(1 for a, k, n, b in edges if k == "gesture"),
@@ -125,9 +128,6 @@ def main():
     print("[NAV_AUDIT] " + ("PASS" if not fails else "FAIL"))
     for f in fails:
         print("  !! " + f)
-    if n_card:
-        print("  · 提示：%d 条卡片带 target 但行为不是换页，H5 按行为判类会丢掉这些跳转（等用户定 A/B）"
-              % n_card)
     sys.exit(1 if fails else 0)
 
 

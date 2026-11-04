@@ -16,6 +16,7 @@ sys.path.insert(0, HERE)
 import simple_control as sc        # noqa: E402
 import export_ui as eu             # noqa: E402
 import overview_pro as ov          # noqa: E402
+import pages as pg                 # noqa: E402
 
 OUT = os.path.join(os.path.dirname(sc.OUT), "designer_annotated", "控件清单.md")
 
@@ -33,13 +34,16 @@ def main():
         d = data["pages"][p]
         cat_by_n = {r["n"]: r["cat"] for r in raw[p]["rows"]}
         tag = "状态页" if d["status"] else ""
+        cnt = {}
         for r in d["rows"]:
             n_ctl += 1
+            code = pg.IO_CODE[r["io"]]
+            cnt[code] = cnt.get(code, 0) + 1
             io_cnt[r["io"]] = io_cnt.get(r["io"], 0) + 1
-            rows.append("| %s%s | L%d | %d | %s | %s | %s | %s | %s | (%d,%d,%d,%d) |" % (
+            rows.append("| %s%s | L%d | %d | %s | %s | %s | %s | %s | %s%02d | (%d,%d,%d,%d) |" % (
                 p, ("（" + tag + "）" if tag else ""), d["layer"], r["n"], r["name"],
                 CAT.get(cat_by_n[r["n"]], cat_by_n[r["n"]]), ov.IO_NAME[r["io"]],
-                r["act"], r["target"] or "—", *r["box"]))
+                r["act"], r["target"] or "—", code, cnt[code], *r["box"]))
         for g in d["gesture"]:
             n_ges += 1
             io_cnt["gesture"] = io_cnt.get("gesture", 0) + 1
@@ -55,8 +59,8 @@ def main():
         "> 要改口径就改上面三处再重跑本脚本；数据流向/层级/手势与 H5 评审页同源"
         "（`design/overview_pro.py`）。",
         "",
-        "| 屏 | 层 | 徽标 | 名称 | 控件类型 | 数据流向 | 作用（点击/滑动后） | 跳转目标 | 框 (x,y,w,h) |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "| 屏 | 层 | 徽标 | 名称 | 控件类型 | 数据流向 | 作用（点击/滑动后） | 跳转目标 | 代号 | 框 (x,y,w,h) |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     io.open(OUT, "w", encoding="utf-8", newline="\n").write("\n".join(head + rows) + "\n")

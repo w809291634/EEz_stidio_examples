@@ -10,8 +10,8 @@ def _room_tiles():
     out = {}
     for room in sc.ROOM_ORDER:
         for t in sc.ROOM_TILES[room]:
-            if t[6]:                      # 场景格：执行不跳页，但「详情」进场景页
-                out[(room, t[0])] = "场景详情"
+            if t[6]:                      # 场景格：卡片只展示，「执行」进场景页
+                out[(room, "%s·执行" % t[0])] = "场景详情"
                 continue
             if t[0] == "空调":
                 page = "空调详情"
@@ -25,7 +25,6 @@ def _room_tiles():
                 page = "传感详情"
             else:
                 page = "灯详情"
-            out[(room, t[0])] = page
             out[(room, "%s·详情" % t[0])] = page
     return out
 
@@ -76,6 +75,7 @@ NAV_TARGETS = {
     ("添加设备·完成", "‹ 全部设备 按钮"): "全部设备",
     ("关于", "‹ 设置 按钮"): "设置",
     ("离线态", "‹ 主控 按钮"): "主控",
+    ("空房间", "＋ 添加设备"): "添加设备·选类型",
 }
 
 NAV_TARGETS.update(ROOM_TARGETS)

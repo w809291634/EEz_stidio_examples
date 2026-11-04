@@ -10,6 +10,12 @@ import simple_control as sc
 
 C = sc.CAT_COLORS
 
+# 控件 identifier 类别码（唯一映射表；与 H5 六类同源，细则见 kit reference/07）
+IO_CODE = {"in_read": "r", "out_read": "hr", "in_write": "w",
+           "out_write": "hw", "nav": "go", "gesture": "sw"}
+STATIC_CODE = "st"        # 纯固定显示（标题/说明/只读文本）
+DECO_CODE = "deco"        # 纯装饰底板，不进控件清单
+
 
 def prow(y, name, sub, right="", h=52, active=False):
     out = [sc.card(40, y, 720, h),
@@ -291,16 +297,21 @@ def _room_rows(room):
     rows = [("‹ 主控 按钮", "back", "返回主控页", "换页", sc.SUB_BACK_BOX)]
     for i, t in enumerate(sc.room_devices(room)):
         k = ("read" if t[5] else ("scene" if t[6] else (t[3] or "toggle")))
+        bx, by, _bw, _bh = sc.tile_box(i)
+        if t[6]:                          # 场景格：卡片只展示，动作在「执行」
+            rows.append((t[0], k, "显示场景摘要（不响应点击）", "只刷新",
+                         sc.tile_box(i)))
+            dx, dy, dw, dh = sc.SCENE_EXEC_BTN
+            rows.append(("%s·执行" % t[0], "nav", "进入 场景详情页", "换页",
+                         (bx + dx, by + dy, dw, dh)))
+            continue
         behav = "只刷新" if k == "read" else "下发硬件"
         act = {"toggle": f"切换「{t[0]}」开 / 关", "slider": f"调「{t[0]}」开合度",
-               "scene": f"执行「{t[0]}」，不跳页",
                "read": f"{t[0]} 状态只读"}[k]
         rows.append((t[0], k, act, behav, sc.tile_box(i)))
-        if not t[6]:                      # 场景格只执行，不进详情
-            dx, dy, dw, dh = sc.TILE_DETAIL_BTN
-            bx, by, _bw, _bh = sc.tile_box(i)
-            rows.append(("%s·详情" % t[0], "nav", "进入 %s 详情页" % t[0],
-                         "换页", (bx + dx, by + dy, dw, dh)))
+        dx, dy, dw, dh = sc.TILE_DETAIL_BTN
+        rows.append(("%s·详情" % t[0], "nav", "进入 %s 详情页" % t[0],
+                     "换页", (bx + dx, by + dy, dw, dh)))
     return rows
 
 
@@ -317,7 +328,7 @@ PAGES = [
     ("客厅", sc.room_frame("客厅", sc.ROOM_SUBS["客厅"], sc.room_devices("客厅")),
      "入口：主控·客厅卡", "出口：‹ 主控 / 每格「详情」", _room_rows("客厅")),
     ("主卧", sc.room_frame("主卧", sc.ROOM_SUBS["主卧"], sc.room_devices("主卧")),
-     "入口：主控·主卧卡", "出口：‹ 主控 / 每格「详情」", _room_rows("主卧")),
+     "入口：主控·主卧卡", "出口：‹ 主控 / 每格「详情」/ 场景格「执行」", _room_rows("主卧")),
     ("厨房", sc.room_frame("厨房", sc.ROOM_SUBS["厨房"], sc.room_devices("厨房")),
      "入口：主控·厨房卡", "出口：‹ 主控 / 每格「详情」", _room_rows("厨房")),
     ("浴室", sc.room_frame("浴室", sc.ROOM_SUBS["浴室"], sc.room_devices("浴室")),
