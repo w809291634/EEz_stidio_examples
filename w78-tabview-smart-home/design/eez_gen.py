@@ -277,6 +277,15 @@ def make_screen():
     return c
 
 
+def no_click(n):
+    """纯展示/装饰容器不该吃点击：去掉 CLICKABLE 等标记，否则会盖住下层按钮。"""
+    keep = {"GESTURE_BUBBLE", "SCROLL_CHAIN_HOR", "SCROLL_CHAIN_VER"}
+    n["widgetFlags"] = "|".join(x for x in str(n.get("widgetFlags", "")).split("|")
+                                if x in keep)
+    n["clickableFlagType"] = "literal"
+    n["clickableFlag"] = False
+
+
 def make_container(ident, box, bg=None, radius=None, text="", color=None):
     """卡片 = 默认 LVGLContainerWidget + 居中子标签（容器本身没有 text 字段）。"""
     c = fresh(DEFAULTS["LVGLContainerWidget"])
@@ -350,6 +359,8 @@ def build_page(name, frame, rows, first=False):
             if tuple(box) in rects:
                 # 底板由设计帧的同位矩形当装饰层画；容器透明，别盖住滑条/图表等内部细件
                 node["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 0
+            if cat not in ("nav", "back"):
+                no_click(node)          # 开关/滑条/只读卡目前是静态层，别抢按钮的点击
             children.append(node)
         else:
             btn = make_button(ident, txt, box, bg, rx)
@@ -397,6 +408,7 @@ def build_page(name, frame, rows, first=False):
                  if c in ("nav", "back") and b[2] <= 200}
     for idx, r in enumerate([r for r in allr if r["box"] not in btn_boxes]):
         node = make_container("%s_deco%02d" % (slug, idx), r["box"], r["fill"], r["rx"])
+        no_click(node)
         if overlap(r) and (r["box"][2] * r["box"][3] < 2000
                            or min(r["box"][2], r["box"][3]) <= 10):
             over.append(node)

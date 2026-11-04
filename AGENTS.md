@@ -36,14 +36,16 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
 1. **EEZ 优先（分阶段）**：预生成阶段的设计控件必须 EEZ 生成，`src/ui` 不可手改。
 2. **仿真时机**：设计核对默认跑，其余微调点名才跑（跳过要留"待同步"清单）。
 3. **五元组**：每条需求写目标/口径/验收/约束/验证归档；观感词两轮对不上就出标注图。
-4. **留痕**：提示词逐字进 kit `prompts/PROMPT_LOG.md`（PR-####），新问题进 `intake/`（P-####）。
+4. **留痕**：提示词逐字进 kit `prompts/PROMPT_LOG.md`（PR-####），新问题进 `intake/`（P-####）
+   并追 `intake/index.md`；查问题先看这张索引。
 5. **收尾即清**：过程件只放工程 `tmp/` 且收尾删除，交付件只放正位。
 6. **载体与交付**：设计阶段以 H5 三视图为主；核对给 HTML 绝对路径、不内嵌、不出查看器页；改 H5 交互/实时效果要同步高清设计图。
 7. **覆盖表只补真值**：例外/映射表不得推翻设计源行为字段，配 assert 门禁。
 8. **控件克隆默认结构**：`tools/eez_defaults.py` 采样；按钮无 `text`（文字在子标签）；
    克隆后复位表达式型属性（`hiddenFlag` 等），否则会带入别的工程的 `get_var_*` 调用。
-   生成器还有八条硬口径：页名 ASCII / identifier 加页前缀并按类别码命名（w/hw/r/hr/go/sw/st）/ 字号动态收集 /
-   替换字符进子集 / 卡片只做底板 / 行式按钮 LEFT_MID+设计文案 / 颜色只收 `#RRGGBB`（NO_FLOW §2.2）。
+   生成器还有九条硬口径：页名 ASCII / identifier 加页前缀并按类别码命名（w/hw/r/hr/go/sw/st）/ 字号动态收集 /
+   替换字符进子集 / 卡片只做底板 / 行式按钮 LEFT_MID+设计文案 / 颜色只收 `#RRGGBB` /
+   装饰容器去 CLICKABLE（NO_FLOW §2.2）。
 9. **中文只在索引里出现**：`log_entry --json`、`design/texts.py` key、`lint_text.py` 门禁。
 10. **字体 F1–F6**：三件套 / `lvglGlyphs.encodings` / 核 cmap / 多字号共用 TTF / headless 不烘 / 验收三连。
 11. **交付必过 D1–D8**：`design/delivery_gate.py`，FAIL 不许交付；D5 每次生成后用
