@@ -189,12 +189,31 @@ def tile(x, y, name, sub, value="", control="toggle", on=True, readonly=False,
 
 
 def room_frame(name, sub, data):
-    """房间页模板：返回主控 + 3x2 设备方格。data 每项 = tile() 的位置参数。"""
-    out = [header_room(name, sub),
-           t(40, 112, "设备", 11, T3)]
+    """房间页：设备列表驱动。<=6 台铺满 2 行；>6 台纵向滚动（底部露半行 + 滚动条）；0 台走空态。"""
+    out = [header_room(name, sub), t(40, 112, "设备", 11, T3)]
+    if not data:
+        out += [card(40, 124, 720, 300),
+                t(400, 240, "本房间暂无设备", 18, T2, "600", "middle"),
+                t(400, 272, "添加后可在这里开关、调光、看状态", 10, T3, "400", "middle"),
+                btn(320, 306, 160, 40, "＋ 添加设备", ACCENT, BG, 11)]
+        return "".join(out)
+    x0, y0, w, h = TILE_VIEW
+    scroll = len(data) > TILE_COLS * TILE_ROWS
+    cid = "clip-" + str(abs(hash(name)) % 10000)
+    out.append('<clipPath id="%s"><rect x="%d" y="%d" width="%d" height="%d" rx="8"/></clipPath>'
+               % (cid, x0, y0, w, h))
+    out.append('<g clip-path="url(#%s)">' % cid)
     for i, d in enumerate(data):
         x, y, _w, _h = tile_box(i)
         out.append(tile(x, y, *d))
+    out.append("</g>")
+    if scroll:
+        total = len(data)
+        rows = (total + TILE_COLS - 1) // TILE_COLS
+        out.append(r(784, y0 + 8, 4, h - 16, "#1b2432", "none", 2))
+        kh = max(40, int((h - 16) * TILE_ROWS / rows))
+        out.append(r(784, y0 + 8, 4, kh, ACCENT, "none", 2))
+        out.append(t(40, 466, "↓ 共 %d 台，可上下滑动" % total, 9, T3))
     return "".join(out)
 
 
@@ -237,6 +256,31 @@ ROOM_SUBS = {
 }
 
 ROOM_ORDER = ["客厅", "主卧", "厨房", "浴室"]
+
+# ---- 设备类型与排序（同类相邻；同类内保持添加顺序）----
+TYPE_ORDER = ["灯", "窗帘", "空调", "插座", "排风", "传感器", "摄像头", "场景"]
+DEVICE_TYPE = {
+    "主灯": "灯", "床头灯": "灯", "暖灯": "灯", "落地灯": "灯",
+    "窗帘": "窗帘", "空调": "空调", "插座": "插座", "排风": "排风",
+    "温湿度": "传感器", "燃气传感": "传感器", "漏水传感": "传感器",
+    "摄像头": "摄像头", "晚安模式": "场景",
+}
+
+
+def room_devices(room):
+    """该房间的设备列表 = 设计源唯一真值；按类型分组后返回（房间页与控件表共用）。"""
+    tiles = ROOM_TILES[room]
+    return sorted(tiles, key=lambda d: TYPE_ORDER.index(DEVICE_TYPE.get(d[0], "场景")))
+
+
+# 动态设备区的可视范围：3 列 × 2 行 = 6 格；超出 → 纵向滚动
+TILE_COLS, TILE_ROWS = 3, 2
+TILE_VIEW = (40, 112, 744, 352)     # 设备区可视框（x,y,w,h），第 3 行只露一条
+
+
+def room_is_scroll(room):
+    return len(room_devices(room)) > TILE_COLS * TILE_ROWS
+
 
 # ---- 二级页几何（标注图 import，不手抄）----
 TILE_DETAIL_BTN = (158, 12, 52, 24)     # 设备格内「详情」按钮（相对格子原点）
@@ -283,7 +327,7 @@ def sub_header(title, sub, back_label):
 
 def detail_frame():
     b = DETAIL_BOXES
-    out = sub_header("主灯", "客厅 · 3000K · 在线", "‹ 客厅")
+    out = sub_header("主灯", "客厅 · 3000K · 在线", "‹ 返回")
     out += [card(40, 104, 340, 180),
             t(60, 140, "电源", 12, T2, "600"),
             toggle(*b["power"][:2], True),

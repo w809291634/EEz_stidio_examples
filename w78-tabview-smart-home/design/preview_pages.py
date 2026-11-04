@@ -24,6 +24,7 @@ ROOM_FIRST, ROOM_LAST = 1, len(sc.ROOM_ORDER)
 CAT_LABEL = {"nav": "跳转", "back": "返回", "scene": "场景",
              "toggle": "开关", "slider": "滑条", "read": "只读"}
 BEHAV_LABEL = {"换页": sc.CAT_COLORS["nav"],
+               "返回": sc.CAT_COLORS["nav"],
                "下发硬件": sc.CAT_COLORS["toggle"],
                "只刷新": sc.CAT_COLORS["read"]}
 
@@ -67,7 +68,7 @@ def main():
         back = [r for r in rows if r[1] == "back"]
         assert len(back) == (0 if pi == 0 else 1), f"{name} 返回按钮数量不对"
         if pi:
-            assert back[0][3] == "换页", f"{name} 返回未接换页"
+            assert back[0][3] in ("换页", "返回"), f"{name} 返回未接换页"
         assert name in {p[0] for p in pages}, f"{name} 未登记"
 
     out = [

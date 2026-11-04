@@ -45,7 +45,6 @@ IO_DESC = {
 # 个别控件的数据流向按语义覆盖，不靠通用规则猜
 OVERRIDES = {
     ("全部设备", "搜索框"): "in_read",
-    ("设置", "关于"): "in_read",
     ("离线态", "同步信息"): "in_read",
     ("灯详情", "添加定时"): "in_write",
     ("场景详情", "编辑动作"): "in_write",
@@ -78,7 +77,7 @@ def io_of(page, row):
     k = OVERRIDES.get((page, row["name"]))
     if k:
         return k
-    if row["behav"] == "换页":
+    if row["behav"] in ("换页", "返回"):
         return "nav"
     if row["behav"] == "下发硬件":
         return "out_write"
@@ -116,11 +115,16 @@ def build():
             io_k = io_of(p, r)
             rows.append({"n": r["n"], "name": r["name"], "io": io_k,
                          "act": r["act"], "box": r["box"],
-                         "target": r["target"] if io_k == "nav" else ""})
+                         "target": r["target"] if io_k == "nav" else "",
+                         "dyn": r["behav"] == "返回"})
         out[p] = {"svg": d["svg"], "rows": rows, "layer": depth[p] + 1,
                   "status": p in status,
                   "entry": d["entry"], "exit": d["exit"],
                   "gesture": ges.get(p, [])}
+    lost = [(p, r["n"], r["name"]) for p in order for r in out[p]["rows"]
+            if any(q["name"] == r["name"] and q["behav"] == "换页" for q in data[p]["rows"])
+            and r["io"] != "nav"]
+    assert not lost, "覆盖判类吃掉了换页控件的跳转：%s" % lost
     return {"pages": out, "order": order,
             "io": {"color": IO_COLORS, "name": IO_NAME, "desc": IO_DESC},
             "layerNote": {1: "一级：与主页同一种切换方式可达（本工程无 pageview tab / 侧栏，故只有主控）",
@@ -205,7 +209,8 @@ border-radius:999px;padding:2px 10px 2px 7px;color:var(--t2);cursor:pointer;tran
 .pill.nav{background:#f2b45c;border-color:#f2b45c;color:#05080f;font-weight:700}
 .pill.nav b{font-weight:900}
 .pill.nav:hover{background:#ffc873;border-color:#ffc873;color:#05080f}
-.pill.ges{background:#ff8fb8;border-color:#ff8fb8;color:#05080f;font-weight:700}
+.pill.back{background:rgba(242,180,92,.10);border-color:#f2b45c;color:#f2b45c;font-weight:700}
+.pill.back:hover{background:rgba(242,180,92,.28);border-color:#ffc873;color:#ffc873}
 .pill.ges b{font-weight:900}
 .pill.ges:hover{background:#ffa5c6;border-color:#ffa5c6;color:#05080f}
 .pill.static{border-color:transparent;background:rgba(117,133,156,.09);color:#8b9aac;font-weight:400}
@@ -217,27 +222,19 @@ border-radius:999px;padding:1px 8px}
 .stage{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:18px;align-items:start}
 .big{border:1px solid var(--edge);border-radius:18px;overflow:hidden;background:#05080f;position:relative}
 .big .pg{display:block}
-.big .pg.exitL,.big .pg.exitR{position:absolute;inset:0}
 .big svg{display:block;width:100%;height:auto}
-@keyframes inR{from{transform:translateX(102%)}to{transform:translateX(0)}}
-@keyframes inL{from{transform:translateX(-102%)}to{transform:translateX(0)}}
-@keyframes outL{from{transform:translateX(0);opacity:1}to{transform:translateX(-30%);opacity:.25}}
-@keyframes outR{from{transform:translateX(0);opacity:1}to{transform:translateX(30%);opacity:.25}}
-.pg.enterR{animation:inR .34s cubic-bezier(.2,.7,.2,1) both}
-.pg.enterL{animation:inL .34s cubic-bezier(.2,.7,.2,1) both}
-.pg.exitL{animation:outL .34s ease both}
-.pg.exitR{animation:outR .34s ease both}
-.big svg g.hot{cursor:pointer}
-.big svg g.hot>rect:not(.hit):not(.hitg){transition:.12s}
-.big svg g.hot:hover>rect:not(.hit):not(.hitg){stroke-width:4}
-.big svg rect.hit{fill:rgba(242,180,92,.10)}
-.big svg g.hot:hover rect.hit{fill:rgba(242,180,92,.32)}
-.big svg g.hot:active rect.hit{fill:rgba(242,180,92,.62)}
-.big svg rect.hitg{fill:rgba(255,143,184,.12)}
-.big svg g.hot:hover rect.hitg{fill:rgba(255,143,184,.34)}
-.big svg g.hot:active rect.hitg{fill:rgba(255,143,184,.6)}
-.trailbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 10px;
-  font-size:12px;color:var(--t3)}
+svg g.hot{cursor:pointer}
+svg g.hot>rect:not(.hit):not(.hitg){transition:.12s}
+svg g.hot:hover>rect:not(.hit):not(.hitg){stroke-width:4}
+svg rect.hit{fill:rgba(242,180,92,.10)}
+svg g.hot:hover rect.hit{fill:rgba(242,180,92,.32)}
+svg g.hot:active rect.hit{fill:rgba(242,180,92,.62)}
+svg rect.hitg{fill:rgba(255,143,184,.12)}
+svg g.hot:hover rect.hitg{fill:rgba(255,143,184,.34)}
+svg g.hot:active rect.hitg{fill:rgba(255,143,184,.6)}
+.trailbar{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;overflow-x:auto;margin:0 0 10px;
+  padding-bottom:2px;font-size:12px;color:var(--t3)}
+.trailbar>*{flex:0 0 auto}
 .trailbar .t{border:1px solid var(--edge);border-radius:999px;padding:1px 9px;color:var(--t2)}
 .trailbar .t.now{border-color:var(--nav);color:var(--nav);font-weight:700}
 .trailbar .ta{color:#44536a}
@@ -306,8 +303,10 @@ function mark(page, opts){
   if (o.marks !== false){
     p.rows.filter(showIo).forEach(r=>{
       const b=r.box, col=IO.color[r.io];
-      const hot = o.hot && r.io==='nav' && r.target;
-      s += '<g id="'+(o.pid||'x')+'-'+r.n+'"'+(hot?' class="hot" data-go="'+r.target+'" data-dir="1"':'')+'>'
+      const hot = o.hot ? (r.io==='nav' && (r.target || r.dyn)) : (o.hotBack && r.dyn);
+      const attrs = !hot ? '' : (r.dyn ? ' class="hot" data-back="1"'
+                                       : ' class="hot" data-go="'+r.target+'" data-dir="1"');
+      s += '<g id="'+(o.pid||'x')+'-'+r.n+'"'+attrs+'>'
          + '<rect x="'+(b[0]-1.5)+'" y="'+(b[1]-1.5)+'" width="'+(b[2]+3)+'" height="'+(b[3]+3)+
            '" fill="none" stroke="'+col+'" stroke-width="'+(o.slim?1.8:2.4)+'" rx="8" opacity="'+
            (o.slim?0.9:1)+'"/>';
@@ -360,10 +359,20 @@ function mark(page, opts){
            ' text-anchor="middle" font-family="sans-serif">'+g.label+'</text>';
     });
   }
+  if (o.hotBack && o.marks === false) {          // 无标注视图（高清设计图）也要能点返回
+    p.rows.filter(r=>r.dyn).forEach(r=>{
+      const b=r.box;
+      s += '<g class="hot" data-back="1"><rect class="hit" x="'+b[0]+'" y="'+b[1]+'" width="'+
+           b[2]+'" height="'+b[3]+'" rx="8" pointer-events="all"/></g>';
+    });
+  }
   return s + '</svg>';
 }
 
 function pill(r){
+  if (!r.target) return '<button class="pill back" data-back="1" data-hi="'+r.n+'"'+
+    ' title="目标=来路（运行时决定）；在总览里点它 = 回到上一次浏览的页">'+
+    '<i style="background:#f2b45c"></i>'+r.n+'. '+r.name+' <b>‹</b> 来路</button>';
   return '<button class="pill nav" data-go="'+r.target+'" data-hi="'+r.n+'">'+r.n+'. '+r.name+
          ' <b>→</b> '+r.target+'</button>';
 }
@@ -393,7 +402,7 @@ function tags(d){
     }
     const rs = d.rows.filter(r=>r.io===k);
     if (!rs.length) return;
-    lines.push(tagLine(k, rs.map(r=>(k==='nav'&&r.target)?pill(r):tagIo(r))));
+    lines.push(tagLine(k, rs.map(r=>(k==='nav')?pill(r):tagIo(r))));
   });
   return lines.join('') || '<div class="tg"><span class="m">当前筛选下无控件</span></div>';
 }
@@ -409,7 +418,7 @@ function vLayers(){
       const d=D.pages[p];
       return '<div class="pcard'+(p===cur?' sel':'')+'" data-sel="'+p+'" data-dock="'+p+'" title="点开右侧放大图">'+
           (d.status?'<div class="stt">状态页</div>':'')+
-        mark(p,{slim:true,marks:true,pid:p}).replace('<svg ','<svg class="mini" ')+
+        mark(p,{slim:true,marks:true,pid:p,hotBack:true}).replace('<svg ','<svg class="mini" ')+
         '<div class="cap">'+p+'<span class="c">'+tally(d)+'</span></div>'+
         '<div class="tags">'+tags(d)+'</div></div>';
     }).join('')+'</div>').join('');
@@ -456,23 +465,27 @@ function vJump(){
       d.gesture.map(g=>g.label+' → '+g.to).join('；')+'</div>':'')+
     '</div><div class="side" id="side">'+sideHtml(cur)+'</div></div>';
 }
-function swapBig(p, dir){
+function swapBig(p){
   const host=document.getElementById('bigbox'); if(!host) return;
-  const old=host.querySelector('.pg');
-  const nw=document.createElement('div');
-  nw.className='pg enter'+(dir<0?'L':'R');
-  nw.innerHTML=mark(p,{hot:true});
-  host.appendChild(nw);
-  if(old){ old.className='pg exit'+(dir<0?'R':'L'); setTimeout(()=>old.remove(), 380); }
+  host.innerHTML = '<div class="pg">' + mark(p,{hot:true}) + '</div>';   // 直接换页，不做滑动
+}
+function crumbText(){
+  return trail.length ? cur + '  ← ' + trail[trail.length-1] : cur + '（无来路）';
 }
 function refreshJump(){
   const s=document.getElementById('side'); if(s) s.innerHTML=sideHtml(cur);
   const t=document.querySelector('.trailbar'); if(t) t.innerHTML=trailHtml();
-  document.getElementById('crumb').textContent=cur;
+  document.getElementById('crumb').textContent=crumbText();
+}
+function pushTrail(p){
+  if(!p) return;
+  if(trail[trail.length-1] === p) return;       // 连续同一页不重复记
+  trail.push(p); if(trail.length>10) trail.shift();
 }
 function navJump(p, dir){
   if(!p || !D.pages[p] || p===cur) return;
-  pushState(); trail.push(cur); cur=p;
+  pushState(); pushTrail(cur);
+  cur=p;
   swapBig(p, dir||1); refreshJump();
 }
 function navBack(){
@@ -488,7 +501,7 @@ function vDesign(){
     '<h2 class="sec"><span class="badge">L'+l+'</span>'+D.layerNote[l]+'</h2>'+
     '<div class="layerrow">'+by[l].map(p=>
       '<div class="pcard'+(p===cur?' sel':'')+'" data-sel="'+p+'" data-dock="'+p+'" title="点开右侧放大图" style="width:660px">'+
-      mark(p,{marks:false,lane:false}).replace('<svg ','<svg class="mini" ')+
+      mark(p,{marks:false,lane:false,hotBack:true}).replace('<svg ','<svg class="mini" ')+
       '<div class="cap">'+p+'<span class="c">800×480 · 原尺寸</span></div></div>').join('')+
     '</div>').join('');
 }
@@ -499,7 +512,7 @@ function legend(){
     '<i style="background:'+IO.color[k]+'"></i><b>'+IO.name[k]+'</b>'+
     '<em>'+IO.desc[k]+'</em></button>').join('')
     + '<span class="end" style="margin-left:auto;color:#5a6a80;font-size:11.5px">'
-    + '总览内：点跳转标签 → 平滑滑到目标页并加选中外框；点卡片本体 → 右侧停靠栏出带标注放大图（再点/Esc 收起）；'
+    + '总览内：点跳转标签 → 平滑滑到目标页并加选中外框；点卡片本体 → 右侧停靠栏出带标注放大图（再点卡片 / 点空白处 / Esc 收起）；'
     + '返回 = 回到上一次浏览位置</span>';
 }
 
@@ -511,7 +524,7 @@ function render(){
   document.querySelectorAll('.tabs .btn').forEach(b=>
     b.classList.toggle('on', b.getAttribute('data-v')===view));
 }
-function reveal(p){
+function selectCard(p){                       // 只选卡不记来路（返回时用）
   const el=document.querySelector('.pcard[data-sel="'+p+'"]');
   if(!el) return false;
   document.querySelectorAll('.pcard').forEach(c=>
@@ -519,11 +532,18 @@ function reveal(p){
   const rows=[...document.querySelectorAll('.layerrow')];
   rows.forEach(r=>r.style.scrollSnapType='none');   // snap 会把平滑滑动过程拽回卡头
   el.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
-  clearTimeout(reveal.t);
-  reveal.t=setTimeout(()=>rows.forEach(r=>r.style.scrollSnapType=''), 600);
+  clearTimeout(selectCard.t);
+  selectCard.t=setTimeout(()=>rows.forEach(r=>r.style.scrollSnapType=''), 600);
   el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
-  cur=p; document.getElementById('crumb').textContent=p;
-  if (dockOn) openDock(p, true);      // 停靠栏跟着跳到新页，但不抢滑动的定位
+  cur=p; document.getElementById('crumb').textContent=crumbText();
+  return true;
+}
+function reveal(p){
+  if(!document.querySelector('.pcard[data-sel="'+p+'"]')) return false;
+  const prev = cur;
+  if(!selectCard(p)) return false;
+  if(prev !== p){ pushTrail(prev); }
+  if(dockOn) openDock(p, true, true);     // 放大图跟着换页，但不重复记来路
   return true;
 }
 function go(p, dir){
@@ -536,14 +556,15 @@ function go(p, dir){
 }
 /* 右侧停靠放大栏：点卡片开/关，钉住不跟随鼠标；窄窗口自动改成右侧浮层 */
 let dockOn = false;
-function openDock(p, keepPos){
+function openDock(p, keepPos, fromBack){
   const d = D.pages[p]; if(!d) return;
+  if(!fromBack && p !== cur){ pushTrail(cur); }
   dockOn = true; cur = p;
   document.getElementById('dock').innerHTML =
     '<h3>'+p+'页 <span class="badge">L'+d.layer+'</span>'+
     '<button class="btn" id="dockx" style="margin-left:auto">✕ 收起</button></h3>'+
-    '<p class="dh">'+d.rows.length+' 控件 · 原 800×480 · 再点卡片或按 Esc 收起</p>'+
-    mark(p,{marks:true,lane:false}).replace('<svg ', '<svg class="dsvg" ');
+    '<p class="dh">'+d.rows.length+' 控件 · 原 800×480 · 再点卡片、点空白处或按 Esc 收起</p>'+
+    mark(p,{marks:true,lane:false,hotBack:true}).replace('<svg ', '<svg class="dsvg" ');
   document.getElementById('wrap').classList.add('docked');
   document.body.classList.add('docked');
   document.getElementById('dockx').onclick = closeDock;
@@ -565,13 +586,25 @@ document.addEventListener('click', e=>{
     ioOn.has(k)?ioOn.delete(k):ioOn.add(k); render(); return;}
   const t=e.target.closest('[data-v]');
   if(t){closeDock(); view=t.getAttribute('data-v'); trail=[]; render(); return;}
+  if(e.target.closest('[data-back]')){
+    if(view==='jump'){ navBack(); }
+    else {
+      const h = trail.pop();                  // 与演练共用同一套来路
+      const to = (h && D.pages[h]) ? h : D.order[0];
+      if(dockOn) closeDock();                 // 返回不是"放大"，先把放大图收掉
+      selectCard(to);
+      if(!h){ document.getElementById('crumb').textContent = to + '（没有来路，已回主控）'; }
+      return;
+    }
+  }
   if(e.target.closest('#trailback')){ navBack(); return; }
   if(e.target.closest('#trailhome')){ navJump(D.order[0], -1); return; }
   const g=e.target.closest('[data-go]');
   if(g){ go(g.getAttribute('data-go'), g.hasAttribute('data-dir')?+g.getAttribute('data-dir'):1); return; }
   const dk=e.target.closest('[data-dock]');
   if(dk){ const p=dk.getAttribute('data-dock');
-    (dockOn && cur===p) ? closeDock() : openDock(p); }
+    (dockOn && cur===p) ? closeDock() : openDock(p); return; }
+  if(dockOn && !e.target.closest('#dock')) closeDock();   // 点空白处即收起，不用刻意找关闭键
 });
 window.addEventListener('keydown', e=>{ if(e.key==='Escape') back(); });
 function back(){
@@ -651,6 +684,26 @@ def main():
              json.dumps(n_io, ensure_ascii=False)))
     assert all(k in n_io for k in ("in_read", "out_read", "in_write",
                                    "out_write", "nav")), "6 类里有一类没控件"
+    assert_js(html)
+
+
+def assert_js(html):
+    """产出的页面脚本必须语法可解析：生成器写出坏页面 = 打开全白，比报错更坑。"""
+    js = html.rsplit("<script>", 1)[1].rsplit("</script>", 1)[0]
+    import subprocess
+    import tempfile
+    try:
+        with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False,
+                                         encoding="utf-8") as f:
+            f.write(js)
+            path = f.name
+        r = subprocess.run(["node", "--check", path], capture_output=True, text=True)
+        import os as _os
+        _os.unlink(path)
+        assert r.returncode == 0, "页面 JS 语法错误: " + (r.stderr or "")[:500]
+        print("[GATE] 页面 JS 语法 OK（node --check）")
+    except FileNotFoundError:
+        print("[GATE] 跳过 JS 语法检查（本机没有 node）")
 
 
 if __name__ == "__main__":
