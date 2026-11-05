@@ -35,7 +35,23 @@ def r(x, y, w, h, fill, stroke="none", rx=8):
             f'fill="{fill}" stroke="{stroke}"/>')
 
 
+UI_CN, UI_NUM, UI_BIG = 12, 24, 32
+
+
+def ui_size(text, size=10):
+    """镜像字库策略：只有 12px 带汉字；24/32 只给纯 ASCII 数字/符号。"""
+    s = str(text)
+    if any(ord(c) > 127 for c in s):
+        return UI_CN
+    if size >= 34:
+        return UI_BIG
+    if size >= 20:
+        return UI_NUM
+    return UI_CN
+
+
 def t(x, y, s, size=10, color=T2, weight="400", anchor="start"):
+    size = ui_size(s, size)
     return (f'<text x="{x}" y="{y}" font-size="{size}" fill="{color}" '
             f'font-weight="{weight}" text-anchor="{anchor}">{esc(s)}</text>')
 
@@ -50,6 +66,7 @@ def card(x, y, w, h, rx=12):
 
 
 def btn(x, y, w, h, label, fill=ACCENT, fg=BG, size=11, sub=""):
+    size = ui_size(label, size)
     out = [r(x, y, w, h, fill, "none", h / 2),
            t(x + w / 2, y + h / 2 + size * 0.35, label, size, fg, "600", "middle")]
     if sub:
@@ -173,8 +190,9 @@ def tile(x, y, name, sub, value="", control="toggle", on=True, readonly=False,
     out.append(t(x + 50, y + 40, sub, 8, T3))
     if value:
         out.append(t(x + 14, y + 76, value, 20, T1, "700"))
-    dx, dy, dw, dh = TILE_DETAIL_BTN
-    out.append(btn(x + dx, y + dy, dw, dh, "详情", CARD2, ACCENT, 8))
+    if not scene:                       # 场景格没有「详情」，只有「执行」
+        dx, dy, dw, dh = TILE_DETAIL_BTN
+        out.append(btn(x + dx, y + dy, dw, dh, "详情", CARD2, ACCENT, 8))
     if readonly:
         out.append(tag(x + 104, y + 16))
         out.append(t(x + 14, y + 124, "状态只读", 8, T3))

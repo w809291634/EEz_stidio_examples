@@ -21,7 +21,7 @@ TEXTS = {
     "wifi.scan": "扫描",
     "wifi.disconnect": "断开",
     "wifi.connect": "连接",
-    "wifi.close": "x",
+    "wifi.close": "×",
     "wifi.pwd_placeholder": "输入密码",
     "wifi.forget_title": "忘记此网络？",
     "wifi.forget_hint": "将删除已保存的密码，下次连接需重新输入。",

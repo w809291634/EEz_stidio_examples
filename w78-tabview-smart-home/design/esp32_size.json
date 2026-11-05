@@ -1,0 +1,53 @@
+{
+ "measured_at": "2026-11-05 12:04:11",
+ "target": "esp32p4",
+ "idf_version": "5.5.5",
+ "board_template": "lvgl_demo_template_no_flow",
+ "ui_hash": "438b4354505170aa4ce6d4e7e72f13c0670ebb2156995d1a0b887f372b076383",
+ "ui_flash": 414649,
+ "ui_ram": 3798,
+ "fonts_flash": 234351,
+ "files": [
+  {
+   "name": "ui_font_cn12.c",
+   "flash": 225856,
+   "ram": 0
+  },
+  {
+   "name": "screens.c",
+   "flash": 180250,
+   "ram": 3796
+  },
+  {
+   "name": "ui_font_cn24.c",
+   "flash": 8495,
+   "ram": 0
+  },
+  {
+   "name": "ui.c",
+   "flash": 48,
+   "ram": 2
+  },
+  {
+   "name": "images.c",
+   "flash": 0,
+   "ram": 0,
+   "note": "未被引用，链接期丢弃"
+  },
+  {
+   "name": "styles.c",
+   "flash": 0,
+   "ram": 0,
+   "note": "未被引用，链接期丢弃"
+  },
+  {
+   "name": "ui_font_cn32.c",
+   "flash": 0,
+   "ram": 0,
+   "note": "未被引用，链接期丢弃"
+  }
+ ],
+ "app_bin": 1140768,
+ "app_partition": 8388608,
+ "internal_ram": 191573
+}

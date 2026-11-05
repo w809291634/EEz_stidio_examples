@@ -53,7 +53,7 @@ static lv_obj_t *ensure_root(void)
     lv_obj_align(sp, LV_ALIGN_CENTER, 0, -14);
 
     s_lbl = lv_label_create(s_root);
-    lv_obj_set_style_text_font(s_lbl, &ui_font_cn12f, LV_PART_MAIN);
+    lv_obj_set_style_text_font(s_lbl, &ui_font_cn12, LV_PART_MAIN);
     lv_obj_set_style_text_color(s_lbl, lv_color_hex(C_TEXT1), LV_PART_MAIN);
     lv_label_set_text(s_lbl, "连接中…");
     lv_obj_set_width(s_lbl, LV_HOR_RES - 32);

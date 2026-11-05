@@ -98,11 +98,11 @@ def sensor_frame():
 
 def camera_frame():
     out = sc.sub_header("摄像头", "客厅 · 1080P · 已加密", "‹ 返回")
-    out += [sc.card(40, 104, 460, 300),
+    out += [sc.card(40, 104, 460, 252),
             sc.t(60, 136, "实时画面（本次为占位帧）", 11, sc.T3),
-            sc.r(60, 152, 420, 200, "#0F1620", sc.EDGE, 8),
-            sc.t(270, 256, "· 无视频源 ·", 12, sc.T3, "600", "middle"),
-            sc.t(60, 380, "码率 1.8 Mbps · 延迟 120 ms", 9, sc.T3),
+            sc.r(60, 152, 420, 168, "#0F1620", sc.EDGE, 8),
+            sc.t(270, 240, "· 无视频源 ·", 12, sc.T3, "600", "middle"),
+            sc.t(60, 336, "码率 1.8 Mbps · 延迟 120 ms", 9, sc.T3),
             sc.card(520, 104, 240, 180),
             sc.t(540, 132, "云台", 11, sc.T3),
             sc.btn(600, 146, 72, 40, "▲", sc.CARD2, sc.T1, 12),
@@ -252,8 +252,7 @@ def about_frame():
         y = 230 + i * 56
         out += [sc.card(40, y, 720, 48),
                 sc.t(60, y + 29, name, 12, sc.T1, "600"),
-                sc.t(240, y + 29, sub, 8.5, sc.T3),
-                sc.t(736, y + 29, "›", 16, sc.ACCENT, "400", "end")]
+                sc.t(240, y + 29, sub, 8.5, sc.T3)]
     out += [sc.btn(40, 404, 160, 40, "检查更新", sc.CARD2, sc.T1, 10),
             sc.btn(216, 404, 160, 40, "恢复出厂", sc.CARD2, sc.RED, 10)]
     return "".join(out)

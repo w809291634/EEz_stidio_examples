@@ -87,7 +87,7 @@ static lv_obj_t *row_label(lv_obj_t *row, int x, int y, int w, int h,
     lv_obj_remove_flag(o, (lv_obj_flag_t)(LV_OBJ_FLAG_CLICKABLE |
                                       LV_OBJ_FLAG_SCROLLABLE));
     lv_obj_set_style_text_color(o, lv_color_hex(color), LV_PART_MAIN);
-    lv_obj_set_style_text_font(o, &ui_font_cn12f, LV_PART_MAIN);
+    lv_obj_set_style_text_font(o, &ui_font_cn12, LV_PART_MAIN);
     lv_obj_set_style_border_width(o, 0, LV_PART_MAIN);
     lv_obj_set_style_pad_all(o, 0, LV_PART_MAIN);
     if (text) lv_label_set_text(o, text);
@@ -190,7 +190,7 @@ static void build_row(lv_obj_t *btn, const wifi_ap_t *ap, int index)
         lv_label_set_long_mode(ssid, LV_LABEL_LONG_MODE_CLIP);
         lv_obj_set_scrollbar_mode(ssid, LV_SCROLLBAR_MODE_OFF);
         lv_obj_set_style_text_color(ssid, lv_color_hex(C_TEXT1), LV_PART_MAIN);
-        lv_obj_set_style_text_font(ssid, &ui_font_cn12f, LV_PART_MAIN);
+        lv_obj_set_style_text_font(ssid, &ui_font_cn12, LV_PART_MAIN);
         lv_obj_set_style_border_width(ssid, 0, LV_PART_MAIN);
         lv_obj_set_style_pad_all(ssid, 0, LV_PART_MAIN);
     }

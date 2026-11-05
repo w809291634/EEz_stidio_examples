@@ -7,24 +7,9 @@
 extern "C" {
 #endif
 
-extern const lv_font_t ui_font_cn8;
-extern const lv_font_t ui_font_cn9;
-extern const lv_font_t ui_font_cn10;
-extern const lv_font_t ui_font_cn11;
 extern const lv_font_t ui_font_cn12;
-extern const lv_font_t ui_font_cn13;
-extern const lv_font_t ui_font_cn14;
-extern const lv_font_t ui_font_cn16;
-extern const lv_font_t ui_font_cn18;
-extern const lv_font_t ui_font_cn20;
-extern const lv_font_t ui_font_cn22;
 extern const lv_font_t ui_font_cn24;
-extern const lv_font_t ui_font_cn26;
-extern const lv_font_t ui_font_cn30;
-extern const lv_font_t ui_font_cn38;
-extern const lv_font_t ui_font_cn40;
-extern const lv_font_t ui_font_cn24f;
-extern const lv_font_t ui_font_cn12f;
+extern const lv_font_t ui_font_cn32;
 
 #ifndef EXT_FONT_DESC_T
 #define EXT_FONT_DESC_T

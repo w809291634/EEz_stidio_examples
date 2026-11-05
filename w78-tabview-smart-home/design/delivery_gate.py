@@ -134,6 +134,24 @@ def d8_trace():
     return True, "留痕在 %s 末尾（人工确认本轮已写）" % "PROMPT_LOG.md"
 
 
+def d9_mem():
+    ok, out = run(["design/mem_report.py"])
+    m = re.search(r"\[MEM-BIN\] fonts=(\d+)KB ui=(\d+)KB ram=(\d+)KB(?: target=(\w+))?(?: opt=(\S+))?", out)
+    if not m:
+        return False, "资源账未产出 [MEM-BIN] 行"
+    fk, uk, rk = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    tgt = m.group(4) or "pc"
+    opt = m.group(5) or "?"
+    budget = {"fonts_mb": 0.5, "ui_mb": 1.0}
+    bf = os.path.join(HERE, "mem_budget.json")
+    if os.path.isfile(bf):
+        budget.update(json.load(io.open(bf, encoding="utf-8")))
+    good = fk <= budget["fonts_mb"] * 1024 and uk <= budget["ui_mb"] * 1024
+    label = "ESP32 工具链估算（只编译，%s）" % opt if tgt.startswith("esp32") else "PC 上限（-O1）"
+    return good and ok, "%s Flash %dKB（字体 %d）+ RAM %dKB（预算 %.0f/%.0fKB）" % (
+        label, uk, fk, rk, budget["fonts_mb"] * 1024, budget["ui_mb"] * 1024)
+
+
 def main():
     if "--b1-ok" in sys.argv:
         i = sys.argv.index("--b1-ok")
@@ -146,7 +164,8 @@ def main():
     rows = [("D1 结构对账", d1_struct()), ("D2 文本覆盖", d2_text()),
             ("D3 字体 F1–F7", d3_font()), ("D4 编译", r4),
             ("D5 画布比对", d5_canvas()), ("D6 跳转闭环", d6_nav()),
-            ("D7 过程件清理", d7_clean()), ("D8 留痕", d8_trace())]
+            ("D7 过程件清理", d7_clean()), ("D8 留痕", d8_trace()),
+            ("D9 内存账", d9_mem())]
     print("== 交付门禁 ==")
     bad = 0
     for name, (ok, msg) in rows:

@@ -41,16 +41,24 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
 5. **收尾即清**：过程件只放工程 `tmp/` 且收尾删除，交付件只放正位。
 6. **载体与交付**：设计阶段以 H5 三视图为主；核对给 HTML 绝对路径、不内嵌、不出查看器页；改 H5 交互/实时效果要同步高清设计图。
 7. **覆盖表只补真值**：例外/映射表不得推翻设计源行为字段，配 assert 门禁。
-8. **控件克隆默认结构**：`tools/eez_defaults.py` 采样；按钮无 `text`（文字在子标签）；
-   克隆后复位表达式型属性（`hiddenFlag` 等），否则会带入别的工程的 `get_var_*` 调用。
-   生成器还有九条硬口径：页名 ASCII / identifier 加页前缀并按类别码命名（w/hw/r/hr/go/sw/st）/ 字号动态收集 /
-   替换字符进子集 / 卡片只做底板 / 行式按钮 LEFT_MID+设计文案 / 颜色只收 `#RRGGBB` /
-   装饰容器去 CLICKABLE（NO_FLOW §2.2）。
+8. **控件只克隆 EEZ 拖拽样板**：先在 EEZ 画布拖控件生成 JSON，再用 `tools/eez_defaults.py` 采样；
+   生成器只改几何/identifier/文本/样式值，**禁止手写或新增字段**（A10 门禁逐控件核对）。
+   按钮无 `text`（文字在子标签）；克隆后复位表达式型属性（`hiddenFlag` 等），否则会带入别工程的 `get_var_*`。
+   生成器还有十条硬口径：页名 ASCII / identifier 按类别码命名 / 字号 ≤3 档令牌 / 替换字符进子集 /
+   卡片只做底板 / 行式按钮 LEFT_MID+设计文案 / 颜色只收 `#RRGGBB` / 装饰容器去 CLICKABLE（只改 flags）/
+   控件 JSON 只克隆拖拽样板（A10 字段集校验）——细则见 NO_FLOW §2.2。
 9. **中文只在索引里出现**：`log_entry --json`、`design/texts.py` key、`lint_text.py` 门禁。
-10. **字体 F1–F6**：三件套 / `lvglGlyphs.encodings` / 核 cmap / 多字号共用 TTF / headless 不烘 / 验收三连。
-11. **交付必过 D1–D8**：`design/delivery_gate.py`，FAIL 不许交付；D5 每次生成后用
+10. **字体 F1–F7**：三件套 / `lvglGlyphs.encodings` / 核 cmap / 多字号共用 TTF / headless 不烘 / 验收三连。
+11. **交付必过 D1–D9**：`design/delivery_gate.py`，FAIL 不许交付；D5 每次生成后用
     `design/d5_pages.py` 打出**相似度百分比**（100−逐像素差异率）并留并排图。
 
+12. **Wi-Fi 连接页先移植**：扫描/连接/密码/忘记网络一律按 kit `reference/15` 移植成熟结构（单页 + lv_list 动态行 + 密码半页 + 忘记框 + busy），不拆三屏、不自造交互。
+
+13. **UI 内存按档位控制（字体/动图）**：**设计阶段（①）先问用户 UI 预算档位**（200K/500K/1M/2M/4M 或实际值）并落 `design/mem_budget.json`，未确认不进预生成；按档决定字号档数/bpp/动图规模，可读性优先、不压呈现质量；交付跑 D9 对档核账；**每次编译/测试打印资源树，默认用 IDF 工具链只编译估算**（`design/esp32_estimate.py`，目标架构、逐文件字节，Flash 偏高约17%；**默认优化 `-O2`（IDF 当前），并给 -O0/-O1/-O2/-O3/-Os 对比**），**PC 编译上限并列**；**只有用户点名“用 IDF 工程编译”时才跑 `design/esp32_size.py` 做最终链接**；无 IDF 时只报 PC 并标明上限（NO_FLOW §2.5）。
+
+14. **字号 ≤3 档且共用**：设计源一套令牌全工程共用；**镜像字库只有 1 档带汉字（尽量小，如 12px）**，其余档只放 ASCII/数字；**SD 卡字库不受限**（保留镜像 1 档兜底）；设计阶段先确认字库存放位置（NO_FLOW §2.5/F4）。
+
 > 细节只在对应文档里写一次：流程 = `EEZ_FIRST_WORKFLOW_NO_FLOW.md`；方法论 = `PLAYBOOK.md`；
-> 字段级 = `reference/07`（工程 JSON / 字体）、`reference/14`（H5 评审页）。
+> 字段级 = `reference/07`（工程 JSON / 字体）、`reference/14`（H5 评审页）、`reference/15`（Wi-Fi 连接页结构）。
 > **新增规则只加两处**：这里一行（入口）+ 对应文档一节（细节）。别在第三处复述。
+

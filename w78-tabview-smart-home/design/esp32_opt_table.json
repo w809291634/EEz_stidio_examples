@@ -1,0 +1,36 @@
+{
+ "ui_hash": "438b4354505170aa4ce6d4e7e72f13c0670ebb2156995d1a0b887f372b076383",
+ "rows": [
+  {
+   "opt": "-O0",
+   "ui_flash": 540681,
+   "ui_ram": 3894,
+   "fonts_flash": 241845
+  },
+  {
+   "opt": "-O1",
+   "ui_flash": 485879,
+   "ui_ram": 3894,
+   "fonts_flash": 241845
+  },
+  {
+   "opt": "-O2",
+   "ui_flash": 487379,
+   "ui_ram": 3894,
+   "fonts_flash": 241845
+  },
+  {
+   "opt": "-O3",
+   "ui_flash": 487379,
+   "ui_ram": 3894,
+   "fonts_flash": 241845
+  },
+  {
+   "opt": "-Os",
+   "ui_flash": 486645,
+   "ui_ram": 3894,
+   "fonts_flash": 241845
+  }
+ ],
+ "measured_at": "2026-11-05 13:04:01"
+}

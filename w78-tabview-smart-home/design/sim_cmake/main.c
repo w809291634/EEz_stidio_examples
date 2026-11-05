@@ -195,6 +195,19 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    if (getenv("W78_SHOT_ALL")) {          /* 逐屏截图，供目检 */
+        int i;
+        wifi_bind_init();
+        user_io_init();
+        { app_value_t sv; sv.i = 1; app_set_output(APP_OUT_WIFI_SCAN, sv); }
+        for (i = 0; i < 80; i++) { user_io_tick(); lv_tick_inc(50); lv_timer_handler(); SDL_Delay(50); if (app_get_input_i(APP_IN_SCAN_STATE) == 2) break; }
+        for (i = 0; i < 8; i++) { user_io_tick(); lv_tick_inc(30); lv_timer_handler(); SDL_Delay(30); }
+#define SHOT_ONE(sid, field) do {             lv_screen_load(nav_screen_obj(sid));             for (i = 0; i < 8; i++) { lv_tick_inc(30); lv_timer_handler(); SDL_Delay(20); }             take_shot("tmp/sim_" #field ".bmp");         } while (0);
+        NAV_PAGE_LIST(SHOT_ONE)
+        SDL_Quit();
+        return 0;
+    }
+
     if (getenv("W78_WIFI_UI_TEST")) {
         int i, conn = -1, saw = 0, n;
         const wifi_ap_t *pick = NULL;
@@ -211,6 +224,17 @@ int main(int argc, char **argv)
         n = wifi_ap_count();
         printf("[WIFI_UI] ap_count=%d\n", n);
         take_shot("tmp/wifi_ui.bmp");
+        for (i = 0; i < n; i++) {
+            const wifi_ap_t *a = wifi_ap_at(i);
+            if (a->saved && !a->connected) {
+                wifi_events_select(a->ssid);
+                wifi_nav_open_dialog(a->ssid);
+                pump(12);
+                take_shot("tmp/wifi_dialog.bmp");
+                wifi_nav_close_dialog();
+                break;
+            }
+        }
         for (i = 0; i < n; i++) {
             const wifi_ap_t *a = wifi_ap_at(i);
             if (a->lock && !a->saved && !a->connected) { pick = a; break; }

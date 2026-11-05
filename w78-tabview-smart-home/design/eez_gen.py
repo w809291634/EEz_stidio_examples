@@ -28,7 +28,7 @@ import simple_control as sc         # noqa: E402
 OUT = os.path.join(ROOT, "w78-smart-home.eez-project")
 FONT_DIR = os.path.join(ROOT, "fonts")
 FONT_FILE = "fonts/cn14.ttf"
-FONT_NAME = "cn14"
+FONT_NAME = "cn12"
 # EEZ 用页名生成 C 标识符；中文会被消成 "_" 而互相撞车（实测 23 页全变 SCREEN_ID___）
 PAGE_IDS = {
     "主控": "main", "客厅": "living", "主卧": "master", "厨房": "kitchen", "浴室": "bath",
@@ -43,15 +43,15 @@ PAGE_IDS = {
 
 
 def font_sizes():
-    """字号集合从设计帧动态收集（写死会漏页）。"""
-    return sorted({int(t["size"]) for _n, f, _e, _x, _r in pg.PAGES
-                   for t in design_texts(f)})
+    """镜像字库策略：全工程只用 3 档；只有 12px 带汉字，24/32 只放 ASCII。"""
+    return [sc.UI_CN, sc.UI_NUM, sc.UI_BIG]
 
 def font_name(size):
     return "cn%d" % int(size)
 
-# 运行时字库：SSID 是任意中文，设计期子集覆盖不到；这两档单独吃 GB2312 一级字
-RT_FONTS = [(24, "cn24f"), (12, "cn12f")]
+# 运行时字符集只挂在正文号（12/18）上：同字号共用一条字体条目，不再另建 *f 档
+RT_SIZES = {12}
+ASCII_SIZES = {24, 32}
 
 
 def gb2312_level1():
@@ -67,7 +67,7 @@ def gb2312_level1():
 
 def runtime_chars():
     # U+00B7 中点不在 GB2312 A1 区（那里是 U+30FB），单独补
-    return {chr(c) for c in range(32, 127)} | gb2312_level1() | {"·"}
+    return {chr(c) for c in range(32, 127)} | gb2312_level1() | {"·", "×"}
 FONT_SIZE = 14
 SRC_TTF = os.path.join(os.path.dirname(ROOT), "app-wifi-scan-flow-no-flow", "fonts", "simhei.ttf")
 SETTINGS_SRC = os.path.join(os.path.dirname(ROOT), "app-wifi-scan-flow-no-flow",
@@ -284,6 +284,7 @@ def make_button(ident, text, box, bg=None, radius=None):
     lb.update({"identifier": ident + "_lb",
                "left": 0, "top": 0, "width": w, "height": h,
                "text": _fix_text(text), "textType": "literal", "useStaticText": True})
+    lb["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = "cn12"
     b["children"] = [lb]
     return b
 
@@ -302,8 +303,6 @@ def no_click(n):
     keep = {"GESTURE_BUBBLE", "SCROLL_CHAIN_HOR", "SCROLL_CHAIN_VER"}
     n["widgetFlags"] = "|".join(x for x in str(n.get("widgetFlags", "")).split("|")
                                 if x in keep)
-    n["clickableFlagType"] = "literal"
-    n["clickableFlag"] = False
 
 
 def make_container(ident, box, bg=None, radius=None, text="", color=None):
@@ -352,7 +351,6 @@ def make_list(ident, box):
     d = c["localStyles"]["definition"]["MAIN"]["DEFAULT"]
     d["bg_opa"] = 0
     d["radius"] = 0
-    d["pad_all"] = 0 if "pad_all" in d else d.get("pad_all", 0)
     return c
 
 
@@ -369,7 +367,7 @@ def make_textarea(ident, box, placeholder):
     d["border_width"] = 1
     d["border_color"] = "0x27313F"
     d["text_color"] = "0xF4F7FB"
-    d["text_font"] = "cn12f"
+    d["text_font"] = "cn12"
     return c
 
 
@@ -397,12 +395,12 @@ def _hide(n):
     return n
 
 
-def _lbl_font(lb, font="cn12f"):
+def _lbl_font(lb, font="cn12"):
     lb["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = font
     return lb
 
 
-def _btn_font(b, font="cn12f"):
+def _btn_font(b, font="cn12"):
     lb = b.get("children", [None])[0]
     if lb:
         lb["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = font
@@ -434,8 +432,8 @@ def build_wifi_page(name, frame, first=False):
     scrim["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 115
     sheet_kids = [
         make_container("sheet_handle", (384, 6, 32, 3), "0x27313F", 2),
-        _lbl_font(make_label("lbl_pwd_ssid", "", (24, 10, 640, 28), "0xF4F7FB", 24), "cn24f"),
-        make_button("btn_pwd_close", TEXTS["wifi.close"], (752, 10, 32, 32), "0x1C2430", 16),
+        make_label("lbl_pwd_ssid", "", (24, 10, 640, 28), "0xF4F7FB", 12),
+        _btn_font(make_button("btn_pwd_close", TEXTS["wifi.close"], (752, 10, 32, 32), "0x1C2430", 16)),
         make_textarea("pwd_ta", (24, 66, 520, 40), TEXTS["wifi.pwd_placeholder"]),
         make_button("btn_connect", TEXTS["wifi.connect"], (560, 66, 216, 40), "0xF2B45C", 20),
         make_keyboard("kb_main", (24, 116, 752, 136), "pwd_ta"),
@@ -449,12 +447,12 @@ def build_wifi_page(name, frame, first=False):
     dscrim = make_container("dlg_scrim", (0, 0, 800, 480), "0x000000", 0)
     dscrim["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 140
     card_kids = [
-        make_label("lbl_dlg_title", TEXTS["wifi.forget_title"], (20, 24, 320, 24), "0xF4F7FB", 15),
-        make_label("lbl_dlg_ssid", "", (20, 58, 320, 18), "0xB9C4D4", 11),
-        make_label("lbl_dlg_hint", TEXTS["wifi.forget_hint"], (20, 82, 320, 16), "0x75859C", 9),
-        make_button("btn_dlg_forget", TEXTS["wifi.forget"], (20, 148, 96, 36), "0x3A1A18", 10),
-        make_button("btn_dlg_disconnect", TEXTS["wifi.disconnect"], (132, 148, 96, 36), "0x1C2430", 10),
-        make_button("btn_dlg_cancel", TEXTS["wifi.cancel"], (244, 148, 96, 36), "0x1C2430", 10),
+        _lbl_font(make_label("lbl_dlg_title", TEXTS["wifi.forget_title"], (20, 20, 320, 24), "0xF4F7FB", 12)),
+        _lbl_font(make_label("lbl_dlg_ssid", "", (20, 52, 320, 20), "0xB9C4D4", 12)),
+        _lbl_font(make_label("lbl_dlg_hint", TEXTS["wifi.forget_hint"], (20, 78, 320, 40), "0x75859C", 12)),
+        _btn_font(make_button("btn_dlg_forget", TEXTS["wifi.forget"], (20, 148, 96, 36), "0x3A1A18", 10)),
+        _btn_font(make_button("btn_dlg_disconnect", TEXTS["wifi.disconnect"], (132, 148, 96, 36), "0x1C2430", 10)),
+        _btn_font(make_button("btn_dlg_cancel", TEXTS["wifi.cancel"], (244, 148, 96, 36), "0x1C2430", 10)),
     ]
     card = make_container("dlg_card", (220, 140, 360, 200), "0x101720", 14)
     card["children"] = card_kids
@@ -530,7 +528,7 @@ def build_page(name, frame, rows, first=False):
         lit = _fix_text(t["text"])
         if any(lit == b or lit.startswith(b + " ") for b in btn_texts):
             continue
-        size = t["size"]
+        size = sc.ui_size(lit, t["size"])
         est_w = int(sum(size if ord(c) > 127 else size * 0.56 for c in lit)) + 4
         left = t["x"]
         if t["anchor"] == "middle":
@@ -542,16 +540,14 @@ def build_page(name, frame, rows, first=False):
                           (int(left), int(t["y"] - size * 0.92), est_w, int(size * 1.5)),
                           t["fill"], size)
         # 运行时字库：Wi-Fi 行/状态文案要显示任意中文 SSID，必须挂 GB2312 档，
-        # 同时让 EEZ 看到引用，才会导出 ui_font_cn12f/cn24f 的 .c
+        # 12/18 号本身已挂运行时字符集（同字号共用一条目）
         rt12 = {"wifi_st06", "wifi_st07", "wifi_st08", "wifi_st09", "wifi_st10", "wifi_st11",
                 "wifi_st12", "wifi_st13", "wifi_st15", "wifi_st16", "wifi_st17", "wifi_st19",
                 "wifi_st20", "wifi_st21", "wifi_st23", "wifi_st24", "wifi_st25", "wifi_st02",
                 "wifi_connecting_st03"}
         rt24 = {"wifi_pwd_st01", "wifi_connecting_st01"}
-        if lid in rt12:
-            node["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = "cn12f"
-        elif lid in rt24:
-            node["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = "cn24f"
+        if lid in rt12 or lid in rt24:
+            node["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = "cn12"
         children.append(node)
 
     allr = design_rects(frame)
@@ -567,7 +563,7 @@ def build_page(name, frame, rows, first=False):
     for idx, r in enumerate([r for r in allr if r["box"] not in btn_boxes]):
         node = make_container("%s_deco%02d" % (slug, idx), r["box"], r["fill"], r["rx"])
         no_click(node)
-        if overlap(r) and (r["box"][2] * r["box"][3] < 2000
+        if overlap(r) and (r["box"][2] * r["box"][3] < 400
                            or min(r["box"][2], r["box"][3]) <= 10):
             over.append(node)
         else:
@@ -608,7 +604,11 @@ def settings():
 
 def build(chars, rt_chars):
     chars_runs = _runs([ord(c) for c in chars])
-    rt_runs = _runs([ord(c) for c in rt_chars])
+    # 12px 是唯一带汉字的档：设计用字也并进来（— 铛 ▼ 这类不在 GB2312 一级区）
+    rt_all = set(rt_chars) | set(chars)
+    rt_runs = _runs([ord(c) for c in rt_all])
+    ascii_chars = {c for c in chars if ord(c) < 128} | {"·", "×", "°"}
+    ascii_runs = _runs([ord(c) for c in ascii_chars])
     proj = {
         "themesVersion": 1,
         "objID": oid(),
@@ -624,25 +624,14 @@ def build(chars, rt_chars):
             "description": "Haven Home 子集 %d 字形 %dpx（按设计源全量文本裁）" % (len(chars), sz),
             "renderingEngine": "LVGL",
             "source": {"objID": oid(), "filePath": FONT_FILE, "size": sz},
-            "bpp": 4, "threshold": 128, "glyphs": [], "screenOrientation": "all",
+            # 大字（≥30）用 2bpp：4 级灰度足够，C 数组直接省一半
+            "bpp": 2 if (sz >= 30 or sz in RT_SIZES) else 4, "threshold": 128, "glyphs": [], "screenOrientation": "all",
             "alwaysBuild": False,
-            "lvglRanges": _range_str(chars_runs),
+            "lvglRanges": _range_str(rt_runs if sz in RT_SIZES else ascii_runs),
             "lvglSymbols": "",
-            "lvglGlyphs": {"objID": oid(), "encodings": chars_runs},
+            "lvglGlyphs": {"objID": oid(), "encodings": rt_runs if sz in RT_SIZES else ascii_runs},
             "lvglAdditionalSources": [],
-        } for sz in font_sizes()] + [{
-            "objID": oid(), "name": nm,
-            "description": "Haven Home 运行时字库 %d 字形 %dpx（GB2312 一级，给 SSID/状态用）"
-                           % (len(rt_chars), sz),
-            "renderingEngine": "LVGL",
-            "source": {"objID": oid(), "filePath": FONT_FILE, "size": sz},
-            "bpp": 4, "threshold": 128, "glyphs": [], "screenOrientation": "all",
-            "alwaysBuild": False,
-            "lvglRanges": _range_str(rt_runs),
-            "lvglSymbols": "",
-            "lvglGlyphs": {"objID": oid(), "encodings": rt_runs},
-            "lvglAdditionalSources": [],
-        } for sz, nm in RT_FONTS],
+        } for sz in font_sizes()],
         "bitmaps": [],
         "colors": [],
         "themes": [{"objID": oid(), "name": "Default", "colors": []}],

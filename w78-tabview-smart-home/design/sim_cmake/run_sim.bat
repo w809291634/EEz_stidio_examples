@@ -59,6 +59,8 @@ if errorlevel 1 (
     exit /b 1
 )
 echo [run_sim] build succeeded.
+set "PYTHONIOENCODING=utf-8"
+python "%SIM_TARGET_PROJ_DIR%\design\mem_report.py"
 set "LOCAL_EXE=%SIM_BIN_DIR%\main.exe"
 if not exist "%LOCAL_EXE%" (
     echo [run_sim] local exe not found: %LOCAL_EXE%
@@ -80,6 +82,7 @@ if /i "%~1"=="test" (
         exit /b 1
     )
     echo [run_sim] AUTOTEST PASS
+    python "%SIM_TARGET_PROJ_DIR%\design\mem_report.py" --brief
     exit /b 0
 )
 if /i "%~1"=="wifitest" (
@@ -107,6 +110,15 @@ if /i "%~1"=="flowtest" (
         pause
         exit /b 1
     )
+    exit /b 0
+)
+if /i "%~1"=="shots" (
+    set "W78_SHOT_ALL=1"
+    set "WIFI_PC_FAKE=1"
+    set "SDL_VIDEODRIVER=dummy"
+    cd /d "%SIM_TARGET_PROJ_DIR%"
+    echo [run_sim] per-screen shots...
+    "%LOCAL_EXE%"
     exit /b 0
 )
 if /i "%~1"=="uitest" (

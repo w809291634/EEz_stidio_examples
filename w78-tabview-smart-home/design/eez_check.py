@@ -30,6 +30,7 @@ import overview_pro as ov           # noqa: E402
 from eez_gen import PAGE_IDS        # noqa: E402
 
 PROJ = os.path.join(ROOT, "w78-smart-home.eez-project")
+DEFAULTS = json.load(io.open(os.path.join(HERE, "eez_defaults.json"), encoding="utf-8"))
 W, H = 800, 480
 
 # 类别码：长码在前，避免 hw01 被当成 w01
@@ -37,6 +38,43 @@ CODE_RE = re.compile(r"_(hw|hr|go|w|r)(\d{2})$")
 STATIC_RE = re.compile(r"_st\d{2}$")
 DECO_RE = re.compile(r"_deco\d{2}$")
 LB_RE = re.compile(r"_(?:hw|hr|go|w|r)\d{2}_lb$")
+
+
+def _font_has_cjk(f):
+    txt = str(f.get("lvglRanges") or "")
+    for part in txt.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "-" in part:
+            a, b = part.split("-", 1)
+            if int(a) <= 0x9FFF and int(b) >= 0x4E00:
+                return True
+        else:
+            if 0x4E00 <= int(part) <= 0x9FFF:
+                return True
+    return False
+
+
+def check_font_policy(fonts, storage):
+    """镜像：≤3 档、仅 1 档带汉字且该档是最小字号；SD：不限档位但镜像留 1 档兜底。"""
+    errs = []
+    sizes = [f["source"]["size"] for f in fonts]
+    cjk = [f for f in fonts if _font_has_cjk(f)]
+    if storage == "image":
+        if len(fonts) > 3:
+            errs.append("A11 镜像字库 %d 档 > 3" % len(fonts))
+        if len(cjk) != 1:
+            errs.append("A11 镜像字库带汉字的档 %d 个（必须恰好 1）" % len(cjk))
+        elif cjk[0]["source"]["size"] != min(sizes):
+            errs.append("A11 汉字档 %dpx 不是最小字号 %dpx"
+                        % (cjk[0]["source"]["size"], min(sizes)))
+    elif storage == "sd":
+        if not cjk:
+            errs.append("A11 SD 模式镜像内也必须有 1 档汉字兜底")
+    else:
+        errs.append("A11 font_storage 未知：%s" % storage)
+    return errs
 
 
 def is_control(identifier):
@@ -206,6 +244,36 @@ def main():
     walk_color(proj)
     if bad_color:
         fails.append("A8 非法颜色值 %d 处（例 %s）" % (len(bad_color), bad_color[:3]))
+
+    # A10 控件 JSON 只能来自 EEZ 拖拽样板：字段集不得超出 eez_defaults 的并集
+    allow_top, allow_style = {}, {}
+    for t in {w["type"] for pgx in proj["userPages"] for w in walk(pgx["components"], "")}:
+        tops, styles = set(), set()
+        for k in (t, "LVGLScreenWidget+" + t, "LVGLContainerWidget+" + t, "LVGLButtonWidget+" + t):
+            if k in DEFAULTS:
+                tops |= set(DEFAULTS[k].keys())
+                styles |= set(DEFAULTS[k].get("localStyles", {}).get("definition", {})
+                              .get("MAIN", {}).get("DEFAULT", {}).keys())
+        allow_top[t], allow_style[t] = tops, styles
+    for pgx in proj["userPages"]:
+        for w in walk(pgx["components"], ""):
+            t = w["type"]
+            extra = set(w.keys()) - allow_top.get(t, set())
+            if extra:
+                fails.append("A10 %s 控件 %s 出现样板外字段：%s"
+                             % (t, w.get("identifier"), sorted(extra)))
+            st = (w.get("localStyles", {}).get("definition", {}).get("MAIN", {})
+                  .get("DEFAULT", {}))
+            extra_s = set(st.keys()) - allow_style.get(t, set())
+            if extra_s:
+                fails.append("A10 %s 控件 %s 样式出现样板外字段：%s"
+                             % (t, w.get("identifier"), sorted(extra_s)))
+
+    fs_path = os.path.join(HERE, "font_storage.json")
+    storage = "image"
+    if os.path.isfile(fs_path):
+        storage = json.load(io.open(fs_path, encoding="utf-8")).get("storage", "image")
+    fails += check_font_policy(proj.get("fonts", []), storage)
 
     print("工程页 %d ｜ 控件 %d ｜ 字体 %d（覆盖 %d 字符）"
           % (len(proj["userPages"]), total, len(fonts), len(covered)))
