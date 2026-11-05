@@ -15,6 +15,7 @@
 
 用法：python design/eez_check.py
 """
+import glob
 import io
 import json
 import re
@@ -312,6 +313,31 @@ def main():
                 if "CHECKABLE" not in str(w.get("widgetFlags", "")).split("|"):
                     fails.append("A13 开关 %s 缺 CHECKABLE 标志"
                                  % w.get("identifier"))
+
+    # A14 每个控件的字段集必须等于标准模板库（只允许改值，不允许增删字段）
+    std = {}
+    tpl_dir = os.path.join(os.path.dirname(ROOT), "eez-widget-templates", "templates")
+    for f in glob.glob(os.path.join(tpl_dir, "*.json")):
+        t = json.load(io.open(f, encoding="utf-8"))
+        std[t["type"]] = set(t.keys())
+    a14_ok = a14_bad = 0
+    for pgx in proj["userPages"]:
+        for w in walk(pgx["components"], ""):
+            typ = w.get("type")
+            if typ not in std:
+                fails.append("A14 %s 没有标准模板" % typ)
+                a14_bad += 1
+                continue
+            extra = set(w.keys()) - std[typ]
+            missing = std[typ] - set(w.keys())
+            if extra or missing:
+                fails.append("A14 %s 控件 %s 字段集不符（多 %s / 少 %s）"
+                             % (typ, w.get("identifier"), sorted(extra),
+                                sorted(missing)))
+                a14_bad += 1
+            else:
+                a14_ok += 1
+    print("[A14] 标准模板字段集 %d/%d" % (a14_ok, a14_ok + a14_bad))
 
     fs_path = os.path.join(HERE, "font_storage.json")
     storage = "image"

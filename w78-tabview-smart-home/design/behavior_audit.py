@@ -21,6 +21,15 @@ WIFI_HANDLED = {"‹ 设置 按钮", "断开", "扫描", "网络列表", "弹层
                 "对话框·断开", "对话框·取消"}
 BOUND_SLIDERS = {("客厅", "窗帘"), ("主卧", "窗帘"), ("窗帘详情", "开合度"),
                  ("灯详情", "亮度"), ("设置", "自动锁屏")}
+STATIC_SCENES = {("主卧", "晚安模式")}   # 设计标明“不响应点击”，只做展示
+BOUND_ACTIONS = {
+    ("主控", "回家按钮"), ("主控", "离家按钮"),
+    ("主控", "晚安按钮"), ("主控", "影院按钮"),
+    ("窗帘详情", "全开"), ("窗帘详情", "半开"), ("窗帘详情", "全关"),
+    ("空调详情", "温度 −"), ("空调详情", "温度 ＋"),
+    ("空调详情", "制冷"), ("空调详情", "制热"), ("空调详情", "送风"),
+    ("空调详情", "风速 低"), ("空调详情", "风速 中"), ("空调详情", "风速 高"),
+}
 
 
 def main():
@@ -37,12 +46,17 @@ def main():
                 bound["wifi"] += 1
             elif cat == "slider" and (name, nm) in BOUND_SLIDERS:
                 bound["slider-label"] += 1
+            elif (name, nm) in BOUND_ACTIONS:
+                bound["action"] += 1
+            elif (name, nm) in STATIC_SCENES:
+                bound["static"] += 1
             elif cat in ("toggle", "slider", "scene"):
                 unhandled[cat].append((name, nm, act))
 
     total = sum(len(v) for v in unhandled.values())
-    print("[BEHAVIOR] 已接：导航 %d ｜ Wi-Fi %d ｜ 滑条数值 %d"
-          % (bound["nav"], bound["wifi"], bound["slider-label"]))
+    print("[BEHAVIOR] 已接：导航 %d ｜ Wi-Fi %d ｜ 滑条数值 %d ｜ 本地动作 %d ｜ 静态展示 %d"
+          % (bound["nav"], bound["wifi"], bound["slider-label"], bound["action"],
+             bound["static"]))
     print("[BEHAVIOR] 未接交互件 %d：开关 %d ｜ 动作按钮/场景 %d ｜ 滑条 %d"
           % (total, len(unhandled["toggle"]), len(unhandled["scene"]),
              len(unhandled["slider"])))

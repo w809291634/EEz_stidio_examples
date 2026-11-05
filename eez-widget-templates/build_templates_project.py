@@ -121,6 +121,8 @@ def _apply_fields(target, dv):
     definition = copy.deepcopy(dv.get("localStyles", {}).get("definition", {}))
     target["localStyles"] = {"objID": "__LOCAL_STYLE_OBJID__", "definition": definition}
     target["states"] = ""
+    target["hiddenFlagType"] = "literal"
+    target["hiddenFlag"] = False
     if "checkedState" in target:
         target["checkedState"] = False
         target["checkedStateType"] = "literal"

@@ -125,6 +125,19 @@ if /i "%~1"=="shots" (
     "%LOCAL_EXE%"
     exit /b 0
 )
+if /i "%~1"=="behaviortest" (
+    set "W78_UI_BEHAVIOR_TEST=1"
+    set "SDL_VIDEODRIVER=dummy"
+    echo [run_sim] headless UI behavior test...
+    start /b /wait "" "%LOCAL_EXE%"
+    if errorlevel 1 (
+        echo [run_sim] UI BEHAVIOR FAILED
+        pause
+        exit /b 1
+    )
+    echo [run_sim] UI BEHAVIOR PASS
+    exit /b 0
+)
 if /i "%~1"=="uitest" (
     set "W78_WIFI_UI_TEST=1"
     set "WIFI_PC_FAKE=1"

@@ -52,6 +52,7 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
    **设计标注的控件必须按类型真实建立**（开关→Switch、滑条→Slider、动作/跳转→Button、
    输入→Textarea、进度→Bar、图表→Chart）；大卡片用容器 + 卡内真控件；A12 硬门禁，禁止透明容器冒充。
    **Switch 样板必须带 `CHECKABLE`**（A13），否则点击不切换状态。
+   **字段集必须等于标准模板库**（A14）：模板统一带 `hiddenFlag=false` 基础字段，只许改值。
    **新建控件唯一来源**：根目录 `eez-widget-templates/templates/`（kit `reference/eez_widget_syntax`），
    不允许临时去其他工程抓样板；模板值必须等于 EEZ classInfo 标准默认值（`defaults.json`），
    不得带源工程配色/字体/尺寸；克隆后只改几何/identifier/文本/样式值。

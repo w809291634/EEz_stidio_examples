@@ -18,6 +18,8 @@
   - 事件/时间线已清空；表达式字段已改为 literal，并给默认值。
   - **所有属性值已复位为 EEZ 新建控件的标准默认值**（几何、标志、文本、选项、值域、localStyles）。
 - `defaults.json`：标准默认值真值表，取自 EEZ Studio `classInfo.defaultValue/defaultFlags`。
+- 所有模板含基础字段 `hiddenFlagType: literal` / `hiddenFlag: false`；隐藏控件只改值，不删字段。
+  `defaults.json` 只列 classInfo 默认值，不含这个基础字段。
 - `manifest.json`：类型 → 源工程、源 identifier、备注（源工程只提供字段集）。
 - `eez-widget-templates.eez-project`：18 页 gallery，每页一个控件，用于 EEZ 构建验证。
 - `build_templates_project.py`：重新提取模板 + 生成工程 + EEZ 无头构建。

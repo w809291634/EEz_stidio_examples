@@ -1,36 +1,36 @@
 {
- "ui_hash": "e15ddd3edb1c2641d24a7a1f56b3959d720a2ea023c4bd3c51209788a63925db",
+ "ui_hash": "8483a0119c677e24823ad67169322d1523dc2cd6ba40d51cc0ede483389fd38d",
  "rows": [
   {
    "opt": "-O0",
-   "ui_flash": 536415,
+   "ui_flash": 537871,
    "ui_ram": 3454,
    "fonts_flash": 241845
   },
   {
    "opt": "-O1",
-   "ui_flash": 481400,
+   "ui_flash": 482762,
    "ui_ram": 3454,
    "fonts_flash": 241845
   },
   {
    "opt": "-O2",
-   "ui_flash": 484180,
+   "ui_flash": 485442,
    "ui_ram": 3454,
    "fonts_flash": 241845
   },
   {
    "opt": "-O3",
-   "ui_flash": 484180,
+   "ui_flash": 485442,
    "ui_ram": 3454,
    "fonts_flash": 241845
   },
   {
    "opt": "-Os",
-   "ui_flash": 483482,
+   "ui_flash": 484786,
    "ui_ram": 3454,
    "fonts_flash": 241845
   }
  ],
- "measured_at": "2026-11-05 18:37:52"
+ "measured_at": "2026-11-05 20:31:22"
 }

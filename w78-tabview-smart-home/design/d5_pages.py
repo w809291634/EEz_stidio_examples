@@ -68,6 +68,8 @@ const find = `(()=>{
   const e=hits.find(x=>tree.contains(x));
   if(!e) return 'MISS_LEAF';
   const row=e.closest('.tree-row') || e;
+  // 树是虚拟列表：先把目标行滚到视口中间，避免行贴上下边缘时命中到容器/表头
+  row.scrollIntoView({block:'center', inline:'nearest'});
   const b=row.getBoundingClientRect();
   const tr=row.closest('.EezStudio_Tree');
   const tb=tr?tr.getBoundingClientRect():{x:0,y:0,width:innerWidth,height:innerHeight};

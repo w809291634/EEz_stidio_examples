@@ -11,6 +11,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "lvgl.h"
 #include "SDL2/SDL.h"
@@ -19,8 +20,10 @@
 #include "screens.h"
 #include "nav_bind.h"
 #include "value_bind.h"
+#include "ui_behavior.h"
 #include "nav_bind_table.h"
 #include "app/wifi_logic.h"
+#include "app/wifi_events.h"
 #include "navigation/wifi_bind.h"
 #include "navigation/wifi_nav.h"
 #include "widgets/wifi_busy/wifi_busy.h"
@@ -154,9 +157,66 @@ static int autotest(void)
     return fail ? 1 : 0;
 }
 
+static int behavior_test(void)
+{
+    int fail = 0;
+    const char *txt;
+
+#define CHECK(cond, msg) do { \
+    if (!(cond)) { printf("[UI_BEHAVIOR] FAIL %s\n", msg); fail++; } \
+} while (0)
+
+    lv_screen_load(objects.detail_curtain);
+    pump(6);
+    click_obj(objects.detail_curtain_hw02);       /* 全开 */
+    pump(6);
+    CHECK(lv_slider_get_value(objects.detail_curtain_hw01_sl) == 100, "curtain 100");
+    txt = lv_label_get_text(objects.detail_curtain_r02);
+    printf("[UI_BEHAVIOR] curtain slider=%d r02='%s'\n",
+           (int)lv_slider_get_value(objects.detail_curtain_hw01_sl), txt ? txt : "(null)");
+    CHECK(txt && strstr(txt, "100"), "curtain label 100");
+    click_obj(objects.detail_curtain_hw03);       /* 半开 */
+    pump(6);
+    CHECK(lv_slider_get_value(objects.detail_curtain_hw01_sl) == 50, "curtain 50");
+    click_obj(objects.detail_curtain_hw04);       /* 全关 */
+    pump(6);
+    CHECK(lv_slider_get_value(objects.detail_curtain_hw01_sl) == 0, "curtain 0");
+
+    lv_screen_load(objects.detail_ac);
+    pump(6);
+    click_obj(objects.detail_ac_hw02);            /* 温度 + */
+    pump(4);
+    printf("[UI_BEHAVIOR] ac_temp=%d\n", ui_behavior_ac_temp());
+    CHECK(ui_behavior_ac_temp() == 240, "ac +0.5");
+    txt = lv_label_get_text(objects.detail_ac_hr02);
+    CHECK(txt && strstr(txt, "24.0"), "ac label 24.0");
+    click_obj(objects.detail_ac_hw04);            /* 制热 */
+    pump(4);
+    printf("[UI_BEHAVIOR] ac_mode=%d\n", ui_behavior_ac_mode());
+    CHECK(ui_behavior_ac_mode() == 1, "ac heat");
+    txt = lv_label_get_text(objects.detail_ac_hr01);
+    CHECK(txt && strstr(txt, "制热"), "ac header heat");
+    click_obj(objects.detail_ac_hw08);            /* 高风 */
+    pump(4);
+    printf("[UI_BEHAVIOR] fan=%d\n", ui_behavior_fan());
+    CHECK(ui_behavior_fan() == 2, "fan high");
+
+    lv_screen_load(objects.main);
+    pump(6);
+    click_obj(objects.main_hw02);                 /* 离家 */
+    pump(4);
+    printf("[UI_BEHAVIOR] scene=%d\n", ui_behavior_scene());
+    CHECK(ui_behavior_scene() == 1, "scene leave");
+
+    printf("[UI_BEHAVIOR] %s\n", fail ? "FAIL" : "PASS");
+#undef CHECK
+    return fail ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
-    int auto_mode = getenv("W78_AUTOTEST") != NULL;
+    int auto_mode = getenv("W78_AUTOTEST") != NULL ||
+                    getenv("W78_UI_BEHAVIOR_TEST") != NULL;
     setvbuf(stdout, NULL, _IONBF, 0);
     (void)argc; (void)argv;
     if (auto_mode) SDL_setenv("SDL_VIDEODRIVER", "dummy", 0);
@@ -166,8 +226,15 @@ int main(int argc, char **argv)
     ui_init();
     nav_bind_init();
     value_bind_init();
+    ui_behavior_init();
 
-
+    if (getenv("W78_UI_BEHAVIOR_TEST")) {
+        int rc;
+        pump(5);
+        rc = behavior_test();
+        SDL_Quit();
+        return rc;
+    }
 
     if (getenv("W78_QUIT_TEST")) {          /* 自证窗口关闭链路：压一个 SDL_QUIT，应干净退出 0 */
         SDL_Event q;
@@ -212,8 +279,55 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    if (getenv("W78_WIFI_FLOW_TEST")) {   /* 假世界连接闭环：扫描→选网→密码→连接成功 */
+        int i, ok = 0;
+        char target[33] = "";
+        const wifi_ap_t *pick = NULL;
+        wifi_bind_init();
+        user_io_init();
+        nav_bind_goto(SCREEN_ID_WIFI);
+        { app_value_t sv; sv.i = 1; app_set_output(APP_OUT_WIFI_SCAN, sv); }
+        for (i = 0; i < 120; i++) {
+            user_io_tick(); lv_tick_inc(50); lv_timer_handler(); SDL_Delay(50);
+            if (app_get_input_i(APP_IN_SCAN_STATE) == 2) break;
+        }
+        for (i = 0; i < wifi_ap_count(); i++) {
+            const wifi_ap_t *a = wifi_ap_at(i);
+            if (a->lock && !a->saved && !a->connected) { pick = a; break; }
+        }
+        if (!pick) {
+            printf("[WIFI_FLOW] FAIL no locked AP\n");
+            SDL_Quit();
+            return 1;
+        }
+        snprintf(target, sizeof(target), "%s", pick->ssid);   /* resort 后 pick 会失效 */
+        wifi_events_select(target);
+        wifi_nav_open_sheet(target);
+        for (i = 0; i < 10; i++) {
+            user_io_tick(); lv_tick_inc(30); lv_timer_handler(); SDL_Delay(30);
+        }
+        lv_textarea_set_text(objects.pwd_ta, "12345678");
+        /* flowtest 只验后端闭环；按钮命中由 uitest 单独验，这里直接投递连接命令 */
+        wifi_events_request_connect();
+        for (i = 0; i < 160; i++) {
+            int k;
+            user_io_tick(); lv_tick_inc(50); lv_timer_handler(); SDL_Delay(50);
+            /* conn 状态会被 logic 当帧消费掉，直接看后端 AP 的 connected 事实 */
+            for (k = 0; k < wifi_ap_count(); k++) {
+                const wifi_ap_t *a = wifi_ap_at(k);
+                if (strcmp(a->ssid, target) == 0 && a->connected) { ok = 1; break; }
+            }
+            if (ok) break;
+        }
+        printf("[WIFI_FLOW] ssid=%s connected=%d %s\n",
+               target, ok, ok ? "PASS" : "FAIL");
+        SDL_Quit();
+        return ok ? 0 : 1;
+    }
+
     if (getenv("W78_WIFI_UI_TEST")) {
-        int i, conn = -1, saw = 0, n;
+        int i, conn = -1, saw = 0, n, ok = 0;
+        char target[33] = "";
         const wifi_ap_t *pick = NULL;
         wifi_bind_init();
         user_io_init();
@@ -244,25 +358,32 @@ int main(int argc, char **argv)
             if (a->lock && !a->saved && !a->connected) { pick = a; break; }
         }
         if (pick) {
-            wifi_events_select(pick->ssid);
-            wifi_nav_open_sheet(pick->ssid);
+            snprintf(target, sizeof(target), "%s", pick->ssid);
+            wifi_events_select(target);
+            wifi_nav_open_sheet(target);
             for (i = 0; i < 10; i++) { user_io_tick(); lv_tick_inc(30); lv_timer_handler(); SDL_Delay(30); }
             pump(6);
             take_shot("tmp/wifi_sheet.bmp");
             lv_textarea_set_text(objects.pwd_ta, "12345678");
             click_obj(objects.btn_connect);
             for (i = 0; i < 160; i++) {
+                int k;
                 user_io_tick(); lv_tick_inc(50); lv_timer_handler(); SDL_Delay(50);
                 conn = (int)app_get_input_i(APP_IN_CONN_STATE);
                 if (conn == 1 && !saw) { saw = 1; pump(25); take_shot("tmp/wifi_connecting.bmp"); }
-                if (conn == 2 || conn == 3) break;
+                for (k = 0; k < wifi_ap_count(); k++) {
+                    const wifi_ap_t *a = wifi_ap_at(k);
+                    if (strcmp(a->ssid, target) == 0 && a->connected) { ok = 1; break; }
+                }
+                if (ok || conn == 3) break;
             }
             for (i = 0; i < 12; i++) { user_io_tick(); lv_tick_inc(30); lv_timer_handler(); SDL_Delay(30); }
-            printf("[WIFI_UI] conn=%d\n", conn);
+            printf("[WIFI_UI] conn=%d connected=%d %s\n",
+                   conn, ok, ok ? "PASS" : "FAIL");
             take_shot("tmp/wifi_flow.bmp");
         }
         SDL_Quit();
-        return 0;
+        return (pick && ok) ? 0 : 1;
     }
 
     if (getenv("W78_AUTOTEST")) {

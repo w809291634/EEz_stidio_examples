@@ -128,7 +128,8 @@
   "duration": 1370,
   "repeatInfinite": true,
   "repeat": 1,
-  "children": []
+  "children": [],
+  "hiddenFlag": false
  },
  "LVGLArcWidget": {
   "objID": "__OID__",
@@ -211,7 +212,8 @@
   "previewBgStartAngle": "0",
   "previewBgEndAngle": "360",
   "previewRotation": "270",
-  "children": []
+  "children": [],
+  "hiddenFlag": false
  },
  "LVGLBarWidget": {
   "objID": "__OID__",
@@ -278,7 +280,10 @@
   "previewValue": "68",
   "previewValueStart": "0",
   "enableAnimation": false,
-  "children": []
+  "children": [],
+  "valueStart": 0,
+  "valueStartType": "literal",
+  "hiddenFlag": false
  },
  "LVGLButtonWidget": {
   "objID": "__OID__",
@@ -304,7 +309,6 @@
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -331,7 +335,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLChartWidget": {
   "objID": "__OID__",
@@ -383,7 +388,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLCheckboxWidget": {
   "objID": "__OID__",
@@ -480,7 +486,8 @@
   "text": "",
   "textType": "literal",
   "useStaticText": true,
-  "checkedState": false
+  "checkedState": false,
+  "hiddenFlag": false
  },
  "LVGLContainerWidget": {
   "objID": "__OID__",
@@ -505,7 +512,7 @@
   "heightUnit": "px",
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
-  "hiddenFlagType": "expression",
+  "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -533,7 +540,7 @@
   },
   "groupIndex": 0,
   "identifier": "",
-  "hiddenFlag": "pick_ssid == ''"
+  "hiddenFlag": false
  },
  "LVGLDropdownWidget": {
   "objID": "__OID__",
@@ -575,7 +582,8 @@
   "selected": "g_sel",
   "selectedType": "expression",
   "direction": "bottom",
-  "useStaticText": true
+  "useStaticText": true,
+  "hiddenFlag": false
  },
  "LVGLKeyboardWidget": {
   "objID": "__OID__",
@@ -601,7 +609,6 @@
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -631,7 +638,8 @@
   "groupIndex": 0,
   "identifier": "",
   "textarea": "pwd_ta",
-  "mode": "TEXT_LOWER"
+  "mode": "TEXT_LOWER",
+  "hiddenFlag": false
  },
  "LVGLLabelWidget": {
   "objID": "__OID__",
@@ -687,7 +695,8 @@
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
-  "useStaticText": true
+  "useStaticText": true,
+  "hiddenFlag": false
  },
  "LVGLLedWidget": {
   "objID": "__OID__",
@@ -727,7 +736,8 @@
   "color": "g_color",
   "colorType": "expression",
   "brightness": 255,
-  "brightnessType": "literal"
+  "brightnessType": "literal",
+  "hiddenFlag": false
  },
  "LVGLListWidget": {
   "objID": "__OID__",
@@ -753,7 +763,6 @@
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "AUTO",
   "checkedStateType": "literal",
@@ -780,7 +789,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLPanelWidget": {
   "objID": "__OID__",
@@ -829,7 +839,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLRollerWidget": {
   "objID": "__OID__",
@@ -871,7 +882,7 @@
   "selected": "g_sel",
   "selectedType": "expression",
   "mode": "NORMAL",
-  "visibleRowCount": 4
+  "hiddenFlag": false
  },
  "LVGLScaleWidget": {
   "objID": "__OID__",
@@ -922,7 +933,9 @@
   "drawTicksOnTop": false,
   "showLabels": true,
   "labelTexts": "",
-  "sections": []
+  "sections": [],
+  "mainArcRounded": false,
+  "hiddenFlag": false
  },
  "LVGLScreenWidget": {
   "objID": "__OID__",
@@ -967,7 +980,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLSliderWidget": {
   "objID": "__OID__",
@@ -1039,7 +1053,11 @@
   "valueType": "literal",
   "previewValue": 70,
   "enableAnimation": false,
-  "children": []
+  "children": [],
+  "valueLeft": 0,
+  "valueLeftType": "literal",
+  "previewValueLeft": 0,
+  "hiddenFlag": false
  },
  "LVGLSpinnerWidget": {
   "objID": "__OID__",
@@ -1075,7 +1093,8 @@
    "definition": {}
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLSwitchWidget": {
   "objID": "5b1b8eed-b0de-407e-a9d9-8860582f32ab",
@@ -1195,7 +1214,8 @@
   },
   "groupIndex": 0,
   "identifier": "switch",
-  "checkedState": false
+  "checkedState": false,
+  "hiddenFlag": false
  },
  "LVGLTabWidget": {
   "objID": "__OID__",
@@ -1249,7 +1269,8 @@
   "groupIndex": 0,
   "identifier": "",
   "tabName": "one",
-  "tabNameType": "literal"
+  "tabNameType": "literal",
+  "hiddenFlag": false
  },
  "LVGLTabviewWidget": {
   "objID": "__OID__",
@@ -1303,7 +1324,8 @@
   "tabviewPosition": "TOP",
   "tabviewSize": 0,
   "selectedTab": 0,
-  "selectedTabType": "literal"
+  "selectedTabType": "literal",
+  "hiddenFlag": false
  },
  "LVGLTextareaWidget": {
   "objID": "__OID__",
@@ -1329,7 +1351,6 @@
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -1366,7 +1387,8 @@
   "oneLineMode": true,
   "passwordMode": true,
   "acceptedCharacters": "",
-  "maxTextLength": 64
+  "maxTextLength": 64,
+  "hiddenFlag": false
  },
  "LVGLButtonWidget+LVGLContainerWidget": {
   "objID": "__OID__",
@@ -1418,7 +1440,8 @@
    }
   },
   "identifier": "",
-  "children": []
+  "children": [],
+  "hiddenFlag": false
  },
  "LVGLButtonWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -1427,13 +1450,28 @@
   "top": 0,
   "width": 0,
   "height": 0,
+  "customInputs": [],
+  "customOutputs": [],
+  "style": {
+   "objID": "__OID__",
+   "useStyle": "default",
+   "conditionalStyles": [],
+   "childStyles": []
+  },
+  "timeline": [],
+  "eventHandlers": [],
+  "leftUnit": "px",
+  "topUnit": "px",
   "widthUnit": "content",
   "heightUnit": "content",
-  "text": "",
-  "textType": "literal",
-  "longMode": "WRAP",
-  "recolor": false,
-  "useStaticText": true,
+  "children": [],
+  "widgetFlags": "",
+  "hiddenFlagType": "literal",
+  "clickableFlagType": "literal",
+  "flagScrollbarMode": "OFF",
+  "checkedStateType": "literal",
+  "disabledStateType": "literal",
+  "states": "",
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -1445,7 +1483,15 @@
      }
     }
    }
-  }
+  },
+  "groupIndex": 0,
+  "text": "",
+  "textType": "literal",
+  "longMode": "WRAP",
+  "recolor": false,
+  "useStaticText": true,
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLContainerWidget+LVGLButtonWidget": {
   "objID": "__OID__",
@@ -1471,7 +1517,6 @@
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -1500,7 +1545,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLContainerWidget+LVGLContainerWidget": {
   "objID": "__OID__",
@@ -1526,7 +1572,6 @@
   "children": [],
   "widgetFlags": "CLICKABLE",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -1553,7 +1598,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLContainerWidget+LVGLKeyboardWidget": {
   "objID": "__OID__",
@@ -1579,7 +1625,6 @@
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -1609,7 +1654,8 @@
   "groupIndex": 0,
   "identifier": "",
   "textarea": "pwd_ta",
-  "mode": "TEXT_LOWER"
+  "mode": "TEXT_LOWER",
+  "hiddenFlag": false
  },
  "LVGLContainerWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -1635,7 +1681,6 @@
   "children": [],
   "widgetFlags": "GESTURE_BUBBLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -1666,7 +1711,8 @@
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
-  "useStaticText": true
+  "useStaticText": true,
+  "hiddenFlag": false
  },
  "LVGLContainerWidget+LVGLTextareaWidget": {
   "objID": "__OID__",
@@ -1692,7 +1738,6 @@
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -1729,7 +1774,8 @@
   "oneLineMode": true,
   "passwordMode": true,
   "acceptedCharacters": "",
-  "maxTextLength": 64
+  "maxTextLength": 64,
+  "hiddenFlag": false
  },
  "LVGLPanelWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -1783,7 +1829,8 @@
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
-  "useStaticText": true
+  "useStaticText": true,
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLAnimationImageWidget": {
   "objID": "__OID__",
@@ -1914,7 +1961,8 @@
   "duration": 1370,
   "repeatInfinite": true,
   "repeat": 1,
-  "children": []
+  "children": [],
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLArcWidget": {
   "objID": "__OID__",
@@ -1997,7 +2045,8 @@
   "previewBgStartAngle": "0",
   "previewBgEndAngle": "360",
   "previewRotation": "270",
-  "children": []
+  "children": [],
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLBarWidget": {
   "objID": "__OID__",
@@ -2064,7 +2113,8 @@
   "previewValue": "68",
   "previewValueStart": "0",
   "enableAnimation": false,
-  "children": []
+  "children": [],
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLButtonWidget": {
   "objID": "__OID__",
@@ -2116,7 +2166,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLChartWidget": {
   "objID": "__OID__",
@@ -2168,7 +2219,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLCheckboxWidget": {
   "objID": "__OID__",
@@ -2265,7 +2317,8 @@
   "text": "",
   "textType": "literal",
   "useStaticText": true,
-  "checkedState": false
+  "checkedState": false,
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLContainerWidget": {
   "objID": "__OID__",
@@ -2290,7 +2343,7 @@
   "heightUnit": "px",
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
-  "hiddenFlagType": "expression",
+  "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
@@ -2318,7 +2371,7 @@
   },
   "groupIndex": 0,
   "identifier": "",
-  "hiddenFlag": "pick_ssid == ''"
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -2374,7 +2427,8 @@
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
-  "useStaticText": true
+  "useStaticText": true,
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLLedWidget": {
   "objID": "__OID__",
@@ -2414,7 +2468,8 @@
   "color": "g_color",
   "colorType": "expression",
   "brightness": 255,
-  "brightnessType": "literal"
+  "brightnessType": "literal",
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLListWidget": {
   "objID": "__OID__",
@@ -2440,7 +2495,6 @@
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
-  "hiddenFlag": false,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "AUTO",
   "checkedStateType": "literal",
@@ -2467,7 +2521,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLPanelWidget": {
   "objID": "__OID__",
@@ -2516,7 +2571,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLScaleWidget": {
   "objID": "__OID__",
@@ -2567,7 +2623,8 @@
   "drawTicksOnTop": false,
   "showLabels": true,
   "labelTexts": "",
-  "sections": []
+  "sections": [],
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLSliderWidget": {
   "objID": "__OID__",
@@ -2639,7 +2696,8 @@
   "valueType": "literal",
   "previewValue": 70,
   "enableAnimation": false,
-  "children": []
+  "children": [],
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLSpinnerWidget": {
   "objID": "__OID__",
@@ -2675,7 +2733,8 @@
    "definition": {}
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLSwitchWidget": {
   "objID": "__OID__",
@@ -2724,7 +2783,8 @@
    }
   },
   "identifier": "",
-  "children": []
+  "children": [],
+  "hiddenFlag": false
  },
  "LVGLScreenWidget+LVGLTabviewWidget": {
   "objID": "__OID__",
@@ -2778,7 +2838,8 @@
   "tabviewPosition": "TOP",
   "tabviewSize": 0,
   "selectedTab": 0,
-  "selectedTabType": "literal"
+  "selectedTabType": "literal",
+  "hiddenFlag": false
  },
  "LVGLTabWidget+LVGLCheckboxWidget": {
   "objID": "__OID__",
@@ -2817,7 +2878,8 @@
   "identifier": "",
   "text": "",
   "textType": "literal",
-  "useStaticText": true
+  "useStaticText": true,
+  "hiddenFlag": false
  },
  "LVGLTabWidget+LVGLContainerWidget": {
   "objID": "__OID__",
@@ -2869,7 +2931,8 @@
    }
   },
   "identifier": "",
-  "children": []
+  "children": [],
+  "hiddenFlag": false
  },
  "LVGLTabWidget+LVGLDropdownWidget": {
   "objID": "__OID__",
@@ -2911,7 +2974,8 @@
   "selected": "g_sel",
   "selectedType": "expression",
   "direction": "bottom",
-  "useStaticText": true
+  "useStaticText": true,
+  "hiddenFlag": false
  },
  "LVGLTabWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -2966,7 +3030,8 @@
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
-  "useStaticText": true
+  "useStaticText": true,
+  "hiddenFlag": false
  },
  "LVGLTabWidget+LVGLRollerWidget": {
   "objID": "__OID__",
@@ -3008,7 +3073,7 @@
   "selected": "g_sel",
   "selectedType": "expression",
   "mode": "NORMAL",
-  "visibleRowCount": 4
+  "hiddenFlag": false
  },
  "LVGLTabWidget+LVGLSwitchWidget": {
   "objID": "__OID__",
@@ -3071,7 +3136,8 @@
    }
   },
   "groupIndex": 0,
-  "identifier": ""
+  "identifier": "",
+  "hiddenFlag": false
  },
  "LVGLTabviewWidget+LVGLTabWidget": {
   "objID": "__OID__",
@@ -3125,6 +3191,7 @@
   "groupIndex": 0,
   "identifier": "",
   "tabName": "one",
-  "tabNameType": "literal"
+  "tabNameType": "literal",
+  "hiddenFlag": false
  }
 }
