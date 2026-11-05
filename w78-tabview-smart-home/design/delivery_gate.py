@@ -58,9 +58,12 @@ def d3_font():
     proj = json.load(io.open(PROJ, encoding="utf-8"))
     fonts = proj.get("fonts", [])
     files = glob.glob(os.path.join(ROOT, "src", "ui", "fonts", "ui_font_*.c"))
-    need = len({f["source"]["size"] for f in fonts})
-    ok = len(fonts) == need and len(files) == need and need > 0
-    return ok, "字体条目 %d（%d 个字号）｜ 烘出的 .c %d 个" % (len(fonts), need, len(files))
+    names = {f["name"] for f in fonts}
+    have = {os.path.basename(f)[len("ui_font_"):-2] for f in files}
+    sizes = {f["source"]["size"] for f in fonts}
+    # 同字号可以有多档（设计子集 + 运行时 GB2312 字库），按「每条都有 .c」核
+    ok = bool(fonts) and names <= have and len(files) == len(names)
+    return ok, "字体条目 %d（%d 个字号）｜ 烘出的 .c %d 个" % (len(fonts), len(sizes), len(files))
 
 
 def d4_build():
@@ -141,7 +144,7 @@ def main():
     # D4 会重新构建（清空 fonts 目录）并在构建后重烘，所以必须先跑 D4 再统计字体
     r4 = d4_build()
     rows = [("D1 结构对账", d1_struct()), ("D2 文本覆盖", d2_text()),
-            ("D3 字体 F1–F6", d3_font()), ("D4 编译", r4),
+            ("D3 字体 F1–F7", d3_font()), ("D4 编译", r4),
             ("D5 画布比对", d5_canvas()), ("D6 跳转闭环", d6_nav()),
             ("D7 过程件清理", d7_clean()), ("D8 留痕", d8_trace())]
     print("== 交付门禁 ==")

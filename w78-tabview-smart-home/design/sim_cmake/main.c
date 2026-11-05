@@ -19,6 +19,13 @@
 #include "screens.h"
 #include "nav_bind.h"
 #include "nav_bind_table.h"
+#include "app/wifi_logic.h"
+#include "navigation/wifi_bind.h"
+#include "navigation/wifi_nav.h"
+#include "widgets/wifi_busy/wifi_busy.h"
+#include "app/wifi_model.h"
+#include "platform/wifi_platform.h"
+#include "src/others/snapshot/lv_snapshot.h"
 
 #define SIM_W 800
 #define SIM_H 480
@@ -37,8 +44,34 @@ static lv_display_t *hal_init(int32_t w, int32_t h)
     return disp;
 }
 
-static void push_mouse(uint32_t type, int x, int y)
+static void take_shot(const char *path)
 {
+    lv_draw_buf_t *buf = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_XRGB8888);
+    if (!buf) { printf("[SHOT] snapshot failed\n"); return; }
+    int w = (int)buf->header.w, h = (int)buf->header.h;
+    int stride = (int)buf->header.stride;
+    unsigned char *src = (unsigned char *)buf->data;
+    FILE *fp = fopen(path, "wb");
+    if (fp) {
+        int row = w * 4, data = row * h;
+        unsigned char hd[54] = { 'B','M' };
+        *(int *)(hd + 2) = 54 + data;
+        *(int *)(hd + 10) = 54;
+        *(int *)(hd + 14) = 40;
+        *(int *)(hd + 18) = w;
+        *(int *)(hd + 22) = -h;
+        *(short *)(hd + 26) = 1;
+        *(short *)(hd + 28) = 32;
+        fwrite(hd, 1, 54, fp);
+        for (int y = 0; y < h; y++)
+            fwrite(src + y * stride, 1, row, fp);
+        fclose(fp);
+        printf("[SHOT] saved %s (%dx%d)\n", path, w, h);
+    }
+    lv_draw_buf_destroy(buf);
+}
+
+static void push_mouse(uint32_t type, int x, int y){
     SDL_Event e;
     SDL_memset(&e, 0, sizeof(e));
     e.type = type;
@@ -57,6 +90,7 @@ static void pump(int frames)
         SDL_Event e;
         while (SDL_PollEvent(&e)) lv_sdl_mouse_handler(&e);
         SDL_Delay(10);
+        lv_tick_inc(10);
         lv_timer_handler();
     }
 }
@@ -122,6 +156,7 @@ static int autotest(void)
 int main(int argc, char **argv)
 {
     int auto_mode = getenv("W78_AUTOTEST") != NULL;
+    setvbuf(stdout, NULL, _IONBF, 0);
     (void)argc; (void)argv;
     if (auto_mode) SDL_setenv("SDL_VIDEODRIVER", "dummy", 0);
 
@@ -138,7 +173,71 @@ int main(int argc, char **argv)
         printf("[QUIT] SDL_QUIT queued\n");
     }
 
-    if (auto_mode) {
+    if (getenv("W78_WIFI_TEST")) {          /* ⑦-1 自证：PC 端真 wlanapi 扫描 → 平台接口 */
+        int i, n;
+        io_init();
+        io_wifi_scan(1);
+        for (i = 0; i < 80; i++) {
+            io_sample_inputs();
+            if (app_get_input_i(APP_IN_SCAN_STATE) == 2) break;
+            SDL_Delay(100);
+        }
+        n = wifi_ap_count();
+        printf("[WIFI] scan_state=%d ap_count=%d gen=%d\n",
+               (int)app_get_input_i(APP_IN_SCAN_STATE), n, wifi_ap_gen());
+        for (i = 0; i < n; i++) {
+            const wifi_ap_t *a = wifi_ap_at(i);
+            printf("[WIFI] %d | %s | %s | %d dBm | %s | lock=%d saved=%d conn=%d\n",
+                   i, a->ssid, a->auth, a->rssi, a->band,
+                   (int)a->lock, (int)a->saved, (int)a->connected);
+        }
+        SDL_Quit();
+        return 0;
+    }
+
+    if (getenv("W78_WIFI_UI_TEST")) {
+        int i, conn = -1, saw = 0, n;
+        const wifi_ap_t *pick = NULL;
+        wifi_bind_init();
+        user_io_init();
+        nav_bind_goto(SCREEN_ID_WIFI);
+        { app_value_t sv; sv.i = 1; app_set_output(APP_OUT_WIFI_SCAN, sv); }
+        for (i = 0; i < 120; i++) {
+            user_io_tick(); lv_tick_inc(50); lv_timer_handler(); SDL_Delay(50);
+            if ((i % 10) == 0) printf("[WIFI_UI] wait i=%d scan=%d cnt=%d\n", i, (int)app_get_input_i(APP_IN_SCAN_STATE), wifi_ap_count());
+            if (app_get_input_i(APP_IN_SCAN_STATE) == 2) break;
+        }
+        for (i = 0; i < 10; i++) { user_io_tick(); lv_tick_inc(30); lv_timer_handler(); SDL_Delay(30); }
+        n = wifi_ap_count();
+        printf("[WIFI_UI] ap_count=%d\n", n);
+        take_shot("tmp/wifi_ui.bmp");
+        for (i = 0; i < n; i++) {
+            const wifi_ap_t *a = wifi_ap_at(i);
+            if (a->lock && !a->saved && !a->connected) { pick = a; break; }
+        }
+        if (pick) {
+            wifi_events_select(pick->ssid);
+            wifi_nav_open_sheet(pick->ssid);
+            for (i = 0; i < 10; i++) { user_io_tick(); lv_tick_inc(30); lv_timer_handler(); SDL_Delay(30); }
+            pump(6);
+            take_shot("tmp/wifi_sheet.bmp");
+            lv_textarea_set_text(objects.pwd_ta, "12345678");
+            click_obj(objects.btn_connect);
+            for (i = 0; i < 160; i++) {
+                user_io_tick(); lv_tick_inc(50); lv_timer_handler(); SDL_Delay(50);
+                conn = (int)app_get_input_i(APP_IN_CONN_STATE);
+                if (conn == 1 && !saw) { saw = 1; pump(25); take_shot("tmp/wifi_connecting.bmp"); }
+                if (conn == 2 || conn == 3) break;
+            }
+            for (i = 0; i < 12; i++) { user_io_tick(); lv_tick_inc(30); lv_timer_handler(); SDL_Delay(30); }
+            printf("[WIFI_UI] conn=%d\n", conn);
+            take_shot("tmp/wifi_flow.bmp");
+        }
+        SDL_Quit();
+        return 0;
+    }
+
+    if (getenv("W78_AUTOTEST")) {
         int rc;
         pump(5);
         rc = autotest();
@@ -146,6 +245,8 @@ int main(int argc, char **argv)
         return rc;
     }
 
+    wifi_bind_init();
+    user_io_init();
     for (;;) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
@@ -159,8 +260,10 @@ int main(int argc, char **argv)
             }
             lv_sdl_mouse_handler(&e);
         }
+        lv_tick_inc(5);
         lv_timer_handler();
         ui_tick();
+        user_io_tick();
         SDL_Delay(5);
     }
     return 0;

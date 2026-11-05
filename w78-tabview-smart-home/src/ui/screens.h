@@ -25,16 +25,17 @@ enum ScreensEnum {
     SCREEN_ID_NOTIFY = 12,
     SCREEN_ID_ENERGY = 13,
     SCREEN_ID_SETTINGS = 14,
-    SCREEN_ID_DEVICES = 15,
-    SCREEN_ID_SECURITY = 16,
-    SCREEN_ID_SCENE_DETAIL = 17,
-    SCREEN_ID_ADD_TYPE = 18,
-    SCREEN_ID_ADD_PAIRING = 19,
-    SCREEN_ID_ADD_DONE = 20,
-    SCREEN_ID_ABOUT = 21,
-    SCREEN_ID_OFFLINE = 22,
-    SCREEN_ID_EMPTY_ROOM = 23,
-    _SCREEN_ID_LAST = 23
+    SCREEN_ID_WIFI = 15,
+    SCREEN_ID_DEVICES = 16,
+    SCREEN_ID_SECURITY = 17,
+    SCREEN_ID_SCENE_DETAIL = 18,
+    SCREEN_ID_ADD_TYPE = 19,
+    SCREEN_ID_ADD_PAIRING = 20,
+    SCREEN_ID_ADD_DONE = 21,
+    SCREEN_ID_ABOUT = 22,
+    SCREEN_ID_OFFLINE = 23,
+    SCREEN_ID_EMPTY_ROOM = 24,
+    _SCREEN_ID_LAST = 24
 };
 
 typedef struct _objects_t {
@@ -52,6 +53,7 @@ typedef struct _objects_t {
     lv_obj_t *notify;
     lv_obj_t *energy;
     lv_obj_t *settings;
+    lv_obj_t *wifi;
     lv_obj_t *devices;
     lv_obj_t *security;
     lv_obj_t *scene_detail;
@@ -655,15 +657,15 @@ typedef struct _objects_t {
     lv_obj_t *settings_deco01;
     lv_obj_t *settings_deco02;
     lv_obj_t *settings_deco09;
+    lv_obj_t *settings_deco10;
     lv_obj_t *settings_deco11;
-    lv_obj_t *settings_deco13;
     lv_obj_t *settings_go01;
     lv_obj_t *settings_go01_lb;
     lv_obj_t *settings_w01;
     lv_obj_t *settings_w02;
     lv_obj_t *settings_w03;
-    lv_obj_t *settings_hr01;
     lv_obj_t *settings_go02;
+    lv_obj_t *settings_go03;
     lv_obj_t *settings_w04;
     lv_obj_t *settings_st01;
     lv_obj_t *settings_st02;
@@ -686,9 +688,39 @@ typedef struct _objects_t {
     lv_obj_t *settings_deco06;
     lv_obj_t *settings_deco07;
     lv_obj_t *settings_deco08;
-    lv_obj_t *settings_deco10;
     lv_obj_t *settings_deco12;
-    lv_obj_t *settings_deco14;
+    lv_obj_t *wifi_go01;
+    lv_obj_t *wifi_go01_lb;
+    lv_obj_t *btn_disconnect;
+    lv_obj_t *btn_disconnect_lb;
+    lv_obj_t *btn_refresh;
+    lv_obj_t *btn_refresh_lb;
+    lv_obj_t *lbl_title;
+    lv_obj_t *lbl_status;
+    lv_obj_t *list_box;
+    lv_obj_t *overlay_root;
+    lv_obj_t *scrim;
+    lv_obj_t *sheet;
+    lv_obj_t *sheet_handle;
+    lv_obj_t *lbl_pwd_ssid;
+    lv_obj_t *btn_pwd_close;
+    lv_obj_t *btn_pwd_close_lb;
+    lv_obj_t *pwd_ta;
+    lv_obj_t *btn_connect;
+    lv_obj_t *btn_connect_lb;
+    lv_obj_t *kb_main;
+    lv_obj_t *dlg_root;
+    lv_obj_t *dlg_scrim;
+    lv_obj_t *dlg_card;
+    lv_obj_t *lbl_dlg_title;
+    lv_obj_t *lbl_dlg_ssid;
+    lv_obj_t *lbl_dlg_hint;
+    lv_obj_t *btn_dlg_forget;
+    lv_obj_t *btn_dlg_forget_lb;
+    lv_obj_t *btn_dlg_disconnect;
+    lv_obj_t *btn_dlg_disconnect_lb;
+    lv_obj_t *btn_dlg_cancel;
+    lv_obj_t *btn_dlg_cancel_lb;
     lv_obj_t *devices_deco00;
     lv_obj_t *devices_deco06;
     lv_obj_t *devices_deco07;
@@ -913,17 +945,16 @@ typedef struct _objects_t {
     lv_obj_t *about_st16;
     lv_obj_t *offline_deco00;
     lv_obj_t *offline_deco01;
-    lv_obj_t *offline_deco02;
     lv_obj_t *offline_go01;
     lv_obj_t *offline_go01_lb;
-    lv_obj_t *offline_w01;
+    lv_obj_t *offline_go02;
+    lv_obj_t *offline_go02_lb;
     lv_obj_t *offline_r01;
     lv_obj_t *offline_st01;
     lv_obj_t *offline_st02;
     lv_obj_t *offline_st03;
     lv_obj_t *offline_st04;
     lv_obj_t *offline_st05;
-    lv_obj_t *offline_st06;
     lv_obj_t *offline_st07;
     lv_obj_t *offline_st08;
     lv_obj_t *empty_room_deco00;
@@ -982,6 +1013,9 @@ void tick_screen_energy();
 
 void create_screen_settings();
 void tick_screen_settings();
+
+void create_screen_wifi();
+void tick_screen_wifi();
 
 void create_screen_devices();
 void tick_screen_devices();

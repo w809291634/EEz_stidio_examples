@@ -62,6 +62,17 @@ int nav_bind_current(void)
     return s_cur;
 }
 
+void nav_bind_goto(int id)
+{
+    lv_obj_t *scr;
+    if (id <= 0) return;
+    /* 状态机跳转必须立即生效：EEZ 的 loadScreen() 带 200ms 淡入，
+     * 连着跳两次时第二次会被动画吃掉（实测停在连接中页）。 */
+    scr = nav_screen_obj(id);
+    if (scr) lv_screen_load(scr);
+    s_cur = id;
+}
+
 void nav_bind_seed(int cur, int back)
 {
     s_cur = cur;

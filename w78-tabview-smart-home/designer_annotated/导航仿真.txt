@@ -1,3 +1,3 @@
-2026-11-05 06:29 ｜ 仿真导航闭环（真 SDL 鼠标事件 → LVGL indev）
+2026-11-05 09:45 ｜ 仿真导航闭环（真 SDL 鼠标事件 → LVGL indev）
 命令：cmd /c design\sim_cmake\run_sim.bat test（W78_AUTOTEST=1）
-[NAV] 开始：69 条边 [NAV] 69/69 PASS 全部通过 
+[NAV] 开始：72 条边 [NAV] 72/72 PASS 全部通过 

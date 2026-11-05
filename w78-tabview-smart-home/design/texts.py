@@ -14,6 +14,19 @@ TEXTS = {
     "home.hello": "晚上好，李然 · 5月18日 周一",
     "home.env": "室内 23.5° · 湿度 48%",
     "home.scene_title": "场景",
+    "wifi.title": "Wi-Fi",
+    "wifi.status": "点「扫描」发现网络",
+    "wifi.hint": "共 0 个网络 · 长按已保存网络可忘记",
+    "wifi.back": "‹ 设置",
+    "wifi.scan": "扫描",
+    "wifi.disconnect": "断开",
+    "wifi.connect": "连接",
+    "wifi.close": "x",
+    "wifi.pwd_placeholder": "输入密码",
+    "wifi.forget_title": "忘记此网络？",
+    "wifi.forget_hint": "将删除已保存的密码，下次连接需重新输入。",
+    "wifi.forget": "忘记",
+    "wifi.cancel": "取消",
 }
 
 

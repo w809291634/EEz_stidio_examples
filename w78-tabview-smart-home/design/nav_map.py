@@ -49,7 +49,10 @@ NAV_TARGETS = {
 
     ("能源统计", "‹ 主控 按钮"): "主控",
     ("设置", "‹ 主控 按钮"): "主控",
+    ("设置", "Wi-Fi"): "Wi-Fi 设置",
     ("设置", "关于"): "关于",
+
+    ("Wi-Fi 设置", "‹ 设置 按钮"): "设置",
 
     ("全部设备", "‹ 主控 按钮"): "主控",
     ("全部设备", "＋ 添加"): "添加设备·选类型",
@@ -77,10 +80,14 @@ NAV_TARGETS = {
     ("添加设备·完成", "完成"): "全部设备",
     ("关于", "‹ 设置 按钮"): "设置",
     ("离线态", "‹ 主控 按钮"): "主控",
+    ("离线态", "重新连接"): "Wi-Fi 设置",
     ("空房间", "＋ 添加设备"): "添加设备·选类型",
 }
 
 NAV_TARGETS.update(ROOM_TARGETS)
+
+
+
 
 for (page, name), target in list(NAV_TARGETS.items()):
     assert isinstance(target, str) and target, f"{page}/{name} 目标为空"

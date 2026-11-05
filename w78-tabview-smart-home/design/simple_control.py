@@ -409,13 +409,99 @@ def settings_frame():
     out.append(toggle(*b["dark"][:2], True))
     out.append(toggle(*b["notify"][:2], True))
     out += [slider(520, 252, 200, 0.5)]
-    for i, (name, val) in enumerate([("网络", "Wi-Fi · 已连接 5G · 信号强"),
+    for i, (name, val) in enumerate([("Wi-Fi", "Haven_5G · 已连接 · 信号强"),
                                      ("关于", "版本 1.0.0 · 构建 2026-05-18")]):
         y = 276 + i * 60
         out += [card(40, y, 720, 52),
                 t(60, y + 24, name, 12, T1, "600"),
-                t(60, y + 40, val, 8.5, T3), tag(700, y + 18)]
+                t(60, y + 40, val, 8.5, T3),
+                t(736, y + 29, "›", 16, ACCENT, "400", "end")]
     out.append(btn(*b["reset"], "恢复默认", CARD2, RED, 9))
+    return "".join(out)
+
+
+# ---------------- Wi-Fi 连接（完全参考 app-wifi-scan-conn-no-flow 的单页+弹层结构） ----------------
+WIFI_BOXES = {
+    "disconnect": (528, 96, 104, 30),
+    "scan": (640, 96, 120, 30),
+    "list": (40, 136, 720, 316),
+    "hint": (40, 458, 700, 16),
+    # 密码半页（默认隐藏）
+    "scrim": (0, 0, 800, 480),
+    "sheet": (0, 220, 800, 260),
+    "sheet_handle": (384, 226, 32, 3),
+    "pwd_ssid": (24, 236, 640, 24),
+    "pwd_close": (752, 230, 32, 32),
+    "pwd_ta": (24, 286, 520, 40),
+    "connect": (560, 286, 216, 40),
+    "keyboard": (24, 336, 752, 136),
+    # 忘记对话框（默认隐藏）
+    "dlg_scrim": (0, 0, 800, 480),
+    "dlg_card": (220, 140, 360, 200),
+    "dlg_ssid": (240, 200, 320, 18),
+    "dlg_hint": (240, 222, 320, 16),
+    "dlg_forget": (240, 288, 96, 36),
+    "dlg_disconnect": (352, 288, 96, 36),
+    "dlg_cancel": (464, 288, 96, 36),
+}
+
+
+def wifi_frame():
+    """默认态：空 list_box（行由 native 按扫描结果动态创建）+ 扫描/断开 + 底部提示。"""
+    out = sub_header("Wi-Fi", "点「扫描」发现网络", "‹ 设置")
+    out += [btn(*WIFI_BOXES["disconnect"], "断开", CARD2, RED, 9),
+            btn(*WIFI_BOXES["scan"], "扫描", CARD2, ACCENT, 9)]
+    return "".join(out)
+
+
+def wifi_sheet_frame():
+    """设计预览用：密码半页展开态（EEZ 里是 overlay_root，默认隐藏）。"""
+    b = WIFI_BOXES
+    out = [wifi_frame(),
+           r(0, 0, 800, 480, "#000000", "none", 0),
+           r(*b["sheet"], "#101720", "none", 0),
+           r(*b["sheet_handle"], EDGE, "none", 2),
+           t(24, 254, "YJT-1号楼办公", 18, T1, "700"),
+           t(760, 254, "×", 18, T2, "400", "middle"),
+           r(24, 286, 520, 40, CARD2, EDGE, 8),
+           t(36, 311, "输入密码", 11, T3),
+           btn(560, 286, 216, 40, "连接", ACCENT, BG, 11)]
+    out.append(_keyboard(336))
+    return "".join(out)
+
+
+def wifi_dialog_frame():
+    """设计预览用：忘记确认框展开态（EEZ 里是 dlg_root，默认隐藏）。"""
+    b = WIFI_BOXES
+    out = [wifi_frame(),
+           r(0, 0, 800, 480, "#000000", "none", 0),
+           r(*b["dlg_card"], "#101720", EDGE, 14),
+           t(240, 172, "忘记此网络？", 15, T1, "700"),
+           t(240, 210, "YJT-1号楼办公", 11, T2),
+           t(240, 234, "将删除已保存的密码，下次连接需重新输入。", 9.5, T3),
+           btn(240, 288, 96, 36, "忘记", "#3A1A18", RED, 10),
+           btn(352, 288, 96, 36, "断开", CARD2, T1, 10),
+           btn(464, 288, 96, 36, "取消", CARD2, T1, 10)]
+    return "".join(out)
+
+
+def _keyboard(y):
+    rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
+    out = []
+    for r_i, chars in enumerate(rows):
+        for c_i, ch in enumerate(chars):
+            kx, ky = 24 + c_i * 72, y + r_i * 40
+            out += [r(kx, ky, 64, 34, CARD2, "none", 6),
+                    t(kx + 32, ky + 23, ch, 12, T1, "500", "middle")]
+    by = y + 3 * 40
+    out += [r(24, by, 64, 34, CARD2, "none", 6),
+            t(56, by + 23, "123", 10, T2, "400", "middle"),
+            r(96, by, 392, 34, CARD2, "none", 6),
+            t(292, by + 23, "空格", 10, T2, "400", "middle"),
+            r(496, by, 64, 34, CARD2, "none", 6),
+            t(528, by + 23, "删除", 9, T2, "400", "middle"),
+            r(568, by, 208, 34, ACCENT, "none", 6),
+            t(672, by + 23, "完成", 11, BG, "600", "middle")]
     return "".join(out)
 
 

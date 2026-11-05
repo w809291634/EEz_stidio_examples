@@ -19,6 +19,7 @@
     X(SCREEN_ID_NOTIFY, notify) \
     X(SCREEN_ID_ENERGY, energy) \
     X(SCREEN_ID_SETTINGS, settings) \
+    X(SCREEN_ID_WIFI, wifi) \
     X(SCREEN_ID_DEVICES, devices) \
     X(SCREEN_ID_SECURITY, security) \
     X(SCREEN_ID_SCENE_DETAIL, scene_detail) \
@@ -80,7 +81,9 @@ static const nav_bind_entry_t NAV_BIND[] = {
     { &objects.notify_go04, SCREEN_ID_NOTIFY, SCREEN_ID_ENERGY, 0 },
     { &objects.energy_go01, SCREEN_ID_ENERGY, SCREEN_ID_MAIN, 0 },
     { &objects.settings_go01, SCREEN_ID_SETTINGS, SCREEN_ID_MAIN, 0 },
-    { &objects.settings_go02, SCREEN_ID_SETTINGS, SCREEN_ID_ABOUT, 0 },
+    { &objects.settings_go02, SCREEN_ID_SETTINGS, SCREEN_ID_WIFI, 0 },
+    { &objects.settings_go03, SCREEN_ID_SETTINGS, SCREEN_ID_ABOUT, 0 },
+    { &objects.wifi_go01, SCREEN_ID_WIFI, SCREEN_ID_SETTINGS, 0 },
     { &objects.devices_go01, SCREEN_ID_DEVICES, SCREEN_ID_MAIN, 0 },
     { &objects.devices_go02, SCREEN_ID_DEVICES, SCREEN_ID_ADD_TYPE, 0 },
     { &objects.devices_go03, SCREEN_ID_DEVICES, SCREEN_ID_DETAIL_LIGHT, 0 },
@@ -104,6 +107,7 @@ static const nav_bind_entry_t NAV_BIND[] = {
     { &objects.add_done_go02, SCREEN_ID_ADD_DONE, SCREEN_ID_DEVICES, 0 },
     { &objects.about_go01, SCREEN_ID_ABOUT, SCREEN_ID_SETTINGS, 0 },
     { &objects.offline_go01, SCREEN_ID_OFFLINE, SCREEN_ID_MAIN, 0 },
+    { &objects.offline_go02, SCREEN_ID_OFFLINE, SCREEN_ID_WIFI, 0 },
     { &objects.empty_room_go01, SCREEN_ID_EMPTY_ROOM, 0, 1 },
     { &objects.empty_room_go02, SCREEN_ID_EMPTY_ROOM, SCREEN_ID_ADD_TYPE, 0 },
 };

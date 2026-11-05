@@ -13,6 +13,7 @@ void nav_bind_init(void);
 /* 当前屏与来路栈（返回键用）。 */
 int nav_bind_current(void);
 void nav_bind_seed(int cur, int back);   /* 测试用：设当前屏 + 一条来路 */
+void nav_bind_goto(int id);              /* native 状态机内部跳转（不压来路栈） */
 lv_obj_t *nav_screen_obj(int id);        /* 屏 id → 根对象（测试断言用） */
 
 #ifdef __cplusplus

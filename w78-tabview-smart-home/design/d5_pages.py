@@ -97,11 +97,28 @@ for (const n of [1, 2]) {
   await new Promise(r => setTimeout(r, 200));
 }
 await new Promise(r => setTimeout(r, 800));
+// 多标签页时：双击只保证「页签存在」，不一定激活；显式点一下该页签
+const tab = await send('Runtime.evaluate', { expression: `(()=>{
+  const b=[...document.querySelectorAll('.flexlayout__tab_button')].find(e=>e.textContent.trim()===` + JSON.stringify(target) + `);
+  if(!b) return 'none';
+  const r=b.getBoundingClientRect();
+  return JSON.stringify([Math.round(r.x+r.width/2), Math.round(r.y+r.height/2),
+    /selected/.test(b.className) ? 1 : 0]);
+})()`, returnByValue: true });
+const tv = tab.result.result.value;
+if (tv && tv !== 'none') {
+  const [tx, ty, sel] = JSON.parse(tv);
+  if (!sel) {
+    await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: tx, y: ty, button: 'left', clickCount: 1, buttons: 1 });
+    await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: tx, y: ty, button: 'left', clickCount: 1, buttons: 0 });
+    await new Promise(r => setTimeout(r, 1000));
+  }
+}
+// 只认「目标页签自身带 selected」；整页有多个 tabset，各自都有一个 selected（Pages/属性栏）
 const chk = await send('Runtime.evaluate', { expression:
-  `[...document.querySelectorAll('.flexlayout__tab_button')].filter(e=>e.textContent.trim()===` + JSON.stringify(target) + `).length`,
+  `(()=>{const b=[...document.querySelectorAll('.flexlayout__tab_button')].find(e=>e.textContent.trim()===` + JSON.stringify(target) + `);return b && /selected/.test(b.className) ? 1 : 0})()`,
   returnByValue: true });
-const tabs = chk.result.result.value;
-console.log(tabs ? 'OK' : 'NOTAB');
+console.log(chk.result.result.value === 1 ? 'OK' : 'NOSEL');
 process.exit(0);
 """
 
@@ -201,7 +218,8 @@ def grab(out_png):
     if os.path.exists(out_png):
         os.remove(out_png)
     for _ in range(2):
-        subprocess.run(["node", grab_js, "--port", "9222", "--canvas", "--out", out_png],
+        subprocess.run(["node", grab_js, "--port", "9222", "--canvas", "--visible",
+                        "--out", out_png],
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
         if os.path.isfile(out_png) and os.path.getsize(out_png) > 5000:
             return True
@@ -279,13 +297,18 @@ def main():
     os.makedirs(TMP, exist_ok=True)
     os.makedirs(SHOT_DIR, exist_ok=True)
     only = sys.argv[sys.argv.index("--page") + 1] if "--page" in sys.argv else None
+    multi = sys.argv[sys.argv.index("--pages") + 1].split(",") if "--pages" in sys.argv else None
     names = [n for n, _f, _e, _x, _r in pg.PAGES]
     frames = {n: f for n, f, _e, _x, _r in pg.PAGES}
-    pages = [only] if only else names          # 默认全量（每页独立重启）
+    pages = [only] if only else (multi if multi else names)   # 默认全量（整轮只起一次 EEZ）
     settle = 15
 
     start_edge()
     rows, fails = [], []
+    root_id = PAGE_IDS.get(pg.PAGES[0][0], "main")
+    prof = os.path.join(TMP, "eezprof")
+    alive = launch(prof)                    # ★ 整轮只起一次 EEZ，逐页切换（不再每页开关窗口）
+
     for cn in pages:
         pid = PAGE_IDS.get(cn, "page")
         if not render_design_edge(frames[cn], os.path.join(TMP, "d_%s.png" % pid)):
@@ -295,27 +318,40 @@ def main():
         best = None
         last_bad = None
         for attempt in range(3):
-            if not launch(os.path.join(TMP, "eezprof")):
-                continue
+            if not alive:
+                alive = launch(prof)
+                if not alive:
+                    continue
             ok = False
             for _ in range(3):
-                if click_node(pid, PAGE_IDS.get(pg.PAGES[0][0], "main")):
+                if click_node(pid, root_id):
                     ok = True
                     break
-                time.sleep(1.0)
-            time.sleep(3.0)                     # 切页后画布要时间清屏
+                time.sleep(0.8)
+            time.sleep(3.5)                 # 切页后画布要时间重绘
             got = ok and grab(os.path.join(TMP, "c_%s.png" % pid))
-            kill_eez()
             if not got:
                 continue
             c = coef_of(os.path.join(TMP, "d_%s.png" % pid), os.path.join(TMP, "c_%s.png" % pid))
-            if c > 20.0:                        # 抓到的根本不是这页：重试，不记数
+            if c > 20.0:                    # 抓到别的页：同实例再切一次
                 last_bad = c
                 continue
             if best is None or c < best[0]:
                 best = (c, os.path.join(TMP, "c_%s.png" % pid))
-            if c <= SUSPECT:                    # 稳定可信，不必再试
+            if c <= SUSPECT:                # 稳定可信，不必再试
                 break
+        if best is None:
+            # 单页兜底：只在确实抓不到时重启一次 EEZ
+            kill_eez()
+            time.sleep(1.0)
+            alive = launch(prof)
+            if alive and click_node(pid, root_id):
+                time.sleep(2.5)
+                if grab(os.path.join(TMP, "c_%s.png" % pid)):
+                    c = coef_of(os.path.join(TMP, "d_%s.png" % pid),
+                                os.path.join(TMP, "c_%s.png" % pid))
+                    if c <= 20.0:
+                        best = (c, os.path.join(TMP, "c_%s.png" % pid))
         if best is None:
             why = ("疑似抓错页（最小差异 %.1f%%）" % last_bad) if last_bad else "画布未取到"
             fails.append((cn, why))

@@ -38,6 +38,7 @@ PAGE_IDS = {
     "安防": "security", "场景详情": "scene_detail", "添加设备·选类型": "add_type",
     "添加设备·配网中": "add_pairing", "添加设备·完成": "add_done", "关于": "about",
     "离线态": "offline", "空房间": "empty_room",
+    "Wi-Fi 设置": "wifi",
 }
 
 
@@ -48,6 +49,25 @@ def font_sizes():
 
 def font_name(size):
     return "cn%d" % int(size)
+
+# 运行时字库：SSID 是任意中文，设计期子集覆盖不到；这两档单独吃 GB2312 一级字
+RT_FONTS = [(24, "cn24f"), (12, "cn12f")]
+
+
+def gb2312_level1():
+    out = set()
+    for hi in range(0xA1, 0xD8):      # 含 A1–A9 符号区（· 、 等）+ 一级汉字
+        for lo in range(0xA1, 0xFF):
+            try:
+                out.add(bytes([hi, lo]).decode("gb2312"))
+            except UnicodeDecodeError:
+                pass
+    return out
+
+
+def runtime_chars():
+    # U+00B7 中点不在 GB2312 A1 区（那里是 U+30FB），单独补
+    return {chr(c) for c in range(32, 127)} | gb2312_level1() | {"·"}
 FONT_SIZE = 14
 SRC_TTF = os.path.join(os.path.dirname(ROOT), "app-wifi-scan-flow-no-flow", "fonts", "simhei.ttf")
 SETTINGS_SRC = os.path.join(os.path.dirname(ROOT), "app-wifi-scan-flow-no-flow",
@@ -324,6 +344,131 @@ def make_slider(ident, box, value=0):
     return c
 
 
+def make_list(ident, box):
+    c = fresh(DEFAULTS["LVGLListWidget"])
+    x, y, w, h = box
+    c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h,
+              "flagScrollbarMode": "AUTO"})
+    d = c["localStyles"]["definition"]["MAIN"]["DEFAULT"]
+    d["bg_opa"] = 0
+    d["radius"] = 0
+    d["pad_all"] = 0 if "pad_all" in d else d.get("pad_all", 0)
+    return c
+
+
+def make_textarea(ident, box, placeholder):
+    c = fresh(DEFAULTS["LVGLTextareaWidget"])
+    x, y, w, h = box
+    c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h,
+              "text": "", "textType": "literal", "placeholder": placeholder,
+              "oneLineMode": True, "passwordMode": True, "maxTextLength": 64})
+    d = c["localStyles"]["definition"]["MAIN"]["DEFAULT"]
+    d["bg_color"] = "0x1C2430"
+    d["bg_opa"] = 255
+    d["radius"] = 8
+    d["border_width"] = 1
+    d["border_color"] = "0x27313F"
+    d["text_color"] = "0xF4F7FB"
+    d["text_font"] = "cn12f"
+    return c
+
+
+def make_keyboard(ident, box, ta_ident):
+    c = fresh(DEFAULTS["LVGLKeyboardWidget"])
+    x, y, w, h = box
+    c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h,
+              "textarea": ta_ident, "mode": "TEXT_LOWER"})
+    d = c["localStyles"]["definition"]["MAIN"]["DEFAULT"]
+    d["align"] = "TOP_LEFT"          # lv_keyboard 构造会先 BOTTOM_MID，必须覆盖
+    d["bg_color"] = "0x101720"
+    d["bg_opa"] = 255
+    d["radius"] = 0
+    d["pad_top"] = 0
+    d["pad_bottom"] = 0
+    d["pad_left"] = 0
+    d["pad_right"] = 0
+    d["border_width"] = 0
+    return c
+
+
+def _hide(n):
+    n["hiddenFlagType"] = "literal"
+    n["hiddenFlag"] = True
+    return n
+
+
+def _lbl_font(lb, font="cn12f"):
+    lb["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = font
+    return lb
+
+
+def _btn_font(b, font="cn12f"):
+    lb = b.get("children", [None])[0]
+    if lb:
+        lb["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = font
+    return b
+
+
+def build_wifi_page(name, frame, first=False):
+    """Wi-Fi 连接页：完全按 app-wifi-scan-conn-no-flow 的结构——
+    一个空 lv_list（行由 native 动态建）+ 密码半页 overlay_root + 忘记对话框 dlg_root。"""
+    slug = PAGE_IDS[name]
+    page = {
+        "objID": oid(), "name": slug, "left": 0, "top": 0, "width": W, "height": H,
+        "isUsedAsUserWidget": False, "createAtStart": bool(first),
+        "deleteOnScreenUnload": False,
+        "connectionLines": [], "localVariables": [], "componentGroups": [],
+        "userProperties": [], "components": [],
+    }
+    bb = sc.WIFI_BOXES
+    kids = [
+        make_button("%s_go01" % slug, TEXTS["wifi.back"], sc.SUB_BACK_BOX, "0x1C2430", 14),
+        _btn_font(make_button("btn_disconnect", TEXTS["wifi.disconnect"], bb["disconnect"], "0x1C2430", 15)),
+        _btn_font(make_button("btn_refresh", TEXTS["wifi.scan"], bb["scan"], "0x1C2430", 15)),
+        make_label("lbl_title", TEXTS["wifi.title"], (152, 22, 200, 36), "0xF4F7FB", 24),
+        _lbl_font(make_label("lbl_status", TEXTS["wifi.status"], (152, 54, 620, 20), "0x75859C", 12)),
+        make_list("list_box", bb["list"]),
+    ]
+
+    scrim = make_container("scrim", bb["scrim"], "0x000000", 0)
+    scrim["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 115
+    sheet_kids = [
+        make_container("sheet_handle", (384, 6, 32, 3), "0x27313F", 2),
+        _lbl_font(make_label("lbl_pwd_ssid", "", (24, 10, 640, 28), "0xF4F7FB", 24), "cn24f"),
+        make_button("btn_pwd_close", TEXTS["wifi.close"], (752, 10, 32, 32), "0x1C2430", 16),
+        make_textarea("pwd_ta", (24, 66, 520, 40), TEXTS["wifi.pwd_placeholder"]),
+        make_button("btn_connect", TEXTS["wifi.connect"], (560, 66, 216, 40), "0xF2B45C", 20),
+        make_keyboard("kb_main", (24, 116, 752, 136), "pwd_ta"),
+    ]
+    sheet = make_container("sheet", (0, 220, 800, 260), "0x101720", 0)
+    sheet["children"] = sheet_kids
+    overlay = make_container("overlay_root", (0, 0, 800, 480), None, 0)
+    overlay["children"] = [scrim, sheet]
+    _hide(overlay)
+
+    dscrim = make_container("dlg_scrim", (0, 0, 800, 480), "0x000000", 0)
+    dscrim["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 140
+    card_kids = [
+        make_label("lbl_dlg_title", TEXTS["wifi.forget_title"], (20, 24, 320, 24), "0xF4F7FB", 15),
+        make_label("lbl_dlg_ssid", "", (20, 58, 320, 18), "0xB9C4D4", 11),
+        make_label("lbl_dlg_hint", TEXTS["wifi.forget_hint"], (20, 82, 320, 16), "0x75859C", 9),
+        make_button("btn_dlg_forget", TEXTS["wifi.forget"], (20, 148, 96, 36), "0x3A1A18", 10),
+        make_button("btn_dlg_disconnect", TEXTS["wifi.disconnect"], (132, 148, 96, 36), "0x1C2430", 10),
+        make_button("btn_dlg_cancel", TEXTS["wifi.cancel"], (244, 148, 96, 36), "0x1C2430", 10),
+    ]
+    card = make_container("dlg_card", (220, 140, 360, 200), "0x101720", 14)
+    card["children"] = card_kids
+    dlg = make_container("dlg_root", (0, 0, 800, 480), None, 0)
+    dlg["children"] = [dscrim, card]
+    _hide(dlg)
+    kids += [overlay, dlg]
+
+    root = make_screen()
+    root["children"] = kids
+    page["components"].append(root)
+    return page
+
+
 def build_page(name, frame, rows, first=False):
     """通用页：底板(设计矩形) → 控件(控件表) → 文字(设计帧) → 小装饰(最上层)。"""
     page = {
@@ -359,8 +504,8 @@ def build_page(name, frame, rows, first=False):
             if tuple(box) in rects:
                 # 底板由设计帧的同位矩形当装饰层画；容器透明，别盖住滑条/图表等内部细件
                 node["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 0
-            if cat not in ("nav", "back"):
-                no_click(node)          # 开关/滑条/只读卡目前是静态层，别抢按钮的点击
+            if cat == "read":
+                no_click(node)      # 只读卡是静态展示；动作类控件要能收点击（⑦ 接 native）
             children.append(node)
         else:
             btn = make_button(ident, txt, box, bg, rx)
@@ -392,9 +537,22 @@ def build_page(name, frame, rows, first=False):
             left = t["x"] - est_w / 2.0
         elif t["anchor"] == "end":
             left = t["x"] - est_w
-        children.append(make_label("%s_%s%02d" % (slug, pg.STATIC_CODE, i), lit,
-                                   (int(left), int(t["y"] - size * 0.92), est_w, int(size * 1.5)),
-                                   t["fill"], size))
+        lid = "%s_%s%02d" % (slug, pg.STATIC_CODE, i)
+        node = make_label(lid, lit,
+                          (int(left), int(t["y"] - size * 0.92), est_w, int(size * 1.5)),
+                          t["fill"], size)
+        # 运行时字库：Wi-Fi 行/状态文案要显示任意中文 SSID，必须挂 GB2312 档，
+        # 同时让 EEZ 看到引用，才会导出 ui_font_cn12f/cn24f 的 .c
+        rt12 = {"wifi_st06", "wifi_st07", "wifi_st08", "wifi_st09", "wifi_st10", "wifi_st11",
+                "wifi_st12", "wifi_st13", "wifi_st15", "wifi_st16", "wifi_st17", "wifi_st19",
+                "wifi_st20", "wifi_st21", "wifi_st23", "wifi_st24", "wifi_st25", "wifi_st02",
+                "wifi_connecting_st03"}
+        rt24 = {"wifi_pwd_st01", "wifi_connecting_st01"}
+        if lid in rt12:
+            node["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = "cn12f"
+        elif lid in rt24:
+            node["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = "cn24f"
+        children.append(node)
 
     allr = design_rects(frame)
 
@@ -424,7 +582,10 @@ def build_page(name, frame, rows, first=False):
 def all_pages():
     out = []
     for k, (name, frame, _entry, _exit, rows) in enumerate(pg.PAGES):
-        out.append(build_page(name, frame, rows or [], first=(k == 0)))
+        if name == "Wi-Fi 设置":
+            out.append(build_wifi_page(name, frame, first=(k == 0)))
+        else:
+            out.append(build_page(name, frame, rows or [], first=(k == 0)))
     return out
 
 
@@ -445,8 +606,9 @@ def settings():
     return st
 
 
-def build(chars):
+def build(chars, rt_chars):
     chars_runs = _runs([ord(c) for c in chars])
+    rt_runs = _runs([ord(c) for c in rt_chars])
     proj = {
         "themesVersion": 1,
         "objID": oid(),
@@ -468,7 +630,19 @@ def build(chars):
             "lvglSymbols": "",
             "lvglGlyphs": {"objID": oid(), "encodings": chars_runs},
             "lvglAdditionalSources": [],
-        } for sz in font_sizes()],
+        } for sz in font_sizes()] + [{
+            "objID": oid(), "name": nm,
+            "description": "Haven Home 运行时字库 %d 字形 %dpx（GB2312 一级，给 SSID/状态用）"
+                           % (len(rt_chars), sz),
+            "renderingEngine": "LVGL",
+            "source": {"objID": oid(), "filePath": FONT_FILE, "size": sz},
+            "bpp": 4, "threshold": 128, "glyphs": [], "screenOrientation": "all",
+            "alwaysBuild": False,
+            "lvglRanges": _range_str(rt_runs),
+            "lvglSymbols": "",
+            "lvglGlyphs": {"objID": oid(), "encodings": rt_runs},
+            "lvglAdditionalSources": [],
+        } for sz, nm in RT_FONTS],
         "bitmaps": [],
         "colors": [],
         "themes": [{"objID": oid(), "name": "Default", "colors": []}],
@@ -519,9 +693,11 @@ def build(chars):
 def main():
     cmap = _src_cmap()
     chars = {c for c in charset() if ord(c) in cmap}   # 源字库没有的已在文本侧替换
-    ttf, n = subset_font(chars)
-    print("[FONT] %s ｜ %d 字形 ｜ %.0f KB" % (FONT_FILE, n, os.path.getsize(ttf) / 1024.0))
-    proj = build(chars)
+    rt = {c for c in runtime_chars() if ord(c) in cmap}
+    ttf, n = subset_font(chars | rt)
+    print("[FONT] %s ｜ %d 字形（设计 %d + 运行时 %d） ｜ %.0f KB"
+          % (FONT_FILE, n, len(chars), len(rt & (chars | rt)), os.path.getsize(ttf) / 1024.0))
+    proj = build(chars, rt)
     io.open(OUT, "w", encoding="utf-8", newline="\n").write(
         json.dumps(proj, ensure_ascii=False, indent=2) + "\n")
     print("written", OUT, "%.1f KB" % (os.path.getsize(OUT) / 1024.0))

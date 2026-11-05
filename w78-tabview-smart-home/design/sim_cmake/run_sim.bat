@@ -47,7 +47,7 @@ if errorlevel 1 set "GENERATOR=MinGW Makefiles"
 echo [run_sim] target    = %SIM_TARGET_PROJ_DIR%
 echo [run_sim] build dir = %BUILD_DIR%
 echo [run_sim] configuring...
-cmake -S "%PC_SIM_DIR%" -B "%BUILD_DIR%" -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=Release
+cmake -S "%PC_SIM_DIR%" -B "%BUILD_DIR%" -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD_LIBRARIES=-lwlanapi
 if errorlevel 1 (
     echo [run_sim] configure FAILED.
     exit /b 1
@@ -73,7 +73,7 @@ if /i "%~1"=="test" (
     set "W78_AUTOTEST=1"
     set "SDL_VIDEODRIVER=dummy"
     echo [run_sim] headless nav autotest...
-    "%LOCAL_EXE%"
+    start /b /wait "" "%LOCAL_EXE%"
     if errorlevel 1 (
         echo [run_sim] AUTOTEST FAILED
         pause
@@ -82,11 +82,52 @@ if /i "%~1"=="test" (
     echo [run_sim] AUTOTEST PASS
     exit /b 0
 )
+if /i "%~1"=="wifitest" (
+    set "W78_WIFI_TEST=1"
+    set "SDL_VIDEODRIVER=dummy"
+    cd /d "%SIM_TARGET_PROJ_DIR%"
+    echo [run_sim] headless wifi scan test...
+    start /b /wait "" "%LOCAL_EXE%"
+    if errorlevel 1 (
+        echo [run_sim] WIFITEST FAILED
+        pause
+        exit /b 1
+    )
+    exit /b 0
+)
+if /i "%~1"=="flowtest" (
+    set "W78_WIFI_FLOW_TEST=1"
+    set "WIFI_PC_FAKE=1"
+    set "SDL_VIDEODRIVER=dummy"
+    cd /d "%SIM_TARGET_PROJ_DIR%"
+    echo [run_sim] headless wifi flow test - fake backend...
+    start /b /wait "" "%LOCAL_EXE%"
+    if errorlevel 1 (
+        echo [run_sim] FLOWTEST FAILED
+        pause
+        exit /b 1
+    )
+    exit /b 0
+)
+if /i "%~1"=="uitest" (
+    set "W78_WIFI_UI_TEST=1"
+    set "WIFI_PC_FAKE=1"
+    set "SDL_VIDEODRIVER=dummy"
+    cd /d "%SIM_TARGET_PROJ_DIR%"
+    echo [run_sim] headless wifi ui test...
+    start /b /wait "" "%LOCAL_EXE%"
+    if errorlevel 1 (
+        echo [run_sim] UITEST FAILED
+        pause
+        exit /b 1
+    )
+    exit /b 0
+)
 if /i "%~1"=="quittest" (
     set "W78_QUIT_TEST=1"
     set "SDL_VIDEODRIVER=dummy"
     echo [run_sim] headless close-window test...
-    "%LOCAL_EXE%"
+    start /b /wait "" "%LOCAL_EXE%"
     if errorlevel 1 (
         echo [run_sim] QUITTEST FAILED
         pause

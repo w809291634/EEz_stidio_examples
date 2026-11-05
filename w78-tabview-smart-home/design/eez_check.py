@@ -103,6 +103,16 @@ def main():
         if name not in design:
             fails.append("A2 工程里有设计源没有的页：%s" % name)
             continue
+        if name == "Wi-Fi 设置":
+            # 该页按示例工程结构生成（list/textarea/keyboard + 弹层），
+            # identifier 是示例命名，不走类别码；这里改核「必需对象存在」。
+            need = {"list_box", "overlay_root", "dlg_root", "pwd_ta", "kb_main",
+                    "btn_refresh", "btn_disconnect", "btn_connect", "scrim", "sheet"}
+            have = {w.get("identifier") for w in widgets}
+            miss = sorted(need - have)
+            if miss:
+                fails.append("A2 页 %s 缺必需对象：%s" % (name, miss))
+            continue
         rows = design[name]
         # 设计源控件 → 工程控件（按下标 + 框对账；标签类控件设计源里没有单独条目）
         boxes = {(r[4][0], r[4][1], r[4][2], r[4][3]) for r in rows}
