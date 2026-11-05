@@ -403,6 +403,8 @@ def widget_kind(nm, cat, box):
         return "switch"
     if cat == "slider":
         return "slider"
+    if cat in ("value", "uivalue"):
+        return "label"
     if cat in ("nav", "back") and box[2] <= 200:
         return "button"
     if cat == "scene" and box[2] <= 220:
@@ -644,6 +646,14 @@ def build_page(name, frame, rows, first=False):
             if nm != "搜索框" and shown:
                 node["text"] = shown
             children.append(node)
+        elif kind == "label":
+            ts = _texts_in(frame, box)
+            t = ts[0] if ts else None
+            lit = _fix_text(t["text"]) if t else _fix_text(nm)
+            node = make_label(ident, lit, box,
+                              t["fill"] if t else None,
+                              sc.ui_size(lit, t["size"]) if t else None)
+            children.append(node)
         else:
             node = make_container(ident, box, bg, rx)
             if tuple(box) in rects:
@@ -655,7 +665,7 @@ def build_page(name, frame, rows, first=False):
 
     # 按钮只跳过已作为按钮文案的那一条；按钮内其它文字（角标、副标题）仍要保留。
     # 输入框内的设计文字改由控件自身承载，跳过以免叠字。
-    skip_boxes = [b for k, b in material if k == "textarea"]
+    skip_boxes = [b for k, b in material if k in ("textarea", "label")]
     for i, t in enumerate(design_texts(frame)):
         lit = _fix_text(t["text"])
         if any(b[0] <= t["x"] <= b[0] + b[2] and b[1] <= t["y"] <= b[1] + b[3]

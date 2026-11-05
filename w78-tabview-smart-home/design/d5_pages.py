@@ -39,6 +39,8 @@ SUSPECT = 8.0
 CLICK_JS = r"""
 const target = process.argv[2];
 const rootPage = process.argv[3];
+const allIds = (process.argv[4] || '').split(',').filter(Boolean);
+const idsJson = JSON.stringify(allIds);
 const list = await (await fetch('http://127.0.0.1:9222/json/list')).json();
 const t = list.find(p => p.type === 'page' && /EEZ Studio/.test(p.title || ''));
 const ws = new WebSocket(t.webSocketDebuggerUrl);
@@ -51,13 +53,20 @@ await send('Runtime.enable');
 // 目标节点 + 树视口 + 命中自证：只看 window 高度会把被树容器裁掉的节点当可见（实测点到别的页）
 const find = `(()=>{
   const hits=[...document.querySelectorAll('*')].filter(e=>e.children.length===0 && e.textContent.trim()===` + JSON.stringify(target) + `);
-  if(!hits.length) return 'none';
-  // 编辑器里有多个 .EezStudio_Tree（Pages / Widgets Structure / Variables），
-  // 页名可能也出现在右侧结构树里；以「含根页 main 的那棵」为准（实测点错树会什么都不发生）
-  const rootLeaf=[...document.querySelectorAll('*')].find(x=>x.children.length===0 && x.textContent.trim()===` + JSON.stringify(rootPage) + `);
-  const tree=(rootLeaf && rootLeaf.closest('.EezStudio_Tree')) || hits.find(x=>x.closest('.EezStudio_Tree'));
-  const e=(tree && hits.find(x=>tree.contains(x))) || hits[0];
-  if(!e) return 'none';
+  if(!hits.length) return 'MISS_HITS';
+  // 编辑器里有多个 .EezStudio_Tree（Pages / Widgets Structure / Variables）。
+  // Widgets Structure 里也可能出现与页名同名的 label（如「客厅」），点它会开错画布。
+  // 只认同时包含 >=3 个已知页 ID 的那棵树（Pages 树）。
+  const trees=[...document.querySelectorAll('.EezStudio_Tree')];
+  let tree=null, bestScore=0;
+  for (const tr of trees){
+    const texts=[...tr.querySelectorAll('*')].filter(x=>x.children.length===0).map(x=>x.textContent.trim());
+    const sc=__IDS__.filter(id=>texts.includes(id)).length;
+    if(sc>bestScore){bestScore=sc;tree=tr;}
+  }
+  if(!tree || bestScore<3) return 'MISS_TREE:'+bestScore;
+  const e=hits.find(x=>tree.contains(x));
+  if(!e) return 'MISS_LEAF';
   const row=e.closest('.tree-row') || e;
   const b=row.getBoundingClientRect();
   const tr=row.closest('.EezStudio_Tree');
@@ -70,10 +79,14 @@ const find = `(()=>{
   const self=hit && hit.closest('.tree-row') && hit.closest('.tree-row')===row;
   return JSON.stringify([cx, cy, Math.round(tb.x), Math.round(tb.y), Math.round(tb.width), Math.round(tb.height), self?1:0, Math.round(y1-y0)]);
 })()`;
+const findExpr = find.replace("__IDS__", idsJson);
 
 async function pos() {
-  const r = await send('Runtime.evaluate', { expression: find, returnByValue: true });
+  const r = await send('Runtime.evaluate', { expression: findExpr, returnByValue: true });
   const v = r.result.result.value;
+  if (typeof v === 'string' && (v.startsWith('MISS') || v === 'BLOCKED')) {
+    console.log(v); process.exit(0);
+  }
   return v === 'none' ? null : JSON.parse(v);
 }
 
@@ -200,8 +213,11 @@ def click_node(page_id, root_id):
     js = os.path.join(TMP, "eez_click_node.js")
     with open(js, "w", encoding="utf-8") as f:
         f.write(CLICK_JS)
-    r = subprocess.run(["node", js, page_id, root_id], capture_output=True, text=True,
+    all_ids = ",".join(sorted(set(PAGE_IDS.values())))
+    r = subprocess.run(["node", js, page_id, root_id, all_ids], capture_output=True, text=True,
                        encoding="utf-8", errors="replace")
+    if not r.stdout.strip().endswith("OK"):
+        print("    [click] %s -> %s %s" % (page_id, r.stdout.strip()[:80], (r.stderr or "")[:80]))
     return r.stdout.strip().endswith("OK")
 
 
@@ -361,7 +377,7 @@ def main():
         sim = 100.0 - c
         rows.append((cn, c))
         suspect = c > SUSPECT
-        keep = c > SAVE_ABOVE or cn == names[0] or suspect
+        keep = bool(os.environ.get("D5_KEEP_ALL")) or c > SAVE_ABOVE or cn == names[0] or suspect
         if keep:
             side_by_side(os.path.join(TMP, "d_%s.png" % pid), c_png,
                          os.path.join(SHOT_DIR, "%s.png" % cn))

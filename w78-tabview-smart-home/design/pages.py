@@ -518,3 +518,6 @@ PAGES = [
      [("‹ 返回", "back", "返回进入前的页面（来路）", "返回", sc.SUB_BACK_BOX),
       ("＋ 添加设备", "nav", "进入 添加设备·选类型", "换页", (320, 306, 160, 40))]),
 ]
+# 设备读数（温度/湿度/功率/状态等）也是控件：从同一份设计帧自动补 value 行。
+import values as _values
+_values.add_value_rows(PAGES)

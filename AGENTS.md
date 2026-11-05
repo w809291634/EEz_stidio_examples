@@ -39,7 +39,7 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
 4. **留痕**：提示词逐字进 kit `prompts/PROMPT_LOG.md`（PR-####），新问题进 `intake/`（P-####）
    并追 `intake/index.md`；查问题先看这张索引。
 5. **收尾即清**：过程件只放工程 `tmp/` 且收尾删除，交付件只放正位；**构建/编译缓存 `tmp/sim_build_<工程名>`、`tmp/compile_cache` 保留**（用户令，避免下次全量重编；build 目录按工程命名，防多工程冲突）。
-6. **载体与交付**：设计阶段以 H5 三视图为主；核对给 HTML 绝对路径、不内嵌、不出查看器页；改 H5 交互/实时效果要同步高清设计图。
+6. **载体与交付**：设计阶段以 H5 三视图为主；**高清设计图默认叠加全部控件标注（开关/滑条/按钮/输入/图表都要有号），可一键关**；**H5 批注**：右键右侧控件清单行/底部控件标签 → 删除/修改/加提示，右键效果图空白 → 落坐标标签，导出 `annotations.json` 给 AI 改设计源，浏览器不改工程；核对给 HTML 绝对路径、不内嵌、不出查看器页；改 H5 交互/实时效果要同步高清设计图。
 7. **覆盖表只补真值**：例外/映射表不得推翻设计源行为字段，配 assert 门禁。
 8. **控件只克隆 EEZ 拖拽样板**：先在 EEZ 画布拖控件生成 JSON，再用 `tools/eez_defaults.py` 采样；
    生成器只改几何/identifier/文本/样式值，**禁止手写或新增字段**（A10 门禁逐控件核对）。
@@ -49,10 +49,13 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
    控件 JSON 只克隆拖拽样板（A10 字段集校验）——细则见 NO_FLOW §2.2。
    **设计标注的控件必须按类型真实建立**（开关→Switch、滑条→Slider、动作/跳转→Button、
    输入→Textarea、进度→Bar、图表→Chart）；大卡片用容器 + 卡内真控件；A12 硬门禁，禁止透明容器冒充。
+   **设备读数也是控件**（温度/湿度/百分比/功率/电量/在线状态/日期时间等），按 value 类标注并生成 Label（`hr` 码）；
+   随 UI 滑条/开关变化的值（含滑条/进度条旁的数值）自动归 `in_read`；标题、说明、按钮文案不算读数（标注范围见 NO_FLOW §2.1）。
 9. **中文只在索引里出现**：`log_entry --json`、`design/texts.py` key、`lint_text.py` 门禁。
 10. **字体 F1–F7**：三件套 / `lvglGlyphs.encodings` / 核 cmap / 多字号共用 TTF / headless 不烘 / 验收三连。
 11. **交付必过 D1–D9**：`design/delivery_gate.py`，FAIL 不许交付；D5 每次生成后用
     `design/d5_pages.py` 打出**相似度百分比**（100−逐像素差异率）并留并排图。
+    **D5 整轮只启动一次 EEZ，禁止反复开关/逐页重启**；多次改动先自检，最后合并跑一次全量。
 
 12. **Wi-Fi 连接页先移植**：扫描/连接/密码/忘记网络一律按 kit `reference/15` 移植成熟结构（单页 + lv_list 动态行 + 密码半页 + 忘记框 + busy），不拆三屏、不自造交互。
 

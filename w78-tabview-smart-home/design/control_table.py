@@ -21,7 +21,8 @@ import pages as pg                 # noqa: E402
 OUT = os.path.join(os.path.dirname(sc.OUT), "designer_annotated", "控件清单.md")
 
 CAT = {"scene": "场景卡(按钮)", "nav": "跳转按钮", "back": "返回按钮",
-       "toggle": "开关", "slider": "滑块", "read": "只读数据卡"}
+       "toggle": "开关", "slider": "滑块", "read": "只读数据卡",
+       "value": "设备读数", "uivalue": "UI 读数"}
 
 
 def main():
@@ -58,8 +59,9 @@ def main():
         "`design/simple_control.py`（几何）。",
         "> 要改口径就改上面三处再重跑本脚本；数据流向/层级/手势与 H5 评审页同源"
         "（`design/overview_pro.py`）。",
-        "> 本表每条在 EEZ 中必须是真实控件（开关/滑块/按钮/输入/进度/图表），"
-        "A12 硬门禁校验；透明容器冒充即 FAIL。",
+        "> 本表每条在 EEZ 中必须是真实控件（开关/滑块/按钮/输入/进度/图表/读数），"
+        "A12 硬门禁校验；透明容器冒充即 FAIL。设备读数（温度/湿度/百分比/功率/状态）"
+        "也单独成 `value` 行。",
         "",
         "| 屏 | 层 | 徽标 | 名称 | 控件类型 | 数据流向 | 作用（点击/滑动后） | 跳转目标 | 代号 | 框 (x,y,w,h) |",
         "|---|---|---|---|---|---|---|---|---|---|",

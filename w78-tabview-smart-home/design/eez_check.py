@@ -32,7 +32,7 @@ from eez_gen import PAGE_IDS, widget_kind, compound_kind   # noqa: E402
 KIND_TYPE = {"button": "LVGLButtonWidget", "switch": "LVGLSwitchWidget",
              "slider": "LVGLSliderWidget", "textarea": "LVGLTextareaWidget",
              "bar": "LVGLBarWidget", "chart": "LVGLChartWidget",
-             "container": "LVGLContainerWidget"}
+             "label": "LVGLLabelWidget", "container": "LVGLContainerWidget"}
 
 PROJ = os.path.join(ROOT, "w78-smart-home.eez-project")
 DEFAULTS = json.load(io.open(os.path.join(HERE, "eez_defaults.json"), encoding="utf-8"))
