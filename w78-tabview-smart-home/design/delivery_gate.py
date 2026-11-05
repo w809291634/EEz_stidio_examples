@@ -5,6 +5,7 @@
       python design/delivery_gate.py --b1-ok    # 人工完成画布比对后打确认标记
 """
 import glob
+import hashlib
 import io
 import json
 import os
@@ -18,6 +19,14 @@ sys.path.insert(0, HERE)
 
 PROJ = os.path.join(ROOT, "w78-smart-home.eez-project")
 B1_MARK = os.path.join(HERE, ".b1_confirmed")
+
+
+def proj_sig():
+    """设计源哈希：D4 重建会重写 .eez-project，不能拿它判过期；设计源不变则确认有效。"""
+    h = hashlib.sha256()
+    for name in ("pages.py", "values.py", "simple_control.py", "eez_gen.py"):
+        h.update(open(os.path.join(HERE, name), "rb").read())
+    return h.hexdigest()[:16]
 
 
 def run(cmd):
@@ -103,11 +112,16 @@ def d5_canvas():
         rows = [l.strip() for l in io.open(coef_file, encoding="utf-8") if l.strip()]
         coef = rows[0] if rows else ""
     if os.path.isfile(B1_MARK):
-        stamp = io.open(B1_MARK, encoding="utf-8").read().strip()
-        newest = max(os.path.getmtime(PROJ),
-                     os.path.getmtime(os.path.join(ROOT, "src", "ui", "screens.c")))
-        if newest > os.path.getmtime(B1_MARK):
-            return False, "工程在画布确认后已变更，需重跑 D5 并重新确认 ｜ %s" % (coef or "无相似度记录")
+        lines = [l.strip() for l in io.open(B1_MARK, encoding="utf-8") if l.strip()]
+        stamp = lines[0] if lines else ""
+        saved = next((l[4:] for l in lines if l.startswith("sig:")), "")
+        if saved and saved != proj_sig():
+            return False, "工程内容在画布确认后已变更，需重跑 D5 并重新确认 ｜ %s" % (coef or "无相似度记录")
+        if not saved:
+            newest = max(os.path.getmtime(PROJ),
+                         os.path.getmtime(os.path.join(ROOT, "src", "ui", "screens.c")))
+            if newest > os.path.getmtime(B1_MARK):
+                return False, "工程在画布确认后已变更，需重跑 D5 并重新确认 ｜ %s" % (coef or "无相似度记录")
         return True, "画布比对已确认（%s）｜ %s" % (stamp, coef or "无相似度记录")
     if coef:
         return False, "%s ｜ 待人工确认后 `--b1-ok`" % coef
@@ -163,7 +177,8 @@ def main():
     if "--b1-ok" in sys.argv:
         i = sys.argv.index("--b1-ok")
         note = sys.argv[i + 1] if len(sys.argv) > i + 1 else "已核对"
-        io.open(B1_MARK, "w", encoding="utf-8", newline="\n").write(note)
+        io.open(B1_MARK, "w", encoding="utf-8", newline="\n").write(
+            note + "\nsig:" + proj_sig() + "\n")
         print("已记录画布比对确认：", note)
         return
     # D4 会重新构建（清空 fonts 目录）并在构建后重烘，所以必须先跑 D4 再统计字体

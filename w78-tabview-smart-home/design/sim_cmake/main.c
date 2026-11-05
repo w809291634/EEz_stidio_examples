@@ -168,6 +168,7 @@ int main(int argc, char **argv)
     value_bind_init();
 
 
+
     if (getenv("W78_QUIT_TEST")) {          /* 自证窗口关闭链路：压一个 SDL_QUIT，应干净退出 0 */
         SDL_Event q;
         SDL_memset(&q, 0, sizeof(q));

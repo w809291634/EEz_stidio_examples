@@ -305,6 +305,14 @@ def main():
                 fails.append("A10 %s 控件 %s 样式出现样板外字段：%s"
                              % (t, w.get("identifier"), sorted(extra_s)))
 
+    # A13 开关必须可切换：EEZ 生成的 Switch 样板缺 CHECKABLE 时点击不会变状态
+    for pgx in proj["userPages"]:
+        for w in walk(pgx["components"], ""):
+            if w.get("type") == "LVGLSwitchWidget":
+                if "CHECKABLE" not in str(w.get("widgetFlags", "")).split("|"):
+                    fails.append("A13 开关 %s 缺 CHECKABLE 标志"
+                                 % w.get("identifier"))
+
     fs_path = os.path.join(HERE, "font_storage.json")
     storage = "image"
     if os.path.isfile(fs_path):
