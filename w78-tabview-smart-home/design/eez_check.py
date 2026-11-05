@@ -27,7 +27,12 @@ sys.path.insert(0, HERE)
 
 import pages as pg                  # noqa: E402
 import overview_pro as ov           # noqa: E402
-from eez_gen import PAGE_IDS        # noqa: E402
+from eez_gen import PAGE_IDS, widget_kind, compound_kind   # noqa: E402
+
+KIND_TYPE = {"button": "LVGLButtonWidget", "switch": "LVGLSwitchWidget",
+             "slider": "LVGLSliderWidget", "textarea": "LVGLTextareaWidget",
+             "bar": "LVGLBarWidget", "chart": "LVGLChartWidget",
+             "container": "LVGLContainerWidget"}
 
 PROJ = os.path.join(ROOT, "w78-smart-home.eez-project")
 DEFAULTS = json.load(io.open(os.path.join(HERE, "eez_defaults.json"), encoding="utf-8"))
@@ -38,6 +43,7 @@ CODE_RE = re.compile(r"_(hw|hr|go|w|r)(\d{2})$")
 STATIC_RE = re.compile(r"_st\d{2}$")
 DECO_RE = re.compile(r"_deco\d{2}$")
 LB_RE = re.compile(r"_(?:hw|hr|go|w|r)\d{2}_lb$")
+SW_RE = re.compile(r"_(?:sw|sl)$")
 
 
 def _font_has_cjk(f):
@@ -150,6 +156,15 @@ def main():
             miss = sorted(need - have)
             if miss:
                 fails.append("A2 页 %s 缺必需对象：%s" % (name, miss))
+            need_types = {"list_box": "LVGLListWidget", "pwd_ta": "LVGLTextareaWidget",
+                          "kb_main": "LVGLKeyboardWidget", "overlay_root": "LVGLContainerWidget",
+                          "dlg_root": "LVGLContainerWidget", "btn_connect": "LVGLButtonWidget",
+                          "btn_refresh": "LVGLButtonWidget", "btn_disconnect": "LVGLButtonWidget"}
+            for ident, want in need_types.items():
+                node = next((w for w in widgets if w.get("identifier") == ident), None)
+                if node is not None and node["type"] != want:
+                    fails.append("A12 页 %s 控件 %s 应为 %s，实际 %s"
+                                 % (name, ident, want, node["type"]))
             continue
         rows = design[name]
         # 设计源控件 → 工程控件（按下标 + 框对账；标签类控件设计源里没有单独条目）
@@ -202,6 +217,27 @@ def main():
         if sorted(got) != sorted(expect):
             fails.append("A9 页 %s 类别码对不上：期望 %s ｜ 实际 %s"
                          % (name, sorted(expect)[:4], sorted(got)[:4]))
+        # A12 设计标注的类型必须是真实控件：开关→Switch、滑条→Slider、
+        # 动作/跳转按钮→Button、输入→Textarea、进度→Bar、图表→Chart。
+        by_id = {w.get("identifier"): w for w in widgets}
+        for r, ident in zip(rows, expect):
+            node = by_id.get(ident)
+            if compound_kind(r[1], r[4]):
+                if node is not None and node["type"] != "LVGLContainerWidget":
+                    fails.append("A12 页 %s 控件 %s 是整卡交互区，应为容器，实际 %s"
+                                 % (name, ident, node["type"]))
+                suffix = "_sw" if r[1] == "toggle" else "_sl"
+                want_child = "LVGLSwitchWidget" if r[1] == "toggle" else "LVGLSliderWidget"
+                child = next((c for c in (node.get("children") or [])
+                              if c.get("identifier") == ident + suffix), None) if node else None
+                if node is not None and (child is None or child["type"] != want_child):
+                    fails.append("A12 页 %s 控件 %s 卡内缺真实 %s"
+                                 % (name, ident, want_child))
+                continue
+            want = KIND_TYPE[widget_kind(r[0], r[1], r[4])]
+            if node is not None and node["type"] != want:
+                fails.append("A12 页 %s 控件 %s 标注为 %s，应为 %s，实际 %s"
+                             % (name, ident, r[1], want, node["type"]))
         known = CODE_RE.search
         for w in widgets:
             ident = str(w.get("identifier") or "")
@@ -210,7 +246,7 @@ def main():
             if not ident:
                 fails.append("A9 页 %s 有控件无 identifier（%s）" % (name, w["type"]))
             elif not (known(ident) or STATIC_RE.search(ident) or DECO_RE.search(ident)
-                      or LB_RE.search(ident)):
+                      or LB_RE.search(ident) or SW_RE.search(ident)):
                 fails.append("A9 页 %s 出现未分类命名：%s" % (name, ident))
 
     ids_all = []

@@ -11,10 +11,10 @@ REM    1) Inject this example's absolute path into SIM_TARGET_PROJ_DIR.
 REM       PC_SIM\CMakeLists.txt reads that env var to locate the target project,
 REM       so switching project = run the matching run_sim.bat. PC_SIM and
 REM       apl_lvgl_v9_4 source stay untouched.
-REM    2) Build dir is THIS BAT'S OWN DIR (build_rel) - one private build dir
-REM       per example. Caches are never deleted and never clash between
-REM       examples; the first build of each example compiles LVGL once
-REM       (ccache speeds it up), later builds are incremental.
+REM    2) Build dir is <project>\tmp\sim_build_<project name> - one private
+REM       build dir per example, named by project. Caches are never deleted
+REM       and never clash between examples; the first build of each example
+REM       compiles LVGL once (ccache speeds it up), later builds incremental.
 REM ============================================================================
 set "SIM_DIR=%~dp0"
 if "%SIM_DIR:~-1%"=="\" set "SIM_DIR=%SIM_DIR:~0,-1%"
@@ -29,7 +29,11 @@ for %%I in ("%PROJ_DIR%") do set "SIM_TARGET_PROJ_DIR=%%~dpI"
 if "%SIM_TARGET_PROJ_DIR:~-1%"=="\" set "SIM_TARGET_PROJ_DIR=%SIM_TARGET_PROJ_DIR:~0,-1%"
 
 set "PC_SIM_DIR=C:\Users\yjt54\Desktop\EEz_stidio_examples\PC_SIM\lv_port_pc_vscode_v9.5"
-set "BUILD_DIR=%SIM_DIR%\..\..\tmp\sim_build"
+REM Per-project build dir: projects sharing this PC_SIM must never share tmp\build.
+for %%I in ("%SIM_TARGET_PROJ_DIR%") do set "PROJ_NAME=%%~nxI"
+set "BUILD_DIR=%SIM_TARGET_PROJ_DIR%\tmp\sim_build_%PROJ_NAME%"
+REM Build dir and tmp\compile_cache are intentionally kept (user 2026-11-05):
+REM deleting them forces a full LVGL/UI rebuild next time. Do not clean them in scripts.
 REM Keep the exe PRIVATE to this project. PC_SIM\bin is shared by every
 REM example: another project building later overwrites main.exe, and this
 REM bat would then launch the wrong program. PC_SIM CMakeLists reads SIM_BIN_DIR.

@@ -6,13 +6,12 @@
 精确值仍可跑 design/esp32_size.py（点名才做）。
 """
 import glob
+import hashlib
 import json
 import os
 import shlex
-import shutil
 import subprocess
 import sys
-import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -37,6 +36,24 @@ def opt_of(args):
         if a == "-O" or a in ("-O0", "-O1", "-O2", "-O3", "-O4", "-Og", "-Os", "-Oz", "-Ofast"):
             return a
     return "?"
+
+
+def ui_hash():
+    files = sorted(glob.glob(os.path.join(UI, "**", "*.c"), recursive=True) +
+                   glob.glob(os.path.join(UI, "**", "*.h"), recursive=True))
+    h = hashlib.sha256()
+    for f in files:
+        h.update(os.path.relpath(f, ROOT).replace(os.sep, "/").encode())
+        h.update(open(f, "rb").read())
+    return h.hexdigest()
+
+
+def header_hash():
+    h = hashlib.sha256()
+    for f in sorted(glob.glob(os.path.join(UI, "**", "*.h"), recursive=True)):
+        h.update(os.path.basename(f).encode())
+        h.update(open(f, "rb").read())
+    return h.hexdigest()[:12]
 
 
 def measure(opt=None):
@@ -66,11 +83,32 @@ def measure(opt=None):
     if not ui_inc:
         return {"error": "编译命令里没有 UI include 路径"}
     size_exe = cfg["size"]
-    tmp = tempfile.mkdtemp(prefix="w78_est_")
+    sig = []
+    skip = False
+    for x in args0:
+        if skip:
+            skip = False
+            continue
+        if x == "-o":
+            skip = True
+            continue
+        if x == src0:
+            sig.append("<SRC>")
+        elif x == ui_inc:
+            sig.append("-I<UI>")
+        else:
+            sig.append(x)
+    cmd_sig = hashlib.sha1("\0".join(sig).encode()).hexdigest()[:10]
+    # 持久缓存：按“单文件内容 + 头文件 + 参数”失效，改一个屏不会重编字库
+    hdr = header_hash()
+    cache = os.path.join(ROOT, "tmp", "compile_cache", "esp32",
+                         level.lstrip("-"), cmd_sig)
+    os.makedirs(cache, exist_ok=True)
     files = []
-    try:
-        for f in sorted(glob.glob(os.path.join(UI, "**", "*.c"), recursive=True)):
-            obj = os.path.join(tmp, os.path.basename(f) + ".o")
+    for f in sorted(glob.glob(os.path.join(UI, "**", "*.c"), recursive=True)):
+        key = hashlib.sha256(open(f, "rb").read() + hdr.encode()).hexdigest()[:10]
+        obj = os.path.join(cache, os.path.basename(f) + "." + key + ".o")
+        if not os.path.isfile(obj):
             a = list(args0)
             a[a.index(ui_inc)] = "-I" + UI
             a[a.index(src0)] = f
@@ -80,13 +118,11 @@ def measure(opt=None):
                                encoding="utf-8", errors="replace")
             if r.returncode != 0 or not os.path.isfile(obj):
                 return {"error": "编译失败 %s：%s" % (os.path.basename(f), (r.stderr or r.stdout)[-200:])}
-            s = subprocess.run([size_exe, obj], capture_output=True, text=True,
-                               encoding="utf-8", errors="replace").stdout.split()
-            text, data, bss = int(s[-6]), int(s[-5]), int(s[-4])
-            files.append({"name": os.path.basename(f), "flash": text + data,
-                          "ram": data + bss, "text": text, "data": data, "bss": bss})
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+        s = subprocess.run([size_exe, obj], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace").stdout.split()
+        text, data, bss = int(s[-6]), int(s[-5]), int(s[-4])
+        files.append({"name": os.path.basename(f), "flash": text + data,
+                      "ram": data + bss, "text": text, "data": data, "bss": bss})
     files.sort(key=lambda x: -x["flash"])
     return {
         "target": cfg.get("target", "esp32p4"),

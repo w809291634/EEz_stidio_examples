@@ -104,6 +104,10 @@ def d5_canvas():
         coef = rows[0] if rows else ""
     if os.path.isfile(B1_MARK):
         stamp = io.open(B1_MARK, encoding="utf-8").read().strip()
+        newest = max(os.path.getmtime(PROJ),
+                     os.path.getmtime(os.path.join(ROOT, "src", "ui", "screens.c")))
+        if newest > os.path.getmtime(B1_MARK):
+            return False, "工程在画布确认后已变更，需重跑 D5 并重新确认 ｜ %s" % (coef or "无相似度记录")
         return True, "画布比对已确认（%s）｜ %s" % (stamp, coef or "无相似度记录")
     if coef:
         return False, "%s ｜ 待人工确认后 `--b1-ok`" % coef
@@ -117,13 +121,16 @@ def d6_nav():
 
 
 def d7_clean():
-    """只卡 tmp（交付件不许进）；__pycache__ 是跑脚本的副产物，仅提示。"""
+    """只卡 tmp（交付件不许进）；构建/编译缓存按用户令保留。"""
     tmp = os.path.join(ROOT, "tmp")
-    junk = os.listdir(tmp) if os.path.isdir(tmp) else []
+    entries = os.listdir(tmp) if os.path.isdir(tmp) else []
+    keep = [x for x in entries if x == "compile_cache" or x.startswith("sim_build")]
+    junk = [x for x in entries if x not in keep]
     cache = os.path.isdir(os.path.join(ROOT, "design", "__pycache__"))
     ok = not junk
-    return ok, "tmp：%s ｜ __pycache__：%s" % (
-        "空" if ok else "未清 %s" % junk[:3], "有（可忽略）" if cache else "无")
+    return ok, "tmp：%s ｜ 保留 %s ｜ __pycache__：%s" % (
+        "无杂物" if ok else "未清 %s" % junk[:3], "/".join(sorted(keep)) or "无",
+        "有（可忽略）" if cache else "无")
 
 
 def d8_trace():

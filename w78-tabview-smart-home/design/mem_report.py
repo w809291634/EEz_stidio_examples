@@ -12,10 +12,8 @@ import io
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
-import tempfile
 import time
 
 import esp32_estimate
@@ -79,24 +77,29 @@ def conf_val(path, key):
 
 
 def compile_sizes(files):
-    """把生成物编成 .o，读 text/data/bss（text 含 rodata；bss 是 RAM）。"""
+    """把生成物编成 .o，读 text/data/bss；.o 持久缓存在 tmp/compile_cache/pc。"""
     out = {}
-    tmp = tempfile.mkdtemp(prefix="w78_mem_")
-    try:
-        for f in files:
-            o = os.path.join(tmp, os.path.basename(f)[:-2] + ".o")
+    hdr = hashlib.sha256()
+    for h in sorted(glob.glob(os.path.join(UI, "**", "*.h"), recursive=True)):
+        hdr.update(os.path.basename(h).encode())
+        hdr.update(open(h, "rb").read())
+    hdr = hdr.hexdigest()[:12]
+    cache = os.path.join(ROOT, "tmp", "compile_cache", "pc", "O1")
+    os.makedirs(cache, exist_ok=True)
+    for f in files:
+        key = hashlib.sha256(open(f, "rb").read() + hdr.encode()).hexdigest()[:10]
+        o = os.path.join(cache, os.path.basename(f)[:-2] + "." + key + ".o")
+        if not os.path.isfile(o):
             r = subprocess.run(["gcc", "-c", "-O1", "-DLV_CONF_INCLUDE_SIMPLE",
                                 "-I", HERE, "-I", UI, "-I", os.path.join(os.path.dirname(ROOT), "apl_lvgl_v9_4"),
                                 f, "-o", o],
                                capture_output=True, text=True, errors="replace")
             if r.returncode != 0 or not os.path.isfile(o):
                 continue
-            s = subprocess.run(["size", o], capture_output=True, text=True, errors="replace")
-            m = re.search(r"^\s*(\d+)\s+(\d+)\s+(\d+)", s.stdout, re.M)
-            if m:
-                out[f] = (int(m.group(1)) + int(m.group(2)), int(m.group(3)))  # (flash, ram)
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+        s = subprocess.run(["size", o], capture_output=True, text=True, errors="replace")
+        m = re.search(r"^\s*(\d+)\s+(\d+)\s+(\d+)", s.stdout, re.M)
+        if m:
+            out[f] = (int(m.group(1)) + int(m.group(2)), int(m.group(3)))  # (flash, ram)
     return out
 
 
@@ -128,8 +131,11 @@ def main():
     except Exception:
         fb = "?"
     mem = conf_val(sim_conf, "LV_MEM_SIZE")
-    exe = os.path.join(ROOT, "tmp", "sim_build", "bin", "main.exe")
-    lib = os.path.join(ROOT, "tmp", "sim_build", "apl_lvgl_build", "lib", "liblvgl.a")
+    sim_build = os.path.join(ROOT, "tmp", "sim_build_" + os.path.basename(ROOT))
+    if not os.path.isdir(sim_build):
+        sim_build = os.path.join(ROOT, "tmp", "sim_build")
+    exe = os.path.join(sim_build, "bin", "main.exe")
+    lib = os.path.join(sim_build, "apl_lvgl_build", "lib", "liblvgl.a")
 
     if not BRIEF:
         print("[MEM] 资源树（%s；只计编译后占用）" % budget.get("tier", "1m"))
@@ -138,8 +144,13 @@ def main():
             print("ESP32（%s / IDF %s，工具链只编译估算；优化 %s，默认）"
                   % (tgt, est["idf_version"], est.get("opt", "?")))
             print("|- EEZ UI Flash %.1fKB / RAM %.1fKB" % (est["ui_flash"] / 1024.0, est["ui_ram"] / 1024.0))
+            exact = {f["name"]: f for f in esp["files"]} if (esp and fresh) else {}
             for f in est["files"]:
-                print("|  |- %s %s / RAM %s" % (f["name"], kb(f["flash"]), kb(f["ram"])))
+                line = "|  |- %s %s / RAM %s" % (f["name"], kb(f["flash"]), kb(f["ram"]))
+                ex = exact.get(f["name"])
+                if ex and ex["flash"] != f["flash"]:
+                    line += "  <- 精确 %s" % kb(ex["flash"])
+                print(line)
             print("`- 未链接：缺 gc/链接脚本，Flash 通常偏高约17%；精确值按需跑 python design/esp32_size.py")
             rows = opt_table()
             if rows:

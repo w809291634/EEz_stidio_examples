@@ -327,10 +327,12 @@ def make_container(ident, box, bg=None, radius=None, text="", color=None):
     return c
 
 
-def make_switch(ident, box):
+def make_switch(ident, box, on=False):
     c = fresh(DEFAULTS["LVGLSwitchWidget"])
     x, y, w, h = box
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h})
+    if on:
+        c["states"] = "CHECKED"      # EEZ 会生成 LV_STATE_<值>
     return c
 
 
@@ -393,6 +395,93 @@ def _hide(n):
     n["hiddenFlagType"] = "literal"
     n["hiddenFlag"] = True
     return n
+
+
+def widget_kind(nm, cat, box):
+    """设计标注 → EEZ 真实控件类型；不再用透明容器冒充交互控件。"""
+    if cat == "toggle":
+        return "switch"
+    if cat == "slider":
+        return "slider"
+    if cat in ("nav", "back") and box[2] <= 200:
+        return "button"
+    if cat == "scene" and box[2] <= 220:
+        return "button"
+    if cat == "read":
+        if nm in ("搜索框", "设备名称"):
+            return "textarea"
+        if nm == "进度":
+            return "bar"
+        if "曲线" in nm or "占比" in nm:
+            return "chart"
+    return "container"
+
+
+def _inside(inner, outer):
+    return (inner[0] >= outer[0] and inner[1] >= outer[1] and
+            inner[0] + inner[2] <= outer[0] + outer[2] and
+            inner[1] + inner[3] <= outer[1] + outer[3])
+
+
+def _texts_in(frame, box):
+    return [t for t in design_texts(frame)
+            if box[0] <= t["x"] <= box[0] + box[2] and
+            box[1] <= t["y"] <= box[1] + box[3]]
+
+
+def _value_ratio(frame, box, default=50):
+    """从设计里的轨道/填充矩形宽度估当前值（0–100）。"""
+    rs = [r["box"] for r in design_rects(frame) if _inside(r["box"], box)]
+    widths = sorted({r[2] for r in rs})
+    if len(widths) >= 2 and widths[-1] > 0:
+        return int(round(widths[-2] / float(widths[-1]) * 100))
+    return default
+
+
+def _switch_on(frame, box):
+    """设计里开关旋钮在右半 → 开。"""
+    rs = [r["box"] for r in design_rects(frame) if _inside(r["box"], box)]
+    if not rs:
+        return False
+    knob = min(rs, key=lambda b: b[2] * b[3])
+    return knob[0] + knob[2] / 2.0 > box[0] + box[2] / 2.0
+
+
+def compound_kind(cat, box):
+    """房间格等大卡片：交互区是整卡，开关/滑条只是卡内小件。"""
+    return cat in ("toggle", "slider") and (box[2] > 120 or box[3] > 60)
+
+
+def glyph_box(frame, kind, box):
+    """从设计帧里找卡内开关轨道/滑条轨道的真实几何；找不到就用右下角兜底。"""
+    rs = [r["box"] for r in design_rects(frame) if _inside(r["box"], box)]
+    if kind == "switch":
+        cand = [b for b in rs if 40 <= b[2] <= 50 and 22 <= b[3] <= 26]
+        if cand:
+            return cand[0]
+        return (box[0] + box[2] - 58, box[1] + box[3] - 32, 44, 24)
+    cand = [b for b in rs if b[3] <= 8 and b[2] >= 80]
+    if cand:
+        b = max(cand, key=lambda x: x[2])
+        return (b[0], b[1] - 7, b[2], 20)
+    return (box[0] + 14, box[1] + box[3] - 38, box[2] - 28, 20)
+
+
+def make_bar(ident, box, value=50):
+    c = fresh(DEFAULTS["LVGLBarWidget"])
+    x, y, w, h = box
+    c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h})
+    if "value" in c:
+        c["value"] = value
+    return c
+
+
+def make_chart(ident, box):
+    c = fresh(DEFAULTS["LVGLChartWidget"])
+    x, y, w, h = box
+    c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h})
+    c["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 0
+    return c
 
 
 def _lbl_font(lb, font="cn12"):
@@ -479,7 +568,7 @@ def build_page(name, frame, rows, first=False):
     }
     slug = PAGE_IDS.get(name, "page")
     rects = {r["box"]: r for r in design_rects(frame)}
-    children, btn_texts = [], []
+    children, btn_texts, material = [], [], []
     ctl_boxes = [tuple(b) for (_nm, _c, _a, _b, b) in rows]
     code_count = {}
 
@@ -494,18 +583,10 @@ def build_page(name, frame, rows, first=False):
         sty = rects.get(tuple(box), {})
         bg = sty.get("fill", "0x1C2430")
         rx = sty.get("rx", 12)
-        wide = box[2] > 200
-        # 只有"窄的跳转控件"做真按钮；卡片/开关/滑条/只读格只做底板，
-        # 否则按钮自带的居中文字会和设计帧里的名字/数值/详情叠在一起（实测）。
-        if cat not in ("nav", "back") or wide:
-            node = make_container(ident, box, bg, rx)
-            if tuple(box) in rects:
-                # 底板由设计帧的同位矩形当装饰层画；容器透明，别盖住滑条/图表等内部细件
-                node["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 0
-            if cat == "read":
-                no_click(node)      # 只读卡是静态展示；动作类控件要能收点击（⑦ 接 native）
-            children.append(node)
-        else:
+        kind = widget_kind(nm, cat, box)
+        material.append(("container" if compound_kind(cat, box) else kind, box))
+
+        if kind == "button":
             btn = make_button(ident, txt, box, bg, rx)
             lb = btn["children"][0]
             d = lb["localStyles"]["definition"]["MAIN"]["DEFAULT"]
@@ -523,9 +604,63 @@ def build_page(name, frame, rows, first=False):
                     break
             children.append(btn)
             btn_texts.append(lb["text"])
+        elif kind == "switch":
+            if compound_kind(cat, box):
+                parent = make_container(ident, box, bg, rx)
+                parent["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 0
+                gb = glyph_box(frame, "switch", box)
+                rel = (gb[0] - box[0], gb[1] - box[1], gb[2], gb[3])
+                parent["children"] = [make_switch(ident + "_sw", rel,
+                                                  _switch_on(frame, gb))]
+                material.append(("switch", gb))
+                children.append(parent)
+            else:
+                children.append(make_switch(ident, box, _switch_on(frame, box)))
+        elif kind == "slider":
+            if compound_kind(cat, box):
+                parent = make_container(ident, box, bg, rx)
+                parent["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 0
+                gb = glyph_box(frame, "slider", box)
+                rel = (gb[0] - box[0], gb[1] - box[1], gb[2], gb[3])
+                parent["children"] = [make_slider(ident + "_sl", rel,
+                                                  _value_ratio(frame, box))]
+                material.append(("slider", gb))
+                children.append(parent)
+            else:
+                children.append(make_slider(ident, box, _value_ratio(frame, box)))
+        elif kind == "bar":
+            node = make_bar(ident, box, _value_ratio(frame, box, 0))
+            no_click(node)
+            children.append(node)
+        elif kind == "chart":
+            node = make_chart(ident, box)
+            no_click(node)
+            children.append(node)
+        elif kind == "textarea":
+            ts = _texts_in(frame, box)
+            shown = _fix_text(ts[0]["text"]) if ts else ""
+            node = make_textarea(ident, box, shown if nm == "搜索框" else "设备名称")
+            node["passwordMode"] = False
+            if nm != "搜索框" and shown:
+                node["text"] = shown
+            children.append(node)
+        else:
+            node = make_container(ident, box, bg, rx)
+            if tuple(box) in rects:
+                # 底板由设计帧的同位矩形当装饰层画；容器透明，别盖住滑条/图表等内部细件
+                node["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 0
+            if cat == "read":
+                no_click(node)      # 只读卡是静态展示；动作类控件要能收点击（⑦ 接 native）
+            children.append(node)
 
+    # 按钮只跳过已作为按钮文案的那一条；按钮内其它文字（角标、副标题）仍要保留。
+    # 输入框内的设计文字改由控件自身承载，跳过以免叠字。
+    skip_boxes = [b for k, b in material if k == "textarea"]
     for i, t in enumerate(design_texts(frame)):
         lit = _fix_text(t["text"])
+        if any(b[0] <= t["x"] <= b[0] + b[2] and b[1] <= t["y"] <= b[1] + b[3]
+               for b in skip_boxes):
+            continue
         if any(lit == b or lit.startswith(b + " ") for b in btn_texts):
             continue
         size = sc.ui_size(lit, t["size"])
@@ -558,9 +693,13 @@ def build_page(name, frame, rows, first=False):
                    for cx, cy, cw, ch in ctl_boxes)
 
     under, over = [], []
-    btn_boxes = {tuple(b) for (nm, c, _a, _b, b) in rows
-                 if c in ("nav", "back") and b[2] <= 200}
-    for idx, r in enumerate([r for r in allr if r["box"] not in btn_boxes]):
+    # 已物化为真实控件的框：其内部的设计图形（按钮底、开关轨道、滑条轨道、进度条）
+    # 不再重复画装饰层，否则会盖住真控件。
+    deco_exclude = [tuple(b) for k, b in material
+                    if k in ("button", "switch", "slider", "textarea", "bar")]
+    deco = [r for r in allr
+            if not any(_inside(r["box"], eb) for eb in deco_exclude)]
+    for idx, r in enumerate(deco):
         node = make_container("%s_deco%02d" % (slug, idx), r["box"], r["fill"], r["rx"])
         no_click(node)
         if overlap(r) and (r["box"][2] * r["box"][3] < 400

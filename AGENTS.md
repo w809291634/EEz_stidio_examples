@@ -38,7 +38,7 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
 3. **五元组**：每条需求写目标/口径/验收/约束/验证归档；观感词两轮对不上就出标注图。
 4. **留痕**：提示词逐字进 kit `prompts/PROMPT_LOG.md`（PR-####），新问题进 `intake/`（P-####）
    并追 `intake/index.md`；查问题先看这张索引。
-5. **收尾即清**：过程件只放工程 `tmp/` 且收尾删除，交付件只放正位。
+5. **收尾即清**：过程件只放工程 `tmp/` 且收尾删除，交付件只放正位；**构建/编译缓存 `tmp/sim_build_<工程名>`、`tmp/compile_cache` 保留**（用户令，避免下次全量重编；build 目录按工程命名，防多工程冲突）。
 6. **载体与交付**：设计阶段以 H5 三视图为主；核对给 HTML 绝对路径、不内嵌、不出查看器页；改 H5 交互/实时效果要同步高清设计图。
 7. **覆盖表只补真值**：例外/映射表不得推翻设计源行为字段，配 assert 门禁。
 8. **控件只克隆 EEZ 拖拽样板**：先在 EEZ 画布拖控件生成 JSON，再用 `tools/eez_defaults.py` 采样；
@@ -47,6 +47,8 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
    生成器还有十条硬口径：页名 ASCII / identifier 按类别码命名 / 字号 ≤3 档令牌 / 替换字符进子集 /
    卡片只做底板 / 行式按钮 LEFT_MID+设计文案 / 颜色只收 `#RRGGBB` / 装饰容器去 CLICKABLE（只改 flags）/
    控件 JSON 只克隆拖拽样板（A10 字段集校验）——细则见 NO_FLOW §2.2。
+   **设计标注的控件必须按类型真实建立**（开关→Switch、滑条→Slider、动作/跳转→Button、
+   输入→Textarea、进度→Bar、图表→Chart）；大卡片用容器 + 卡内真控件；A12 硬门禁，禁止透明容器冒充。
 9. **中文只在索引里出现**：`log_entry --json`、`design/texts.py` key、`lint_text.py` 门禁。
 10. **字体 F1–F7**：三件套 / `lvglGlyphs.encodings` / 核 cmap / 多字号共用 TTF / headless 不烘 / 验收三连。
 11. **交付必过 D1–D9**：`design/delivery_gate.py`，FAIL 不许交付；D5 每次生成后用
