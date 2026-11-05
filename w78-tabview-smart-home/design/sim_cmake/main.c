@@ -18,6 +18,7 @@
 #include "ui.h"
 #include "screens.h"
 #include "nav_bind.h"
+#include "value_bind.h"
 #include "nav_bind_table.h"
 #include "app/wifi_logic.h"
 #include "navigation/wifi_bind.h"
@@ -164,6 +165,8 @@ int main(int argc, char **argv)
     hal_init(SIM_W, SIM_H);
     ui_init();
     nav_bind_init();
+    value_bind_init();
+
 
     if (getenv("W78_QUIT_TEST")) {          /* 自证窗口关闭链路：压一个 SDL_QUIT，应干净退出 0 */
         SDL_Event q;
