@@ -473,6 +473,7 @@ python design\check_project.py         && rem 5b. 7 项静态自检
 | [minimal-lvgl-project](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/minimal-lvgl-project) | 最小可构建工程：`.eez-project` JSON 骨架 + headless 构建判据 | ★"构建成功"≠有产物，要判据+产物对账；`destinationFolder` 要显式配 |
 | [minimal-lvgl-project-no-flow](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/minimal-lvgl-project-no-flow) | 同上的 no-flow 姊妹版：`flowSupport`/`generateSourceCodeForEezFramework` 均 `false` → 纯 LVGL 出码 | ★ 不发射 `eez-flow.cpp/h`；`ui_init()` 走 `create_screens()` 分支；逻辑全放 native C 时用这版 |
 | [widget-gallery](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/widget-gallery) | 7 类常用控件（Button/Slider/Switch/Bar/Spinner/Checkbox/Panel）的正确 JSON 形态 | ★ `widgetFlags` 漏 `CHECKABLE` → 控件变装饰件（LVGL 9.4 `lv_obj.c` 硬条件） |
+| [eez-widget-templates](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/eez-widget-templates) | 19 类控件初始 JSON 模板（真实拖拽提取 + 18 页构建验证）；新建控件唯一来源 | ★ Switch 必须 CHECKABLE（A13）；Button 恰一子 Label；objID 占位符换新；表达式已复位 |
 | [font-entry-form](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/font-entry-form) | 中文字体条目正确形态：`renderingEngine` + `lvglRanges` 数字表 + 相对路径 | ★ 决定性变量是条目形态不是字体文件；CLI 不烘字体 .c |
 | [two-state-styles](file:///c:/Users/yjt54/Desktop/EEz_stidio_examples/two-state-styles) | DEFAULT/CHECKED 两态样式 + `checkedState` 初始态 + 子元素颜色继承 | ★ 两态都要写全；toggle 按钮要显式加 CHECKABLE |
 

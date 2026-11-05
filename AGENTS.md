@@ -50,6 +50,9 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
    **设计标注的控件必须按类型真实建立**（开关→Switch、滑条→Slider、动作/跳转→Button、
    输入→Textarea、进度→Bar、图表→Chart）；大卡片用容器 + 卡内真控件；A12 硬门禁，禁止透明容器冒充。
    **Switch 样板必须带 `CHECKABLE`**（A13），否则点击不切换状态。
+   **新建控件唯一来源**：根目录 `eez-widget-templates/templates/`（kit `reference/eez_widget_syntax`），
+   不允许临时去其他工程抓样板；模板值必须等于 EEZ classInfo 标准默认值（`defaults.json`），
+   不得带源工程配色/字体/尺寸；克隆后只改几何/identifier/文本/样式值。
    **设备读数也是控件**（温度/湿度/百分比/功率/电量/在线状态/日期时间等），按 value 类标注并生成 Label（`hr` 码）；
    随 UI 滑条/开关变化的值（含滑条/进度条旁的数值）自动归 `in_read`；标题、说明、按钮文案不算读数（标注范围见 NO_FLOW §2.1）。
 9. **中文只在索引里出现**：`log_entry --json`、`design/texts.py` key、`lint_text.py` 门禁。
