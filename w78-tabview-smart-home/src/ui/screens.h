@@ -612,8 +612,6 @@ typedef struct _objects_t {
     lv_obj_t *settings_st14;
     lv_obj_t *wifi_go01;
     lv_obj_t *wifi_go01_lb;
-    lv_obj_t *btn_disconnect;
-    lv_obj_t *btn_disconnect_lb;
     lv_obj_t *btn_refresh;
     lv_obj_t *btn_refresh_lb;
     lv_obj_t *lbl_title;

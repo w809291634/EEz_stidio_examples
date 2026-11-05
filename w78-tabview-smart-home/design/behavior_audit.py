@@ -16,7 +16,7 @@ import sys
 import overview_pro as ov
 import pages as pg
 
-WIFI_HANDLED = {"‹ 设置 按钮", "断开", "扫描", "网络列表", "弹层·密码框",
+WIFI_HANDLED = {"‹ 设置 按钮", "扫描", "网络列表", "弹层·密码框",
                 "弹层·连接", "弹层·关闭", "弹层·键盘", "对话框·忘记",
                 "对话框·断开", "对话框·取消"}
 BOUND_SLIDERS = {("客厅", "窗帘"), ("主卧", "窗帘"), ("窗帘详情", "开合度"),

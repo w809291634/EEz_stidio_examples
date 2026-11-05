@@ -152,7 +152,7 @@ def main():
             # 该页按示例工程结构生成（list/textarea/keyboard + 弹层），
             # identifier 是示例命名，不走类别码；这里改核「必需对象存在」。
             need = {"list_box", "overlay_root", "dlg_root", "pwd_ta", "kb_main",
-                    "btn_refresh", "btn_disconnect", "btn_connect", "scrim", "sheet"}
+                    "btn_refresh", "btn_connect", "scrim", "sheet"}
             have = {w.get("identifier") for w in widgets}
             miss = sorted(need - have)
             if miss:
@@ -160,7 +160,7 @@ def main():
             need_types = {"list_box": "LVGLListWidget", "pwd_ta": "LVGLTextareaWidget",
                           "kb_main": "LVGLKeyboardWidget", "overlay_root": "LVGLContainerWidget",
                           "dlg_root": "LVGLContainerWidget", "btn_connect": "LVGLButtonWidget",
-                          "btn_refresh": "LVGLButtonWidget", "btn_disconnect": "LVGLButtonWidget"}
+                          "btn_refresh": "LVGLButtonWidget"}
             for ident, want in need_types.items():
                 node = next((w for w in widgets if w.get("identifier") == ident), None)
                 if node is not None and node["type"] != want:

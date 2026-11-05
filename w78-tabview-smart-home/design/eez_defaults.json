@@ -257,13 +257,13 @@
       "pad_column": 0,
       "border_width": 0,
       "outline_width": 0,
-      "bg_color": "0x2A2A35",
+      "bg_color": "0x222B38",
       "radius": 4
      }
     },
     "INDICATOR": {
      "DEFAULT": {
-      "bg_color": "0x2BD97C",
+      "bg_color": "0xF2B45C",
       "radius": 4
      }
     }
@@ -1025,13 +1025,13 @@
       "pad_column": 0,
       "border_width": 0,
       "outline_width": 0,
-      "bg_color": "0x2A2A35",
+      "bg_color": "0x222B38",
       "radius": 6
      }
     },
     "INDICATOR": {
      "DEFAULT": {
-      "bg_color": "0xFFC531",
+      "bg_color": "0xF2B45C",
       "radius": 6
      }
     },
@@ -1138,7 +1138,7 @@
       "pad_column": 0,
       "border_width": 0,
       "outline_width": 0,
-      "bg_color": "0x3A3A3C",
+      "bg_color": "0x222B38",
       "bg_opa": 255,
       "radius": 15
      },
@@ -1151,7 +1151,7 @@
       "pad_column": 0,
       "border_width": 0,
       "outline_width": 0,
-      "bg_color": "0x34C759",
+      "bg_color": "0xF2B45C",
       "bg_opa": 255,
       "radius": 15
      }
@@ -1166,7 +1166,7 @@
       "pad_column": 0,
       "border_width": 0,
       "outline_width": 0,
-      "bg_color": "0x34C759",
+      "bg_color": "0xF2B45C",
       "bg_opa": 0
      },
      "CHECKED": {
@@ -1178,7 +1178,7 @@
       "pad_column": 0,
       "border_width": 0,
       "outline_width": 0,
-      "bg_color": "0x34C759",
+      "bg_color": "0xF2B45C",
       "bg_opa": 255
      }
     },

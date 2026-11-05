@@ -267,7 +267,7 @@ def make_label(ident, text, box, color=None, size=None):
     return c
 
 
-def make_button(ident, text, box, bg=None, radius=None):
+def make_button(ident, text, box, bg=None, radius=None, fg=None):
     """按钮 = 默认 LVGLButtonWidget 克隆 + 一个默认 LVGLLabelWidget 子节点承载文字。
 
     EEZ 的按钮没有 text 字段；文字必须放在子标签里（align=CENTER）。
@@ -285,6 +285,8 @@ def make_button(ident, text, box, bg=None, radius=None):
                "left": 0, "top": 0, "width": w, "height": h,
                "text": _fix_text(text), "textType": "literal", "useStaticText": True})
     lb["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = "cn12"
+    if fg:
+        lb["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_color"] = fg
     b["children"] = [lb]
     return b
 
@@ -511,9 +513,8 @@ def build_wifi_page(name, frame, first=False):
     }
     bb = sc.WIFI_BOXES
     kids = [
-        make_button("%s_go01" % slug, TEXTS["wifi.back"], sc.SUB_BACK_BOX, "0x1C2430", 14),
-        _btn_font(make_button("btn_disconnect", TEXTS["wifi.disconnect"], bb["disconnect"], "0x1C2430", 15)),
-        _btn_font(make_button("btn_refresh", TEXTS["wifi.scan"], bb["scan"], "0x1C2430", 15)),
+        make_button("%s_go01" % slug, TEXTS["wifi.back"], sc.SUB_BACK_BOX, "0x1C2430", 14, "0xF4F7FB"),
+        _btn_font(make_button("btn_refresh", TEXTS["wifi.scan"], bb["scan"], "0x1C2430", 15, "0xF2B45C")),
         make_label("lbl_title", TEXTS["wifi.title"], (152, 22, 200, 36), "0xF4F7FB", 24),
         _lbl_font(make_label("lbl_status", TEXTS["wifi.status"], (152, 54, 620, 20), "0x75859C", 12)),
         make_list("list_box", bb["list"]),
@@ -524,9 +525,9 @@ def build_wifi_page(name, frame, first=False):
     sheet_kids = [
         make_container("sheet_handle", (384, 6, 32, 3), "0x27313F", 2),
         make_label("lbl_pwd_ssid", "", (24, 10, 640, 28), "0xF4F7FB", 12),
-        _btn_font(make_button("btn_pwd_close", TEXTS["wifi.close"], (752, 10, 32, 32), "0x1C2430", 16)),
+        _btn_font(make_button("btn_pwd_close", TEXTS["wifi.close"], (752, 10, 32, 32), "0x1C2430", 16, "0xB9C4D4")),
         make_textarea("pwd_ta", (24, 66, 520, 40), TEXTS["wifi.pwd_placeholder"]),
-        make_button("btn_connect", TEXTS["wifi.connect"], (560, 66, 216, 40), "0xF2B45C", 20),
+        make_button("btn_connect", TEXTS["wifi.connect"], (560, 66, 216, 40), "0xF2B45C", 20, "0x05080F"),
         make_keyboard("kb_main", (24, 116, 752, 136), "pwd_ta"),
     ]
     sheet = make_container("sheet", (0, 220, 800, 260), "0x101720", 0)
@@ -541,9 +542,9 @@ def build_wifi_page(name, frame, first=False):
         _lbl_font(make_label("lbl_dlg_title", TEXTS["wifi.forget_title"], (20, 20, 320, 24), "0xF4F7FB", 12)),
         _lbl_font(make_label("lbl_dlg_ssid", "", (20, 52, 320, 20), "0xB9C4D4", 12)),
         _lbl_font(make_label("lbl_dlg_hint", TEXTS["wifi.forget_hint"], (20, 78, 320, 40), "0x75859C", 12)),
-        _btn_font(make_button("btn_dlg_forget", TEXTS["wifi.forget"], (20, 148, 96, 36), "0x3A1A18", 10)),
-        _btn_font(make_button("btn_dlg_disconnect", TEXTS["wifi.disconnect"], (132, 148, 96, 36), "0x1C2430", 10)),
-        _btn_font(make_button("btn_dlg_cancel", TEXTS["wifi.cancel"], (244, 148, 96, 36), "0x1C2430", 10)),
+        _btn_font(make_button("btn_dlg_forget", TEXTS["wifi.forget"], (20, 148, 96, 36), "0x3A1A18", 10, "0xFF7A6B")),
+        _btn_font(make_button("btn_dlg_disconnect", TEXTS["wifi.disconnect"], (132, 148, 96, 36), "0x1C2430", 10, "0xF4F7FB")),
+        _btn_font(make_button("btn_dlg_cancel", TEXTS["wifi.cancel"], (244, 148, 96, 36), "0x1C2430", 10, "0xF4F7FB")),
     ]
     card = make_container("dlg_card", (220, 140, 360, 200), "0x101720", 14)
     card["children"] = card_kids

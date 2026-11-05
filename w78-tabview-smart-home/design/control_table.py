@@ -23,6 +23,9 @@ OUT = os.path.join(os.path.dirname(sc.OUT), "designer_annotated", "控件清单.
 CAT = {"scene": "场景卡(按钮)", "nav": "跳转按钮", "back": "返回按钮",
        "toggle": "开关", "slider": "滑块", "read": "只读数据卡",
        "value": "设备读数", "uivalue": "UI 读数"}
+# Wi-Fi 弹层/对话框控件在 overview 里拆成独立展开态卡，不计入基础页控件表
+WIFI_STATE = {"弹层·密码框", "弹层·连接", "弹层·关闭", "弹层·键盘",
+              "对话框·忘记", "对话框·断开", "对话框·取消"}
 
 
 def main():
@@ -75,7 +78,11 @@ def main():
     print("written", OUT)
     print("[GATE] 控件 %d 手势边 %d 行数 %d 分类计数 %s"
           % (n_ctl, n_ges, len(rows), sorted(io_cnt.items())))
-    assert n_ctl == sum(len(raw[p]["rows"]) for p in raw), "控件行数与设计源不符"
+    visible_raw = sum(
+        len([r for r in raw[p]["rows"]
+             if not (p == "Wi-Fi 设置" and r["name"] in WIFI_STATE)])
+        for p in data["order"])
+    assert n_ctl == visible_raw, "控件行数与设计源不符"
     assert set(io_cnt) >= {"in_read", "out_read", "in_write", "out_write", "nav", "gesture"}, \
         "6 类数据流向里缺类"
     assert not no_back, "这些页没有任何跳转/返回控件：%s" % no_back

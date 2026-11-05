@@ -440,7 +440,6 @@ def settings_frame():
 
 # ---------------- Wi-Fi 连接（完全参考 app-wifi-scan-conn-no-flow 的单页+弹层结构） ----------------
 WIFI_BOXES = {
-    "disconnect": (528, 96, 104, 30),
     "scan": (640, 96, 120, 30),
     "list": (40, 136, 720, 316),
     "hint": (40, 458, 700, 16),
@@ -465,10 +464,9 @@ WIFI_BOXES = {
 
 
 def wifi_frame():
-    """默认态：空 list_box（行由 native 按扫描结果动态创建）+ 扫描/断开 + 底部提示。"""
+    """默认态：空 list_box（行由 native 按扫描结果动态创建）+ 扫描 + 底部提示。"""
     out = sub_header("Wi-Fi", "点「扫描」发现网络", "‹ 设置")
-    out += [btn(*WIFI_BOXES["disconnect"], "断开", CARD2, RED, 9),
-            btn(*WIFI_BOXES["scan"], "扫描", CARD2, ACCENT, 9)]
+    out += [btn(*WIFI_BOXES["scan"], "扫描", CARD2, ACCENT, 9)]
     return "".join(out)
 
 

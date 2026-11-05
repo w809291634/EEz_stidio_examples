@@ -14,8 +14,6 @@ void wifi_bind_init(void)
 {
     if (objects.btn_refresh)
         lv_obj_add_event_cb(objects.btn_refresh, action_scan_start, LV_EVENT_CLICKED, NULL);
-    if (objects.btn_disconnect)
-        lv_obj_add_event_cb(objects.btn_disconnect, on_disconnect, LV_EVENT_CLICKED, NULL);
     if (objects.btn_connect)
         lv_obj_add_event_cb(objects.btn_connect, action_wifi_connect, LV_EVENT_CLICKED, NULL);
     if (objects.btn_pwd_close)
