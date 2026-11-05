@@ -290,3 +290,4 @@ if __name__ == "__main__":
     make_gallery(m)
     if not a.no_build:
         build()
+        subprocess.check_call([sys.executable, os.path.join(HERE, "validate_templates.py")])

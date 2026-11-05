@@ -81,7 +81,7 @@ EEZ_stidio_examples/
 | [`minimal-lvgl-project/`](minimal-lvgl-project/) | 最小可构建工程：`.eez-project` JSON 骨架 + headless 构建判据 | ★ "构建成功"≠有产物，要判据+产物对账；`destinationFolder` 要显式配 |
 | [`minimal-lvgl-project-no-flow/`](minimal-lvgl-project-no-flow/) | 同上的 no-flow 姊妹版：`flowSupport`/`generateSourceCodeForEezFramework` 均 `false` → 只出纯 LVGL 代码，无 `eez-flow.cpp/h` | ★ 逻辑全放 native C 时用这版；`ui_init()` 走 `create_screens()` 分支 |
 | [`widget-gallery/`](widget-gallery/) | 7 类常用控件（Button/Slider/Switch/Bar/Spinner/Checkbox/Panel）的正确 JSON 形态 | ★ widgetFlags 漏 `CHECKABLE` → 控件变装饰件（LVGL 9.4 `lv_obj.c` 硬条件） |
-| [`eez-widget-templates/`](eez-widget-templates/) | **19 类控件的初始 JSON 模板**（真实拖拽工程提取 + 18 页 gallery 构建验证）；新建控件只从这里克隆 | ★ Switch 必须 CHECKABLE（A13）；Button 恰一子 Label；objID 是占位符必须换新；表达式字段已复位 |
+| [`eez-widget-templates/`](eez-widget-templates/) | **19 类控件的初始 JSON 模板**（字段集来自真实拖拽，值/flags 按 EEZ classInfo 复位；`defaults.json` + 18 页 gallery 构建验证）；新建控件只从这里克隆 | ★ Switch 必须 CHECKABLE（A13）；Button 恰一子 Label；objID 是占位符必须换新；表达式字段已复位；`validate_templates.py` 校验标准值 |
 | [`font-entry-form/`](font-entry-form/) | 中文字体条目正确形态：`renderingEngine` + `lvglRanges` 数字表 + 相对路径 | ★ 决定性变量是条目形态不是字体文件；CLI 不烘字体 .c（P-0140） |
 | [`two-state-styles/`](two-state-styles/) | DEFAULT/CHECKED 两态样式 + `checkedState` 初始态 + 子元素颜色继承 | ★ 两态都要写全（只写默认态被主题盖住）；toggle 按钮要显式加 CHECKABLE |
 | [`gesture-page-switch/`](gesture-page-switch/) | 多独立 screen + GESTURE 离散切屏（3 页循环），不靠 CHECKED 高亮 | ★ Switch 的 `evt` 输入要 `type:'any'` 否则 Checks 空转；双线裸 `GESTURE` 防静默丢线；手势只能 PC_SIM/真机验收（P-0141） |

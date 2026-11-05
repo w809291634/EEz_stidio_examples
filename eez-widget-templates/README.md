@@ -30,6 +30,7 @@ python validate_templates.py
 python build_templates_project.py
 ```
 
+`build_templates_project.py` 构建完会自动跑一次 `validate_templates.py`，校验失败即非零退出。
 换控件样板：只改脚本里的 `SOURCES`，重新提取并构建；不要手改 `templates/*.json`。
 `validate_templates.py` 会逐项对照 `defaults.json`：几何、单位、标志、文本、选项、值域、
 `localStyles` 必须与 EEZ 新建控件一致；Button 子 Label 也必须标准。

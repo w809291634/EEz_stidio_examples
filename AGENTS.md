@@ -41,8 +41,10 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
 5. **收尾即清**：过程件只放工程 `tmp/` 且收尾删除，交付件只放正位；**构建/编译缓存 `tmp/sim_build_<工程名>`、`tmp/compile_cache` 保留**（用户令，避免下次全量重编；build 目录按工程命名，防多工程冲突）。
 6. **载体与交付**：设计阶段以 H5 三视图为主；**高清设计图默认叠加全部控件标注（开关/滑条/按钮/输入/图表都要有号），可一键关**；**H5 批注**：右键右侧控件清单行/底部控件标签 → 删除/修改/加提示，右键效果图空白 → 落坐标标签，导出 `annotations.json` 给 AI 改设计源，浏览器不改工程；核对给 HTML 绝对路径、不内嵌、不出查看器页；改 H5 交互/实时效果要同步高清设计图。
 7. **覆盖表只补真值**：例外/映射表不得推翻设计源行为字段，配 assert 门禁。
-8. **控件只克隆 EEZ 拖拽样板**：先在 EEZ 画布拖控件生成 JSON，再用 `tools/eez_defaults.py` 采样；
+8. **控件只克隆 EEZ 拖拽样板**：新建控件从根目录 `eez-widget-templates/templates/` 克隆
+   （字段集来自真实拖拽，值/flags 按 `defaults.json` 的 EEZ classInfo 标准复位，`validate_templates.py` 校验）；
    生成器只改几何/identifier/文本/样式值，**禁止手写或新增字段**（A10 门禁逐控件核对）。
+   `tools/eez_defaults.py` 只用于已有工程的自定义样板采样/对照，不再作为新建控件来源。
    按钮无 `text`（文字在子标签）；克隆后复位表达式型属性（`hiddenFlag` 等），否则会带入别工程的 `get_var_*`。
    生成器还有十条硬口径：页名 ASCII / identifier 按类别码命名 / 字号 ≤3 档令牌 / 替换字符进子集 /
    卡片只做底板 / 行式按钮 LEFT_MID+设计文案 / 颜色只收 `#RRGGBB` / 装饰容器去 CLICKABLE（只改 flags）/
