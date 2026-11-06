@@ -23,12 +23,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "lvgl.h"
 #include "SDL2/SDL.h"
 #include "lv_sdl_window.h"   /* lv_sdl_window_get_window：真鼠标事件要拿 SDL_Window* 换 windowID */
 #include "ui.h"              /* EEZ 生成：ui_init / ui_tick（C 安全，不引入额外 C++ 头） */
+#include "app/sim_fs.h"      /* PC 文件系统：A: → 工程根 */
 
 extern void ui_init(void);
 extern void ui_tick(void);
@@ -63,12 +65,42 @@ static lv_display_t * hal_init(int32_t w, int32_t h)
     return disp;
 }
 
+static int fs_test(void)
+{
+    lv_fs_file_t f;
+    uint32_t br = 0;
+    char buf[64] = { 0 };
+    int ok;
+    lv_fs_res_t r = lv_fs_open(&f, "A:/assets/fs_probe.txt", LV_FS_MODE_RD);
+    if (r != LV_FS_RES_OK) {
+        printf("[FS] open A:/assets/fs_probe.txt FAIL res=%d\n", (int)r);
+        return 1;
+    }
+    lv_fs_read(&f, buf, sizeof(buf) - 1, &br);
+    lv_fs_close(&f);
+    printf("[FS] read %u bytes: '%s'\n", (unsigned)br, buf);
+    ok = strstr(buf, "w78-fs-ok") != NULL;
+    printf("[FS] %s\n", ok ? "PASS" : "FAIL");
+    return ok ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
 
+    if (getenv("SIM_FS_TEST")) {
+        int rc;
+        SDL_setenv("SDL_VIDEODRIVER", "dummy", 0);
+        lv_init();
+        sim_fs_init();
+        rc = fs_test();
+        SDL_Quit();
+        return rc;
+    }
+
     lv_init();
+    sim_fs_init();
     hal_init(SIM_W, SIM_H);
 
     ui_init();

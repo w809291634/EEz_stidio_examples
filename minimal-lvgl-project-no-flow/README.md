@@ -48,6 +48,20 @@ python build_example.py     # 生成 minimal-lvgl-project.eez-project
   ```
   判据：日志出现 `No error and no warning detected`（或 `Build successfully finished`）。
 
+## PC 仿真（含文件系统）
+
+```bash
+run_sim.bat          # 构建并启动仿真窗口
+run_sim.bat build    # 只构建
+run_sim.bat fstest   # 无头自证：LVGL 通过 A: 读取工程内文件（打印 [FS] PASS）
+```
+
+- 文件系统驱动在 `src/native/app/sim_fs.c`：**`A:` → 工程根**（取自 `SIM_TARGET_PROJ_DIR`），
+  可按 `A:/assets/xxx` 读写宿主文件；ESP32 下编译为空实现，真机换 FATFS/LittleFS 保持同一路径写法。
+- 初始化顺序：`lv_init()` → `sim_fs_init()` → `hal_init()`。
+- `design/sim_cmake/lv_conf.h` 里 `LV_USE_FS_STDIO` 置 0（由 `sim_fs` 接管 `A:`，避免字母冲突）。
+- `assets/fs_probe.txt` 是自证用测试文件，不是业务资源。
+
 ## 踩过的坑
 
 - ★ **CLI"构建成功"≠有产物**：判据 = 日志标记 **+ 产物目录对账**（`src/ui/` 下应有 12 个模板文件 + `eez-flow.cpp/h`）。案例见经验库 `cases/B7`。

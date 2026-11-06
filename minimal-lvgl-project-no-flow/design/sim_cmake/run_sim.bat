@@ -72,6 +72,18 @@ if not exist "%LOCAL_EXE%" (
 )
 echo [run_sim] exe = %LOCAL_EXE%
 if /i "%~1"=="build" exit /b 0
+if /i "%~1"=="fstest" (
+    set "SIM_FS_TEST=1"
+    echo [run_sim] headless filesystem test...
+    start /b /wait "" "%LOCAL_EXE%"
+    if errorlevel 1 (
+        echo [run_sim] FSTEST FAILED
+        pause
+        exit /b 1
+    )
+    echo [run_sim] FSTEST PASS
+    exit /b 0
+)
 python "%SIM_TARGET_PROJ_DIR%\design\esp32_mem_report.py" --brief
 echo [run_sim] launching simulator window...
 "%LOCAL_EXE%"
