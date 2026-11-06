@@ -20,14 +20,17 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
+  "children": [],
   "widgetFlags": "ADV_HITTEST|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -46,7 +49,8 @@
     }
    }
   },
-  "identifier": "",
+  "group": "",
+  "groupIndex": 0,
   "images": [
    {
     "objID": "__OID__",
@@ -128,8 +132,7 @@
   "duration": 1370,
   "repeatInfinite": true,
   "repeat": 1,
-  "children": [],
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLArcWidget": {
   "objID": "__OID__",
@@ -152,14 +155,18 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
+  "children": [],
   "widgetFlags": "GESTURE_BUBBLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -187,19 +194,9 @@
     }
    }
   },
-  "identifier": "",
+  "group": "",
+  "groupIndex": 0,
   "useAngle": false,
-  "mode": "NORMAL",
-  "startAngle": 0,
-  "startAngleType": "literal",
-  "endAngle": 360,
-  "endAngleType": "literal",
-  "bgStartAngle": 0,
-  "bgStartAngleType": "literal",
-  "bgEndAngle": 360,
-  "bgEndAngleType": "literal",
-  "rotation": 270,
-  "rotationType": "literal",
   "rangeMin": 0,
   "rangeMinType": "literal",
   "rangeMax": 100,
@@ -207,13 +204,23 @@
   "value": "97",
   "valueType": "literal",
   "previewValue": "97",
+  "mode": "NORMAL",
+  "startAngle": 0,
+  "startAngleType": "literal",
   "previewStartAngle": "0",
+  "endAngle": 360,
+  "endAngleType": "literal",
   "previewEndAngle": "360",
+  "bgStartAngle": 0,
+  "bgStartAngleType": "literal",
   "previewBgStartAngle": "0",
+  "bgEndAngle": 360,
+  "bgEndAngleType": "literal",
   "previewBgEndAngle": "360",
+  "rotation": 270,
+  "rotationType": "literal",
   "previewRotation": "270",
-  "children": [],
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLBarWidget": {
   "objID": "__OID__",
@@ -236,14 +243,18 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
+  "children": [],
   "widgetFlags": "GESTURE_BUBBLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -269,7 +280,8 @@
     }
    }
   },
-  "identifier": "",
+  "group": "",
+  "groupIndex": 0,
   "min": 0,
   "minType": "literal",
   "max": 100,
@@ -278,12 +290,11 @@
   "value": "68",
   "valueType": "literal",
   "previewValue": "68",
-  "previewValueStart": "0",
-  "enableAnimation": false,
-  "children": [],
   "valueStart": 0,
   "valueStartType": "literal",
-  "hiddenFlag": false
+  "previewValueStart": "0",
+  "enableAnimation": false,
+  "identifier": ""
  },
  "LVGLButtonWidget": {
   "objID": "__OID__",
@@ -307,10 +318,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -334,9 +349,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLChartWidget": {
   "objID": "__OID__",
@@ -360,10 +375,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -390,9 +409,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLCheckboxWidget": {
   "objID": "__OID__",
@@ -416,10 +435,14 @@
   "widthUnit": "content",
   "heightUnit": "content",
   "children": [],
-  "widgetFlags": "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CHECKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -484,13 +507,12 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "text": "",
   "textType": "literal",
   "useStaticText": true,
-  "checkedState": false,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLContainerWidget": {
   "objID": "__OID__",
@@ -514,10 +536,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -541,9 +567,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLDropdownWidget": {
   "objID": "__OID__",
@@ -567,10 +593,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -578,15 +608,15 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "options": "Red\nGreen\nBlue\nYellow",
   "optionsType": "literal",
   "selected": "g_sel",
   "selectedType": "expression",
   "direction": "bottom",
   "useStaticText": true,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLKeyboardWidget": {
   "objID": "__OID__",
@@ -610,10 +640,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -638,11 +672,11 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "textarea": "pwd_ta",
   "mode": "TEXT_LOWER",
-  "hiddenFlag": false
+  "identifier": "",
+  "textarea": "pwd_ta"
  },
  "LVGLLabelWidget": {
   "objID": "__OID__",
@@ -670,6 +704,9 @@
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -692,14 +729,14 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "text": "",
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
   "useStaticText": true,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLLedWidget": {
   "objID": "__OID__",
@@ -723,10 +760,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -734,13 +775,13 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "color": "g_color",
   "colorType": "expression",
   "brightness": 255,
   "brightnessType": "literal",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLListWidget": {
   "objID": "__OID__",
@@ -764,10 +805,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "AUTO",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -791,9 +836,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLPanelWidget": {
   "objID": "__OID__",
@@ -817,10 +862,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -841,9 +890,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLRollerWidget": {
   "objID": "__OID__",
@@ -867,10 +916,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -878,14 +931,14 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "options": "Red\nGreen\nBlue\nYellow",
   "optionsType": "literal",
   "selected": "g_sel",
   "selectedType": "expression",
   "mode": "NORMAL",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScaleWidget": {
   "objID": "__OID__",
@@ -909,10 +962,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -920,8 +977,8 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "scaleMode": "HORIZONTAL_BOTTOM",
   "minValue": 0,
   "minValueType": "literal",
@@ -938,7 +995,7 @@
   "labelTexts": "",
   "sections": [],
   "mainArcRounded": false,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget": {
   "objID": "__OID__",
@@ -964,8 +1021,8 @@
   "children": [],
   "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
-  "flagScrollbarMode": "OFF",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -983,8 +1040,7 @@
    }
   },
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLSliderWidget": {
   "objID": "__OID__",
@@ -1007,14 +1063,18 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "children": [],
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -1046,7 +1106,8 @@
     }
    }
   },
-  "identifier": "",
+  "group": "",
+  "groupIndex": 0,
   "min": 0,
   "minType": "literal",
   "max": 100,
@@ -1055,12 +1116,11 @@
   "value": "70",
   "valueType": "literal",
   "previewValue": 70,
-  "enableAnimation": false,
-  "children": [],
   "valueLeft": 0,
   "valueLeftType": "literal",
   "previewValueLeft": 0,
-  "hiddenFlag": false
+  "enableAnimation": false,
+  "identifier": ""
  },
  "LVGLSpinnerWidget": {
   "objID": "__OID__",
@@ -1088,6 +1148,9 @@
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1095,9 +1158,9 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLSwitchWidget": {
   "objID": "5b1b8eed-b0de-407e-a9d9-8860582f32ab",
@@ -1121,10 +1184,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CHECKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1215,10 +1282,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "switch",
-  "checkedState": false,
-  "hiddenFlag": false
+  "identifier": "switch"
  },
  "LVGLTabWidget": {
   "objID": "__OID__",
@@ -1242,10 +1308,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1269,11 +1339,11 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "tabName": "one",
   "tabNameType": "literal",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLTabviewWidget": {
   "objID": "__OID__",
@@ -1297,10 +1367,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1322,13 +1396,13 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "tabviewPosition": "TOP",
   "tabviewSize": 0,
   "selectedTab": 0,
   "selectedTabType": "literal",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLTextareaWidget": {
   "objID": "__OID__",
@@ -1352,10 +1426,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1382,8 +1460,8 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "text": "",
   "textType": "literal",
   "placeholder": "输入密码",
@@ -1391,7 +1469,7 @@
   "passwordMode": true,
   "acceptedCharacters": "",
   "maxTextLength": 64,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLButtonWidget+LVGLContainerWidget": {
   "objID": "__OID__",
@@ -1414,14 +1492,18 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
+  "children": [],
   "widgetFlags": "GESTURE_BUBBLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -1442,9 +1524,9 @@
     }
    }
   },
-  "identifier": "",
-  "children": [],
-  "hiddenFlag": false
+  "group": "",
+  "groupIndex": 0,
+  "identifier": ""
  },
  "LVGLButtonWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -1472,6 +1554,9 @@
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1487,14 +1572,14 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
   "text": "",
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
   "useStaticText": true,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLContainerWidget+LVGLButtonWidget": {
   "objID": "__OID__",
@@ -1518,10 +1603,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1547,9 +1636,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLContainerWidget+LVGLContainerWidget": {
   "objID": "__OID__",
@@ -1573,10 +1662,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE",
+  "widgetFlags": "",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1600,9 +1693,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLContainerWidget+LVGLKeyboardWidget": {
   "objID": "__OID__",
@@ -1626,10 +1719,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1654,11 +1751,11 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "textarea": "pwd_ta",
   "mode": "TEXT_LOWER",
-  "hiddenFlag": false
+  "identifier": "",
+  "textarea": "pwd_ta"
  },
  "LVGLContainerWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -1686,6 +1783,9 @@
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1708,14 +1808,14 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "text": "",
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
   "useStaticText": true,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLContainerWidget+LVGLTextareaWidget": {
   "objID": "__OID__",
@@ -1739,10 +1839,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1769,8 +1873,8 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "text": "",
   "textType": "literal",
   "placeholder": "输入密码",
@@ -1778,7 +1882,7 @@
   "passwordMode": true,
   "acceptedCharacters": "",
   "maxTextLength": 64,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLPanelWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -1806,6 +1910,9 @@
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -1827,13 +1934,13 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
   "text": "",
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
-  "useStaticText": true,
-  "hiddenFlag": false
+  "useStaticText": true
  },
  "LVGLScreenWidget+LVGLAnimationImageWidget": {
   "objID": "__OID__",
@@ -1856,14 +1963,17 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
+  "children": [],
   "widgetFlags": "ADV_HITTEST|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -1882,7 +1992,8 @@
     }
    }
   },
-  "identifier": "",
+  "group": "",
+  "groupIndex": 0,
   "images": [
    {
     "objID": "__OID__",
@@ -1964,8 +2075,7 @@
   "duration": 1370,
   "repeatInfinite": true,
   "repeat": 1,
-  "children": [],
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLArcWidget": {
   "objID": "__OID__",
@@ -1988,14 +2098,18 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
+  "children": [],
   "widgetFlags": "GESTURE_BUBBLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -2023,19 +2137,9 @@
     }
    }
   },
-  "identifier": "",
+  "group": "",
+  "groupIndex": 0,
   "useAngle": false,
-  "mode": "NORMAL",
-  "startAngle": 0,
-  "startAngleType": "literal",
-  "endAngle": 360,
-  "endAngleType": "literal",
-  "bgStartAngle": 0,
-  "bgStartAngleType": "literal",
-  "bgEndAngle": 360,
-  "bgEndAngleType": "literal",
-  "rotation": 270,
-  "rotationType": "literal",
   "rangeMin": 0,
   "rangeMinType": "literal",
   "rangeMax": 100,
@@ -2043,13 +2147,23 @@
   "value": "97",
   "valueType": "literal",
   "previewValue": "97",
+  "mode": "NORMAL",
+  "startAngle": 0,
+  "startAngleType": "literal",
   "previewStartAngle": "0",
+  "endAngle": 360,
+  "endAngleType": "literal",
   "previewEndAngle": "360",
+  "bgStartAngle": 0,
+  "bgStartAngleType": "literal",
   "previewBgStartAngle": "0",
+  "bgEndAngle": 360,
+  "bgEndAngleType": "literal",
   "previewBgEndAngle": "360",
+  "rotation": 270,
+  "rotationType": "literal",
   "previewRotation": "270",
-  "children": [],
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLBarWidget": {
   "objID": "__OID__",
@@ -2072,14 +2186,18 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
+  "children": [],
   "widgetFlags": "GESTURE_BUBBLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -2105,7 +2223,8 @@
     }
    }
   },
-  "identifier": "",
+  "group": "",
+  "groupIndex": 0,
   "min": 0,
   "minType": "literal",
   "max": 100,
@@ -2114,10 +2233,11 @@
   "value": "68",
   "valueType": "literal",
   "previewValue": "68",
+  "valueStart": 0,
+  "valueStartType": "literal",
   "previewValueStart": "0",
   "enableAnimation": false,
-  "children": [],
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLButtonWidget": {
   "objID": "__OID__",
@@ -2141,10 +2261,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2168,9 +2292,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLChartWidget": {
   "objID": "__OID__",
@@ -2194,10 +2318,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2221,9 +2349,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLCheckboxWidget": {
   "objID": "__OID__",
@@ -2247,10 +2375,14 @@
   "widthUnit": "content",
   "heightUnit": "content",
   "children": [],
-  "widgetFlags": "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CHECKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2315,13 +2447,12 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "text": "",
   "textType": "literal",
   "useStaticText": true,
-  "checkedState": false,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLContainerWidget": {
   "objID": "__OID__",
@@ -2345,10 +2476,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2372,9 +2507,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -2402,6 +2537,9 @@
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2424,14 +2562,14 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "text": "",
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
   "useStaticText": true,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLLedWidget": {
   "objID": "__OID__",
@@ -2455,10 +2593,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2466,13 +2608,13 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "color": "g_color",
   "colorType": "expression",
   "brightness": 255,
   "brightnessType": "literal",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLListWidget": {
   "objID": "__OID__",
@@ -2496,10 +2638,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "AUTO",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2523,9 +2669,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLPanelWidget": {
   "objID": "__OID__",
@@ -2549,10 +2695,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2573,9 +2723,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLScaleWidget": {
   "objID": "__OID__",
@@ -2599,10 +2749,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2610,8 +2764,8 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "scaleMode": "HORIZONTAL_BOTTOM",
   "minValue": 0,
   "minValueType": "literal",
@@ -2627,7 +2781,8 @@
   "showLabels": true,
   "labelTexts": "",
   "sections": [],
-  "hiddenFlag": false
+  "mainArcRounded": false,
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLSliderWidget": {
   "objID": "__OID__",
@@ -2650,14 +2805,18 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "children": [],
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -2689,7 +2848,8 @@
     }
    }
   },
-  "identifier": "",
+  "group": "",
+  "groupIndex": 0,
   "min": 0,
   "minType": "literal",
   "max": 100,
@@ -2698,9 +2858,11 @@
   "value": "70",
   "valueType": "literal",
   "previewValue": 70,
+  "valueLeft": 0,
+  "valueLeftType": "literal",
+  "previewValueLeft": 0,
   "enableAnimation": false,
-  "children": [],
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLSpinnerWidget": {
   "objID": "__OID__",
@@ -2728,6 +2890,9 @@
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2735,9 +2900,9 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLSwitchWidget": {
   "objID": "__OID__",
@@ -2760,14 +2925,18 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "children": [],
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -2785,9 +2954,9 @@
     }
    }
   },
-  "identifier": "",
-  "children": [],
-  "hiddenFlag": false
+  "group": "",
+  "groupIndex": 0,
+  "identifier": ""
  },
  "LVGLScreenWidget+LVGLTabviewWidget": {
   "objID": "__OID__",
@@ -2811,10 +2980,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2836,13 +3009,13 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "tabviewPosition": "TOP",
   "tabviewSize": 0,
   "selectedTab": 0,
   "selectedTabType": "literal",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLTabWidget+LVGLCheckboxWidget": {
   "objID": "__OID__",
@@ -2866,10 +3039,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2877,12 +3054,12 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "text": "",
   "textType": "literal",
   "useStaticText": true,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLTabWidget+LVGLContainerWidget": {
   "objID": "__OID__",
@@ -2905,14 +3082,18 @@
   "topUnit": "px",
   "widthUnit": "px",
   "heightUnit": "px",
+  "children": [],
   "widgetFlags": "GESTURE_BUBBLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
-  "groupIndex": 0,
   "localStyles": {
    "objID": "__OID__",
    "definition": {
@@ -2933,9 +3114,9 @@
     }
    }
   },
-  "identifier": "",
-  "children": [],
-  "hiddenFlag": false
+  "group": "",
+  "groupIndex": 0,
+  "identifier": ""
  },
  "LVGLTabWidget+LVGLDropdownWidget": {
   "objID": "__OID__",
@@ -2959,10 +3140,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -2970,15 +3155,15 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "options": "Red\nGreen\nBlue\nYellow",
   "optionsType": "literal",
   "selected": "g_sel",
   "selectedType": "expression",
   "direction": "bottom",
   "useStaticText": true,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLTabWidget+LVGLLabelWidget": {
   "objID": "__OID__",
@@ -3006,6 +3191,9 @@
   "hiddenFlagType": "literal",
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -3027,14 +3215,14 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "text": "",
   "textType": "literal",
   "longMode": "WRAP",
   "recolor": false,
   "useStaticText": true,
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLTabWidget+LVGLRollerWidget": {
   "objID": "__OID__",
@@ -3058,10 +3246,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -3069,14 +3261,14 @@
    "objID": "__OID__",
    "definition": {}
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "options": "Red\nGreen\nBlue\nYellow",
   "optionsType": "literal",
   "selected": "g_sel",
   "selectedType": "expression",
   "mode": "NORMAL",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLTabWidget+LVGLSwitchWidget": {
   "objID": "__OID__",
@@ -3100,10 +3292,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -3138,9 +3334,9 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
-  "hiddenFlag": false
+  "identifier": ""
  },
  "LVGLTabviewWidget+LVGLTabWidget": {
   "objID": "__OID__",
@@ -3164,10 +3360,14 @@
   "widthUnit": "px",
   "heightUnit": "px",
   "children": [],
-  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
   "hiddenFlagType": "literal",
+  "clickableFlag": true,
   "clickableFlagType": "literal",
   "flagScrollbarMode": "OFF",
+  "flagScrollDirection": "",
+  "scrollSnapX": "",
+  "scrollSnapY": "",
   "checkedStateType": "literal",
   "disabledStateType": "literal",
   "states": "",
@@ -3191,10 +3391,10 @@
     }
    }
   },
+  "group": "",
   "groupIndex": 0,
-  "identifier": "",
   "tabName": "one",
   "tabNameType": "literal",
-  "hiddenFlag": false
+  "identifier": ""
  }
 }

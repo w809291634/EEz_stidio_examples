@@ -296,6 +296,13 @@ def main():
         for w in walk(pgx["components"], ""):
             t = w["type"]
             extra = set(w.keys()) - allow_top.get(t, set())
+            # 与 A14 同口径：identifier 放置时才有；hiddenFlag 只允许真正隐藏的遮罩
+            # （=True）；Keyboard 绑定后才出现 textarea。
+            extra -= {"identifier"}
+            if w.get("hiddenFlag") is True:
+                extra -= {"hiddenFlag"}
+            if t == "LVGLKeyboardWidget":
+                extra -= {"textarea"}
             if extra:
                 fails.append("A10 %s 控件 %s 出现样板外字段：%s"
                              % (t, w.get("identifier"), sorted(extra)))
@@ -330,6 +337,13 @@ def main():
                 continue
             extra = set(w.keys()) - std[typ]
             missing = std[typ] - set(w.keys())
+            # 放置期才有的字段：identifier；hiddenFlag 只允许真正隐藏的遮罩（=True）；
+            # Keyboard 绑定 textarea 后才出现该字段。
+            extra -= {"identifier"}
+            if w.get("hiddenFlag") is True:
+                extra -= {"hiddenFlag"}
+            if typ == "LVGLKeyboardWidget":
+                extra -= {"textarea"}
             if extra or missing:
                 fails.append("A14 %s 控件 %s 字段集不符（多 %s / 少 %s）"
                              % (typ, w.get("identifier"), sorted(extra),

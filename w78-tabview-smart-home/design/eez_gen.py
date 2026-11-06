@@ -301,10 +301,13 @@ def make_screen():
 
 
 def no_click(n):
-    """纯展示/装饰容器不该吃点击：去掉 CLICKABLE 等标记，否则会盖住下层按钮。"""
+    """纯展示/装饰容器不该吃点击：点击由 clickableFlag 表达，否则会盖住下层按钮。"""
     keep = {"GESTURE_BUBBLE", "SCROLL_CHAIN_HOR", "SCROLL_CHAIN_VER"}
     n["widgetFlags"] = "|".join(x for x in str(n.get("widgetFlags", "")).split("|")
                                 if x in keep)
+    if "clickableFlag" in n:
+        n["clickableFlag"] = False
+        n["clickableFlagType"] = "literal"
 
 
 def make_container(ident, box, bg=None, radius=None, text="", color=None):
