@@ -210,17 +210,25 @@ BASE_STYLE = {
         "INDICATOR": {"DEFAULT": {"bg_color": "0xF2B45C", "radius": 4}},
     },
     "LVGLSliderWidget": {
-        "MAIN": {"DEFAULT": dict(PAD0, pad_bottom=14, bg_color="0x222B38", radius=3)},
+        # 20px 高的滑条里放 6px 轨道：上下各留 7px，轨道才落在设计位置（原来 pad_top=0 会贴顶）
+        "MAIN": {"DEFAULT": dict(PAD0, pad_top=7, pad_bottom=7,
+                                 bg_color="0x222B38", radius=3)},
         "INDICATOR": {"DEFAULT": {"bg_color": "0xF2B45C", "radius": 3}},
-        "KNOB": {"DEFAULT": {"bg_color": "0xFFFFFF", "radius": 60}},
+        "KNOB": {"DEFAULT": {"bg_color": "0xFFFFFF", "radius": 60,
+                             # LVGL 9.4：旋钮直径 = 滑条高度 + KNOB 的 padding（width/height 不参与）；
+                             # 20px 高 + pad=-2 → 16px 旋钮，比设计大一点、方便手指点击
+                             "pad_top": -2, "pad_bottom": -2,
+                             "pad_left": -2, "pad_right": -2}},
     },
     "LVGLSwitchWidget": {
         "MAIN": {"DEFAULT": dict(PAD0, bg_color="0x222B38", bg_opa=255, radius=15),
                  "CHECKED": dict(PAD0, bg_color="0xF2B45C", bg_opa=255, radius=15)},
         "INDICATOR": {"DEFAULT": dict(PAD0, bg_color="0xF2B45C", bg_opa=0),
                       "CHECKED": dict(PAD0, bg_color="0xF2B45C", bg_opa=255)},
-        "KNOB": {"DEFAULT": dict(PAD0, bg_color="0xFFFFFF", bg_opa=255, radius=15),
-                 "CHECKED": dict(PAD0, bg_color="0xFFFFFF", bg_opa=255, radius=15)},
+        "KNOB": {"DEFAULT": dict(PAD0, bg_color="0xFFFFFF", bg_opa=255, radius=15,
+                                 pad_top=-2, pad_bottom=-2, pad_left=-2, pad_right=-2),
+                 "CHECKED": dict(PAD0, bg_color="0xFFFFFF", bg_opa=255, radius=15,
+                                 pad_top=-2, pad_bottom=-2, pad_left=-2, pad_right=-2)},
     },
     "LVGLTextareaWidget": {"MAIN": {"DEFAULT": {
         "pad_top": 8, "pad_bottom": 8, "pad_left": 8, "pad_right": 0,
@@ -516,18 +524,19 @@ def _switch_on(frame, box):
 
 
 def compound_kind(cat, box):
-    """房间格等大卡片：交互区是整卡，开关/滑条只是卡内小件。"""
-    return cat in ("toggle", "slider") and (box[2] > 120 or box[3] > 60)
+    """交互区是否用「容器 + 卡内真控件」：房间格等大卡片，以及所有开关
+    （设计里开关轨道 44×24 比触摸区小，直接铺满控件框会让旋钮跟着变大）。"""
+    return cat == "toggle" or (cat == "slider" and (box[2] > 120 or box[3] > 60))
 
 
 def glyph_box(frame, kind, box):
-    """从设计帧里找卡内开关轨道/滑条轨道的真实几何；找不到就用右下角兜底。"""
+    """从设计帧里找卡内开关轨道/滑条轨道的真实几何；找不到就在控件框内居中兜底。"""
     rs = [r["box"] for r in design_rects(frame) if _inside(r["box"], box)]
     if kind == "switch":
         cand = [b for b in rs if 40 <= b[2] <= 50 and 22 <= b[3] <= 26]
         if cand:
             return cand[0]
-        return (box[0] + box[2] - 58, box[1] + box[3] - 32, 44, 24)
+        return (box[0] + (box[2] - 44) // 2, box[1] + (box[3] - 24) // 2, 44, 24)
     cand = [b for b in rs if b[3] <= 8 and b[2] >= 80]
     if cand:
         b = max(cand, key=lambda x: x[2])

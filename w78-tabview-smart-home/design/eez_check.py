@@ -45,7 +45,7 @@ STYLE_KEYS = {
     "line_width", "line_color", "line_opa",
     "bg_color", "bg_opa", "border_color", "border_width", "outline_width", "radius",
     "pad_top", "pad_bottom", "pad_left", "pad_right", "pad_row", "pad_column",
-    "arc_width", "arc_rounded",
+    "arc_width", "arc_rounded", "width", "height",
 }
 
 

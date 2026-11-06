@@ -331,12 +331,15 @@ typedef struct _objects_t {
     lv_obj_t *detail_light_go01;
     lv_obj_t *detail_light_go01_lb;
     lv_obj_t *detail_light_hw01;
+    lv_obj_t *detail_light_hw01_sw;
     lv_obj_t *detail_light_hw02;
     lv_obj_t *detail_light_hw02_sl;
     lv_obj_t *detail_light_hw03;
     lv_obj_t *detail_light_hw03_sl;
     lv_obj_t *detail_light_hw04;
+    lv_obj_t *detail_light_hw04_sw;
     lv_obj_t *detail_light_hw05;
+    lv_obj_t *detail_light_hw05_sw;
     lv_obj_t *detail_light_w01;
     lv_obj_t *detail_light_w01_lb;
     lv_obj_t *detail_light_hr01;
@@ -383,7 +386,9 @@ typedef struct _objects_t {
     lv_obj_t *detail_ac_hw08;
     lv_obj_t *detail_ac_hw08_lb;
     lv_obj_t *detail_ac_hw09;
+    lv_obj_t *detail_ac_hw09_sw;
     lv_obj_t *detail_ac_hw10;
+    lv_obj_t *detail_ac_hw10_sw;
     lv_obj_t *detail_ac_hr01;
     lv_obj_t *detail_ac_hr02;
     lv_obj_t *detail_ac_hr03;
@@ -411,6 +416,7 @@ typedef struct _objects_t {
     lv_obj_t *detail_curtain_hw04;
     lv_obj_t *detail_curtain_hw04_lb;
     lv_obj_t *detail_curtain_hw05;
+    lv_obj_t *detail_curtain_hw05_sw;
     lv_obj_t *detail_curtain_hr01;
     lv_obj_t *detail_curtain_hr02;
     lv_obj_t *detail_curtain_r01;
@@ -441,6 +447,7 @@ typedef struct _objects_t {
     lv_obj_t *detail_sensor_w02;
     lv_obj_t *detail_sensor_w02_sl;
     lv_obj_t *detail_sensor_w03;
+    lv_obj_t *detail_sensor_w03_sw;
     lv_obj_t *detail_sensor_hr02;
     lv_obj_t *detail_sensor_hr03;
     lv_obj_t *detail_sensor_hr04;
@@ -494,6 +501,7 @@ typedef struct _objects_t {
     lv_obj_t *detail_plug_go01;
     lv_obj_t *detail_plug_go01_lb;
     lv_obj_t *detail_plug_hw01;
+    lv_obj_t *detail_plug_hw01_sw;
     lv_obj_t *detail_plug_hr01;
     lv_obj_t *detail_plug_hr02;
     lv_obj_t *detail_plug_hr03;
@@ -589,7 +597,9 @@ typedef struct _objects_t {
     lv_obj_t *settings_go01;
     lv_obj_t *settings_go01_lb;
     lv_obj_t *settings_w01;
+    lv_obj_t *settings_w01_sw;
     lv_obj_t *settings_w02;
+    lv_obj_t *settings_w02_sw;
     lv_obj_t *settings_w03;
     lv_obj_t *settings_w03_sl;
     lv_obj_t *settings_go02;
@@ -690,9 +700,13 @@ typedef struct _objects_t {
     lv_obj_t *security_go01;
     lv_obj_t *security_go01_lb;
     lv_obj_t *security_hw01;
+    lv_obj_t *security_hw01_sw;
     lv_obj_t *security_hw02;
+    lv_obj_t *security_hw02_sw;
     lv_obj_t *security_hw03;
+    lv_obj_t *security_hw03_sw;
     lv_obj_t *security_hw04;
+    lv_obj_t *security_hw04_sw;
     lv_obj_t *security_hr01;
     lv_obj_t *security_hr02;
     lv_obj_t *security_hr03;
@@ -715,9 +729,13 @@ typedef struct _objects_t {
     lv_obj_t *scene_detail_go01;
     lv_obj_t *scene_detail_go01_lb;
     lv_obj_t *scene_detail_hw01;
+    lv_obj_t *scene_detail_hw01_sw;
     lv_obj_t *scene_detail_hw02;
+    lv_obj_t *scene_detail_hw02_sw;
     lv_obj_t *scene_detail_hw03;
+    lv_obj_t *scene_detail_hw03_sw;
     lv_obj_t *scene_detail_hw04;
+    lv_obj_t *scene_detail_hw04_sw;
     lv_obj_t *scene_detail_hw05;
     lv_obj_t *scene_detail_hw05_lb;
     lv_obj_t *scene_detail_w01;
