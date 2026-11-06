@@ -23,8 +23,7 @@
 #include "ui_behavior.h"
 #include "app/sim_reads.h"
 #include "app/sim_fs.h"
-#include "app/boot_anim.h"
-#include "app/boot_frames.h"
+#include "app/sim_video.h"
 #include "nav_bind_table.h"
 #include "app/wifi_logic.h"
 #include "app/wifi_events.h"
@@ -277,19 +276,17 @@ static int fs_test(void)
 static int boot_test(void)
 {
     int i;
-    boot_anim_play();
-    if (!boot_anim_active()) {
-        printf("[BOOT] 未启动（帧文件或 FS 不可用）\n");
+    if (!sim_video_play_boot()) {
+        printf("[VIDEO] 启动失败（检查 FFMPEG_EXE / assets/boot.mp4）\n");
         return 1;
     }
-    for (i = 0; i < 220 && boot_anim_active(); i++) {
-        if (i == 20) take_shot_obj(lv_layer_top(), "tmp/boot_mid.bmp");   /* 约 0.4s，取中间帧 */
+    for (i = 0; i < 400 && sim_video_active(); i++) {
+        if (i == 30) take_shot_obj(lv_layer_top(), "tmp/boot_mid.bmp");
         pump(2);
     }
-    printf("[BOOT] frames=%d/%d active=%d\n", boot_anim_frames_played(),
-           BOOT_FRAME_COUNT, (int)boot_anim_active());
-    i = (!boot_anim_active() && boot_anim_frames_played() == BOOT_FRAME_COUNT);
-    printf("[BOOT] %s\n", i ? "PASS" : "FAIL");
+    printf("[VIDEO] frames=%d active=%d\n", sim_video_frames(), (int)sim_video_active());
+    i = (!sim_video_active() && sim_video_frames() > 0);
+    printf("[VIDEO] %s\n", i ? "PASS" : "FAIL");
     return i ? 0 : 1;
 }
 
@@ -503,7 +500,7 @@ int main(int argc, char **argv)
 
     wifi_bind_init();
     user_io_init();
-    boot_anim_play();                        /* 开机动画：播完自动露出主界面 */
+    sim_video_play_boot();                   /* 开机动画：直接解码真实 MP4 */
     for (;;) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {

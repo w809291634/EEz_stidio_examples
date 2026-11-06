@@ -76,15 +76,13 @@ if not exist "%LOCAL_EXE%" (
 )
 echo [run_sim] exe = %LOCAL_EXE%
 if /i "%~1"=="build" exit /b 0
-REM 开机动画帧是生成物（方案 B）：缺失时从 assets\boot.mp4 自动转帧
-if not exist "%SIM_TARGET_PROJ_DIR%\assets\boot\boot_000.jpg" (
-    echo [run_sim] boot frames missing - converting assets\boot.mp4 ...
-    python "%SIM_TARGET_PROJ_DIR%\design\boot_from_mp4.py"
-    if errorlevel 1 (
-        echo [run_sim] boot frame generation FAILED
-        exit /b 1
-    )
+REM 开机动画：直接解码真实 MP4（ffmpeg 路径来自 imageio_ffmpeg；找不到则回退 PATH 里的 ffmpeg）
+if not defined FFMPEG_EXE (
+    python -c "import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())" > "%TEMP%\w78_ffmpeg.txt" 2>nul
+    set /p FFMPEG_EXE=<"%TEMP%\w78_ffmpeg.txt"
+    del "%TEMP%\w78_ffmpeg.txt" >nul 2>&1
 )
+echo [run_sim] ffmpeg = %FFMPEG_EXE%
 if /i "%~1"=="test" (
     set "W78_AUTOTEST=1"
     set "SDL_VIDEODRIVER=dummy"
