@@ -64,7 +64,8 @@ if errorlevel 1 (
 )
 echo [run_sim] build succeeded.
 set "PYTHONIOENCODING=utf-8"
-python "%SIM_TARGET_PROJ_DIR%\design\mem_report.py"
+REM Resource accounting is ESP32-P4 only; PC simulator binaries are not firmware budget.
+python "%SIM_TARGET_PROJ_DIR%\design\esp32_mem_report.py"
 set "LOCAL_EXE=%SIM_BIN_DIR%\main.exe"
 if not exist "%LOCAL_EXE%" (
     echo [run_sim] local exe not found: %LOCAL_EXE%
@@ -86,7 +87,7 @@ if /i "%~1"=="test" (
         exit /b 1
     )
     echo [run_sim] AUTOTEST PASS
-    python "%SIM_TARGET_PROJ_DIR%\design\mem_report.py" --brief
+    python "%SIM_TARGET_PROJ_DIR%\design\esp32_mem_report.py" --brief
     exit /b 0
 )
 if /i "%~1"=="wifitest" (
