@@ -44,6 +44,14 @@ def check_canonical(t, typ, defaults, errs):
     got = (t.get("localStyles") or {}).get("definition", {})
     if got != exp:
         errs.append("%s.localStyles 残留非标准样式" % typ)
+    base = defaults.get("_base") or {}
+    for n in walk(t):
+        if not str(n.get("type", "")).startswith("LVGL"):
+            continue
+        for k in ("hiddenFlagType", "hiddenFlag"):
+            if k in base and n.get(k) != base[k]:
+                errs.append("%s %s.%s=%r，基础值 %r"
+                            % (typ, n.get("identifier"), k, n.get(k), base[k]))
     if typ == "LVGLButtonWidget":
         kids = t.get("children") or []
         if len(kids) != 1 or kids[0].get("type") != "LVGLLabelWidget":
@@ -86,7 +94,7 @@ def main():
             errs.append("%s states 应为空（标准初始态）" % typ)
         if "visibleRowCount" in t:
             errs.append("%s 残留旧字段 visibleRowCount" % typ)
-        for k, want in (("checkedState", False), ("disabledState", False), ("hiddenFlag", False)):
+        for k, want in (("checkedState", False), ("disabledState", False)):
             if k in t and t[k] is not want:
                 errs.append("%s.%s 应为 %r" % (typ, k, want))
         for k in ("customInputs", "customOutputs"):

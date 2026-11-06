@@ -327,5 +327,10 @@
    "maxTextLength": 128
   },
   "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ONE|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "_base": {
+  "hiddenFlagType": "literal",
+  "hiddenFlag": false,
+  "note": "LVGLWidget 基础字段；不在 classInfo.defaultValue，但标准模板统一带 false/literal"
  }
 }

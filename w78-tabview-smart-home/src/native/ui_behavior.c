@@ -9,7 +9,7 @@
 #include "screens.h"
 #include "ui_behavior.h"
 
-#define COLOR_ACCENT 0x5FD3A6
+#define COLOR_ACCENT 0xF2B45C
 #define COLOR_CARD2  0x1C2430
 #define COLOR_BG     0x05080F
 #define COLOR_T1     0xF4F7FB

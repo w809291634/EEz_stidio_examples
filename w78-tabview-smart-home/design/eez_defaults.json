@@ -249,8 +249,8 @@
    "definition": {
     "MAIN": {
      "DEFAULT": {
-      "pad_top": 0,
-      "pad_bottom": 0,
+      "pad_top": 4,
+      "pad_bottom": 8,
       "pad_left": 0,
       "pad_right": 0,
       "pad_row": 0,
@@ -382,7 +382,10 @@
       "outline_width": 0,
       "bg_color": "0x0C1220",
       "bg_opa": 255,
-      "radius": 8
+      "radius": 8,
+      "line_width": 0,
+      "line_color": "0x000000",
+      "line_opa": 0
      }
     }
    }
@@ -1018,7 +1021,7 @@
     "MAIN": {
      "DEFAULT": {
       "pad_top": 0,
-      "pad_bottom": 0,
+      "pad_bottom": 14,
       "pad_left": 0,
       "pad_right": 0,
       "pad_row": 0,
@@ -1026,13 +1029,13 @@
       "border_width": 0,
       "outline_width": 0,
       "bg_color": "0x222B38",
-      "radius": 6
+      "radius": 3
      }
     },
     "INDICATOR": {
      "DEFAULT": {
       "bg_color": "0xF2B45C",
-      "radius": 6
+      "radius": 3
      }
     },
     "KNOB": {
