@@ -33,7 +33,7 @@ def main():
         "npx", "--yes", "lv_font_conv",
         "--no-compress", "--bpp", "4", "--size", "14",
         "--font", FONT_SRC,
-        "-r", "0x20-0x7E",
+        "--range", "0x20-0x7E",
         "--symbols", SYMBOLS,
         "--format", "lvgl",
         "--lv-font-name", "ui_font_%s" % be.FONT_NAME,

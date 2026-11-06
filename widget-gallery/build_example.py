@@ -11,9 +11,17 @@
 """
 import json
 import os
+import sys
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# 控件只从 eez-widget-templates 克隆（禁止手拼字段）
+_clone_dir = HERE
+while not os.path.isfile(os.path.join(_clone_dir, "eez_widget_clone.py")):
+    _clone_dir = os.path.dirname(_clone_dir)
+sys.path.insert(0, _clone_dir)
+from eez_widget_clone import new_widget  # noqa: E402
+
 PROJECT_FILE = os.path.join(HERE, "widget-gallery.eez-project")
 
 SCREEN_W, SCREEN_H = 480, 320
@@ -34,18 +42,6 @@ BUILD_TEMPLATES = {
 }
 
 # 各控件类型的默认 widgetFlags（LVGL 9 口径，取自 EEZ Studio 0.29 控件定义）
-DEFAULT_FLAGS = {
-    "LVGLScreenWidget": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
-    "LVGLLabelWidget": "GESTURE_BUBBLE",
-    "LVGLContainerWidget": "GESTURE_BUBBLE",
-    "LVGLButtonWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLSwitchWidget": "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLSliderWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLBarWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLSpinnerWidget": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLCheckboxWidget": "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLPanelWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-}
 
 # 显式清零默认主题的 padding/border（PLAYBOOK 红线 6：声明坐标 == 渲染坐标）
 ZERO_PAD = {
@@ -58,44 +54,14 @@ def oid():
     return str(uuid.uuid4())
 
 
-def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None,
-           children=None, **extra):
-    """通用控件构造：字段形态与 EEZ Studio 0.29 序列化结果一致。"""
-    wd = {
-        "objID": oid(),
-        "type": wtype,
-        "left": x,
-        "top": y,
-        "width": w,
-        "height": h,
-        "customInputs": [],
-        "customOutputs": [],
-        "style": {
-            "objID": oid(),
-            "useStyle": "default",
-            "conditionalStyles": [],
-            "childStyles": [],
-        },
-        "timeline": [],
-        "eventHandlers": [],
-        "leftUnit": "px",
-        "topUnit": "px",
-        "widthUnit": "px",
-        "heightUnit": "px",
-        "children": children if children is not None else [],
-        "widgetFlags": flags if flags is not None else DEFAULT_FLAGS[wtype],
-        "hiddenFlagType": "literal",
-        "clickableFlagType": "literal",
-        "flagScrollbarMode": "OFF",
-        "checkedStateType": "literal",
-        "disabledStateType": "literal",
-        "states": "",
-        "localStyles": {"objID": oid(), "definition": local or {}},
-        "groupIndex": 0,
-    }
-    if identifier:
-        wd["identifier"] = identifier
-    wd.update(extra)
+def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None, children=None, **extra):
+    """克隆 eez-widget-templates 的标准语法，只改几何/标识/标志/样式/事件。"""
+    wd = new_widget(wtype, x, y, w, h,
+                    identifier=identifier,
+                    flags=flags,
+                    local=local,
+                    children=children or [],
+                    **extra)
     return wd
 
 
@@ -182,7 +148,7 @@ def checkbox(x, y, text, identifier=None, checked=False):
                   identifier=identifier,
                   widthUnit="content", heightUnit="content",
                   text=text, textType="literal", useStaticText=True,
-                  checkedState=checked)
+                  **({"checkedState": True} if checked else {}))
 
 
 def build_project():

@@ -34,6 +34,13 @@ import sys
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# 控件只从 eez-widget-templates 克隆（禁止手拼字段）
+_clone_dir = HERE
+while not os.path.isfile(os.path.join(_clone_dir, "eez_widget_clone.py")):
+    _clone_dir = os.path.dirname(_clone_dir)
+sys.path.insert(0, _clone_dir)
+from eez_widget_clone import new_widget  # noqa: E402
+
 PROJECT_FILE = os.path.join(HERE, "flow-page-timeline-animation.eez-project")
 
 SCREEN_W, SCREEN_H = 480, 320
@@ -144,44 +151,22 @@ ZERO_PAD = {
     "pad_row": 0, "pad_column": 0, "border_width": 0, "outline_width": 0,
 }
 
-DEFAULT_FLAGS = {
-    "LVGLScreenWidget": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
-    "LVGLLabelWidget": "GESTURE_BUBBLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
-    "LVGLButtonWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLContainerWidget": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SNAPPABLE",
-}
 
 
 def oid():
     return str(uuid.uuid4())
 
 
-def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None,
-           children=None, eventHandlers=None, timeline=None, **extra):
-    wd = {
-        "objID": oid(),
-        "type": wtype,
-        "left": x, "top": y, "width": w, "height": h,
-        "customInputs": [], "customOutputs": [],
-        "style": {"objID": oid(), "useStyle": "default",
-                  "conditionalStyles": [], "childStyles": []},
-        # ★ 页面时间线的关键帧就挂在这里（Widget 级），游标在页面级
-        "timeline": timeline or [],
-        "eventHandlers": eventHandlers or [],
-        "leftUnit": "px", "topUnit": "px", "widthUnit": "px", "heightUnit": "px",
-        "children": children if children is not None else [],
-        "widgetFlags": flags if flags is not None else DEFAULT_FLAGS[wtype],
-        "hiddenFlagType": "literal", "hiddenFlag": False,
-        "clickableFlagType": "literal",
-        "flagScrollbarMode": "OFF",
-        "checkedStateType": "literal", "disabledStateType": "literal",
-        "states": "",
-        "localStyles": {"objID": oid(), "definition": local or {}},
-        "groupIndex": 0,
-    }
-    if identifier:
-        wd["identifier"] = identifier
-    wd.update(extra)
+def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None, children=None, eventHandlers=None, timeline=None, **extra):
+    """克隆 eez-widget-templates 的标准语法，只改几何/标识/标志/样式/事件。"""
+    wd = new_widget(wtype, x, y, w, h,
+                    identifier=identifier,
+                    flags=flags,
+                    local=local,
+                    eventHandlers=eventHandlers,
+                    children=children or [],
+                    timeline=timeline or [],
+                    **extra)
     return wd
 
 
@@ -221,16 +206,13 @@ def label(x, y, w, h, text, color=TEXT1, identifier=None, expr=None):
 
 
 def button(x, y, w, h, text, identifier):
-    lbl = {
-        "objID": oid(), "type": "LVGLLabelWidget",
-        "left": 0, "top": 0, "width": 80, "height": 32,
-        "widthUnit": "content", "heightUnit": "content",
-        "text": text, "textType": "literal", "longMode": "WRAP",
-        "recolor": False, "useStaticText": True,
-        "localStyles": {"objID": oid(), "definition": {"MAIN": {"DEFAULT": {
-            "align": "CENTER", "text_color": "0xFFFFFF",
-            "text_font": FONT_NAME}}}},
-    }
+    lbl = new_widget(
+        "LVGLLabelWidget", 0, 0, 80, 32,
+        local={"MAIN": {"DEFAULT": {
+            "align": "CENTER",
+            "text_color": "0xFFFFFF",
+            "text_font": FONT_NAME}}},
+        text=text, widthUnit="content", heightUnit="content")
     return widget(
         "LVGLButtonWidget", x, y, w, h,
         identifier=identifier,

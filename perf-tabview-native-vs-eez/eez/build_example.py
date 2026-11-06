@@ -7,9 +7,17 @@ UI 结构与 native/design/sim_cmake/main.c 完全一致（公平对照）：
 """
 import json
 import os
+import sys
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# 控件只从 eez-widget-templates 克隆（禁止手拼字段）
+_clone_dir = HERE
+while not os.path.isfile(os.path.join(_clone_dir, "eez_widget_clone.py")):
+    _clone_dir = os.path.dirname(_clone_dir)
+sys.path.insert(0, _clone_dir)
+from eez_widget_clone import new_widget  # noqa: E402
+
 PROJECT_FILE = os.path.join(HERE, "perf-eez-tabview.eez-project")
 
 SCREEN_W, SCREEN_H = 480, 320
@@ -29,13 +37,6 @@ BUILD_TEMPLATES = {
     'ui.c': '#if defined(EEZ_FOR_LVGL)\n#include <eez/core/vars.h>\n#endif\n\n#include "ui.h"\n#include "screens.h"\n#include "images.h"\n#include "actions.h"\n#include "vars.h"\n\n//${eez-studio GUI_ASSETS_DEF}\n\n//${eez-studio LVGL_NATIVE_VARS_TABLE_DEF}\n\n//${eez-studio LVGL_ACTIONS_ARRAY_DEF}\n\n#if defined(EEZ_FOR_LVGL)\n\nvoid ui_init() {\n    eez_flow_init(assets, sizeof(assets), (lv_obj_t **)&objects, sizeof(objects), images, sizeof(images), actions);\n}\n\nvoid ui_tick() {\n    eez_flow_tick();\n    tick_screen(g_currentScreen);\n}\n\n#else\n\nstatic int16_t currentScreen = -1;\n\nstatic lv_obj_t *getLvglObjectFromIndex(int32_t index) {\n    if (index == -1) {\n        return 0;\n    }\n    return ((lv_obj_t **)&objects)[index];\n}\n\nvoid loadScreen(enum ScreensEnum screenId) {\n    currentScreen = screenId - 1;\n    lv_obj_t *screen = getLvglObjectFromIndex(currentScreen);\n    lv_scr_load_anim(screen, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);\n}\n\nvoid ui_init() {\n    create_screens();\n//${eez-studio LVGL_LOAD_FIRST_SCREEN}\n}\n\nvoid ui_tick() {\n    tick_screen(currentScreen);\n}\n\n#endif\n',
 }
 
-DEFAULT_FLAGS = {
-    "LVGLScreenWidget": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
-    "LVGLLabelWidget": "GESTURE_BUBBLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
-    "LVGLContainerWidget": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SNAPPABLE",
-    "LVGLTabviewWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-    "LVGLTabWidget": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-}
 
 ZERO_PAD = {
     "pad_top": 0, "pad_bottom": 0, "pad_left": 0, "pad_right": 0,
@@ -47,28 +48,14 @@ def oid():
     return str(uuid.uuid4())
 
 
-def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None,
-           children=None, **extra):
-    wd = {
-        "objID": oid(),
-        "type": wtype,
-        "left": x, "top": y, "width": w, "height": h,
-        "customInputs": [], "customOutputs": [],
-        "style": {"objID": oid(), "useStyle": "default",
-                  "conditionalStyles": [], "childStyles": []},
-        "timeline": [], "eventHandlers": [],
-        "leftUnit": "px", "topUnit": "px", "widthUnit": "px", "heightUnit": "px",
-        "children": children if children is not None else [],
-        "widgetFlags": flags if flags is not None else DEFAULT_FLAGS[wtype],
-        "hiddenFlagType": "literal", "clickableFlagType": "literal",
-        "flagScrollbarMode": "OFF", "checkedStateType": "literal",
-        "disabledStateType": "literal", "states": "",
-        "localStyles": {"objID": oid(), "definition": local or {}},
-        "groupIndex": 0,
-    }
-    if identifier:
-        wd["identifier"] = identifier
-    wd.update(extra)
+def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None, children=None, **extra):
+    """克隆 eez-widget-templates 的标准语法，只改几何/标识/标志/样式/事件。"""
+    wd = new_widget(wtype, x, y, w, h,
+                    identifier=identifier,
+                    flags=flags,
+                    local=local,
+                    children=children or [],
+                    **extra)
     return wd
 
 

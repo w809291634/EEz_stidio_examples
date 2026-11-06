@@ -67,13 +67,17 @@ def new_widget(wtype, x, y, w, h, identifier=None, flags=None, local=None,
     if identifier:
         wd["identifier"] = identifier
 
-    old_flags = flags if flags is not None else OLD_DEFAULT_FLAGS.get(wtype, "")
     if flags is not None:
         wd["widgetFlags"] = "|".join(
             p for p in flags.split("|") if p and p != "CLICKABLE")
-    if clickable is None:
-        clickable = "CLICKABLE" in old_flags.split("|") or bool(eventHandlers)
-    if "clickableFlag" in wd or clickable:
+    if clickable is None and (flags is not None or wtype in OLD_DEFAULT_FLAGS
+                              or eventHandlers):
+        if eventHandlers:
+            clickable = True
+        else:
+            src = flags if flags is not None else OLD_DEFAULT_FLAGS[wtype]
+            clickable = "CLICKABLE" in src.split("|")
+    if clickable is not None and ("clickableFlag" in wd or clickable):
         wd["clickableFlag"] = bool(clickable)
 
     if local is not None:

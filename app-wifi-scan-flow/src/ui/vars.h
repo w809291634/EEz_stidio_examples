@@ -16,6 +16,8 @@ enum FlowGlobalVariables {
     FLOW_GLOBAL_VARIABLE_NONE
 };
 
+// Native global variables
+
 #ifdef __cplusplus
 }
 #endif

@@ -21,11 +21,19 @@ import base64
 import json
 import math
 import os
+import sys
 import struct
 import uuid
 import zlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# 控件只从 eez-widget-templates 克隆（禁止手拼字段）
+_clone_dir = HERE
+while not os.path.isfile(os.path.join(_clone_dir, "eez_widget_clone.py")):
+    _clone_dir = os.path.dirname(_clone_dir)
+sys.path.insert(0, _clone_dir)
+from eez_widget_clone import new_widget  # noqa: E402
+
 PROJECT_FILE = os.path.join(HERE, "w1-animation-image.eez-project")
 
 SCREEN_W, SCREEN_H = 480, 320
@@ -100,11 +108,6 @@ BUILD_TEMPLATES = {
 
 # 官方默认 flags（asar 挖证 LVGLAnimationImageWidget.lvgl.defaultFlags；
 # P-0150 教训：flags 是最终态白名单，别裁）
-DEFAULT_FLAGS = {
-    "LVGLScreenWidget": "CLICKABLE|CLICK_FOCUSABLE|SCROLLABLE|SCROLL_MOMENTUM|SCROLL_ELASTIC|SNAPPABLE|SCROLL_CHAIN_VER",
-    "LVGLLabelWidget": "GESTURE_BUBBLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
-    "LVGLAnimationImageWidget": "ADV_HITTEST|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-}
 
 ZERO_PAD = {
     "pad_top": 0, "pad_bottom": 0, "pad_left": 0, "pad_right": 0,
@@ -116,33 +119,14 @@ def oid():
     return str(uuid.uuid4())
 
 
-def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None,
-           children=None, **extra):
-    wd = {
-        "objID": oid(),
-        "type": wtype,
-        "left": x, "top": y, "width": w, "height": h,
-        "customInputs": [],
-        "customOutputs": [],
-        "style": {"objID": oid(), "useStyle": "default",
-                  "conditionalStyles": [], "childStyles": []},
-        "timeline": [],
-        "eventHandlers": [],
-        "leftUnit": "px", "topUnit": "px", "widthUnit": "px", "heightUnit": "px",
-        "children": children if children is not None else [],
-        "widgetFlags": flags if flags is not None else DEFAULT_FLAGS[wtype],
-        "hiddenFlagType": "literal",
-        "clickableFlagType": "literal",
-        "flagScrollbarMode": "OFF",
-        "checkedStateType": "literal",
-        "disabledStateType": "literal",
-        "states": "",
-        "localStyles": {"objID": oid(), "definition": local or {}},
-        "groupIndex": 0,
-    }
-    if identifier:
-        wd["identifier"] = identifier
-    wd.update(extra)
+def widget(wtype, x, y, w, h, identifier=None, flags=None, local=None, children=None, **extra):
+    """克隆 eez-widget-templates 的标准语法，只改几何/标识/标志/样式/事件。"""
+    wd = new_widget(wtype, x, y, w, h,
+                    identifier=identifier,
+                    flags=flags,
+                    local=local,
+                    children=children or [],
+                    **extra)
     return wd
 
 
