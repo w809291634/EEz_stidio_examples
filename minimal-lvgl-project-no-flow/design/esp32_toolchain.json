@@ -1,0 +1,8 @@
+{
+ "target": "esp32p4",
+ "idf_version": "5.5.5",
+ "template": "D:\\esp32_8266_files\\esp-idf-v5.5.5_ol\\examples\\idf_v555_my_exps\\p4_touch_lcd4_3_exp\\lvgl_demo_template_no_flow",
+ "size": "D:\\esp32_8266_files\\esp-idf-tools_for_idf_v5_5_5\\tools\\riscv32-esp-elf\\esp-14.2.0_20260121\\riscv32-esp-elf\\bin\\riscv32-esp-elf-size.exe",
+ "note": "默认 -O2（IDF 当前）；只编译不链接，Flash 偏高约17%；模板只需构建过一次",
+ "default_opt": "-O2"
+}

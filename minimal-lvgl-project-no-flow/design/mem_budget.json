@@ -1,0 +1,6 @@
+{
+  "tier": "1m",
+  "fonts_mb": 0.5,
+  "ui_mb": 1.0,
+  "note": "按编译后 Flash 计；tier=1m（200K/500K/1M/2M/4M 档位制）"
+}

@@ -59,6 +59,9 @@ if errorlevel 1 (
     exit /b 1
 )
 echo [run_sim] build succeeded.
+set "PYTHONIOENCODING=utf-8"
+REM Resource accounting is ESP32-P4 only; PC simulator binaries are not firmware budget.
+python "%SIM_TARGET_PROJ_DIR%\design\esp32_mem_report.py"
 set "LOCAL_EXE=%SIM_BIN_DIR%\main.exe"
 if not exist "%LOCAL_EXE%" (
     echo [run_sim] local exe not found: %LOCAL_EXE%
@@ -69,6 +72,7 @@ if not exist "%LOCAL_EXE%" (
 )
 echo [run_sim] exe = %LOCAL_EXE%
 if /i "%~1"=="build" exit /b 0
+python "%SIM_TARGET_PROJ_DIR%\design\esp32_mem_report.py" --brief
 echo [run_sim] launching simulator window...
 "%LOCAL_EXE%"
 exit /b 0
