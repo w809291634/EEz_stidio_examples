@@ -14,27 +14,32 @@ TYPES = ["Arc", "Bar", "Button", "Chart", "Checkbox", "Container", "Dropdown",
          "Slider", "Spinner", "Switch", "Textarea"]
 
 
-def normalize(node, ident):
+def ph(prefix, role):
+    return "__%s%s__" % ((prefix + "_") if prefix else "", role)
+
+
+def placeholders(node, prefix=""):
+    """按层级给三个身份角色独立占位符，并去掉放置时才赋值的 identifier。"""
     node = copy.deepcopy(node)
 
-    def rec(o):
+    def rec(o, pre):
         if isinstance(o, dict):
             if "objID" in o:
-                o["objID"] = "__OBJID__"
+                o["objID"] = ph(pre, "OBJID")
             if isinstance(o.get("style"), dict) and "objID" in o["style"]:
-                o["style"]["objID"] = "__STYLE_OBJID__"
+                o["style"]["objID"] = ph(pre, "STYLE_OBJID")
             if isinstance(o.get("localStyles"), dict) and "objID" in o["localStyles"]:
-                o["localStyles"]["objID"] = "__LOCAL_STYLE_OBJID__"
-            for v in o.values():
-                rec(v)
+                o["localStyles"]["objID"] = ph(pre, "LOCAL_STYLE_OBJID")
+            o.pop("identifier", None)
+            for i, c in enumerate(o.get("children", [])):
+                rec(c, (pre + "_" if pre else "") + "CHILD%d" % i)
         elif isinstance(o, list):
-            for v in o:
-                rec(v)
+            for c in o:
+                rec(c, pre)
 
-    rec(node)
+    rec(node, prefix)
     node["left"] = 0
     node["top"] = 0
-    node["identifier"] = ident
     return node
 
 
@@ -56,13 +61,8 @@ def main():
     for name in TYPES:
         pg = pages[name]
         w = pg["components"][0]["children"][0]
-        typ = w["type"]
-        t = normalize(w, "tpl_" + name.lower())
-        if typ == "LVGLButtonWidget":
-            for c in t.get("children", []):
-                c["identifier"] = "tpl_button_label"
-        tpls[typ] = t
-    root = normalize(pages["Label"]["components"][0], "tpl_screen")
+        tpls[w["type"]] = placeholders(w)
+    root = placeholders(pages["Label"]["components"][0])
     root["children"] = []
     tpls["LVGLScreenWidget"] = root
 

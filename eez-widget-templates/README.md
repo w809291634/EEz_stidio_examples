@@ -23,14 +23,17 @@
 - `clickableFlag: true` 表示可点击，`widgetFlags` **不含 `CLICKABLE`**；
 - 有 `flagScrollbarMode`、`flagScrollDirection`、`scrollSnapX/Y`、`group`；
 - **没有** `hiddenFlag`、`checkedState`；
-- `localStyles` 只有 `{objID}`，没有 `definition`；
+- `localStyles` 默认只有 `{objID}`；Keyboard 与 Button 子 Label 保留实际 `definition`（align），不要删；
+- 三个身份角色用独立占位符：`__OBJID__` / `__STYLE_OBJID__` / `__LOCAL_STYLE_OBJID__`；
+  Button 子 Label 用 `__CHILD0_OBJID__` / `__CHILD0_STYLE_OBJID__` / `__CHILD0_LOCAL_STYLE_OBJID__`；
+- 模板**不带 `identifier`**（放置/克隆时才赋值）；
 - Keyboard **没有** `textarea`（绑定后才会出现）；
 - Button 子 Label 是完整 Label 字段集。
 
 ## 使用
 
 1. 克隆 `templates/<Type>.json`；
-2. 换新 objID/style/localStyles objID 和 `identifier`；
+2. 按角色给占位符换新 UUID，并赋新的 `identifier`；
 3. 只改几何/文本/样式值，不增删字段；
 4. Switch 保留 `CHECKABLE`；Button 保留唯一子 Label；
 5. 改动 UI 工程后跑 `python extract_templates.py` 再提取，跑 `python validate_templates.py` 校验。
