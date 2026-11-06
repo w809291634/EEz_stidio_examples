@@ -65,6 +65,8 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
 11. **交付必过 D1–D9**：`design/delivery_gate.py`，FAIL 不许交付；D5 每次生成后用
     `design/d5_pages.py` 打出**相似度百分比**（100−逐像素差异率）并留并排图。
     **D5 整轮只启动一次 EEZ，禁止反复开关/逐页重启**；多次改动先自检，最后合并跑一次全量。
+    **改完 EEZ 工程必须当场编译确认（每次都要，不得遗留）**：`cli_build` → 字体补烘 →
+    `gcc -fsyntax-only` → `eez_check`，四项全绿才允许汇报。
 
 12. **Wi-Fi 连接页先移植**：扫描/连接/密码/忘记网络一律按 kit `reference/15` 移植成熟结构（单页 + lv_list 动态行 + 密码半页 + 忘记框 + busy），不拆三屏、不自造交互。
 
