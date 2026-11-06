@@ -38,6 +38,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
+sys.path.insert(0, os.path.dirname(ROOT))
+from eez_widget_clone import new_widget  # noqa: E402  控件只从模板克隆
+
 TEMPLATE = r"C:\Users\yjt54\Desktop\EEz_stidio_examples\watch-app-list-no-flow\watch-app-list-no-flow.eez-project"
 OUT = os.path.join(ROOT, "watch.eez-project")
 ICON_DIR = os.path.join(HERE, "assets", "icons")
@@ -153,23 +156,19 @@ def styles(part_default, parts=None):
 
 
 def widget(key, wtype, x, y, w_, h_, flags, local, children=None, extra=None):
-    o = {"objID": oid(key), "type": wtype,
-         "left": int(round(x)), "top": int(round(y)),
-         "width": int(round(w_)), "height": int(round(h_)),
-         "customInputs": [], "customOutputs": [],
-         "style": {"objID": oid("ref" + key), "useStyle": "default",
-                   "conditionalStyles": [], "childStyles": []},
-         "timeline": [], "eventHandlers": [],
-         "leftUnit": "px", "topUnit": "px", "widthUnit": "px", "heightUnit": "px",
-         "widgetFlags": flags, "hiddenFlagType": "literal",
-         "clickableFlagType": "literal", "flagScrollbarMode": "OFF",
-         "checkedStateType": "literal", "disabledStateType": "literal",
-         "states": "", "groupIndex": 0, "localStyles": local,
-         "identifier": key.replace(".", "_").replace("-", "_")}
-    if extra:
-        o.update(extra)
-    o["children"] = children or []
-    md = local["definition"]["MAIN"]["DEFAULT"]
+    """克隆 eez-widget-templates 的标准语法，只改几何/标识/标志/样式/事件。
+
+    objID 仍按 key 定值（模板占位符作后缀），保证每次生成可复现。
+    """
+    o = new_widget(
+        wtype, int(round(x)), int(round(y)), int(round(w_)), int(round(h_)),
+        identifier=key.replace(".", "_").replace("-", "_"),
+        flags=flags,
+        local=(local or {}).get("definition"),
+        children=children if children is not None else [],
+        id_fn=lambda ph: oid(key + ":" + ph),
+        **(extra or {}))
+    md = o["localStyles"]["definition"]["MAIN"]["DEFAULT"]
     entry = {"identifier": o["identifier"], "type": wtype,
              "left": o["left"], "top": o["top"],
              "width": o["width"], "height": o["height"],

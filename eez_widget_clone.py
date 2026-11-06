@@ -38,28 +38,29 @@ def template(wtype):
     return _cache[wtype]
 
 
-def _fresh_ids(o):
-    """模板里的 __OBJID__ 占位符全部换成新 UUID（含子控件/样式/事件）。"""
+def _fresh_ids(o, id_fn=None):
+    """模板里的 __OBJID__ 占位符全部换新：默认随机 UUID；传 id_fn 则按占位符定值。"""
     if isinstance(o, dict):
         for k, v in o.items():
             if k == "objID":
-                o[k] = str(uuid.uuid4())
+                o[k] = id_fn(v) if id_fn else str(uuid.uuid4())
             else:
-                _fresh_ids(v)
+                _fresh_ids(v, id_fn)
     elif isinstance(o, list):
         for v in o:
-            _fresh_ids(v)
+            _fresh_ids(v, id_fn)
 
 
 def new_widget(wtype, x, y, w, h, identifier=None, flags=None, local=None,
-               children=None, eventHandlers=None, clickable=None, **extra):
+               children=None, eventHandlers=None, clickable=None, id_fn=None,
+               **extra):
     """克隆模板后只改值。
 
     flags 传旧语法 flags：None=沿用模板默认；显式=按给定值（去掉 CLICKABLE）。
     clickable=None 时按 flags 是否含 CLICKABLE 推导；带事件回调的控件视为可点击。
     """
     wd = copy.deepcopy(template(wtype))
-    _fresh_ids(wd)
+    _fresh_ids(wd, id_fn)
     wd["left"], wd["top"], wd["width"], wd["height"] = x, y, w, h
     for k in ("leftUnit", "topUnit", "widthUnit", "heightUnit"):
         wd[k] = "px"
@@ -81,6 +82,6 @@ def new_widget(wtype, x, y, w, h, identifier=None, flags=None, local=None,
         wd["children"] = children
     if eventHandlers is not None:
         wd["eventHandlers"] = eventHandlers
-        _fresh_ids(wd["eventHandlers"])
+        _fresh_ids(wd["eventHandlers"], id_fn)
     wd.update(extra)
     return wd
