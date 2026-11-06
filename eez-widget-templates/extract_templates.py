@@ -9,9 +9,13 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJ = os.path.join(HERE, "eez-widget-templates.eez-project")
-TYPES = ["Arc", "Bar", "Button", "Chart", "Checkbox", "Container", "Dropdown",
-         "Keyboard", "Label", "Led", "List", "Panel", "Roller", "Scale",
-         "Slider", "Spinner", "Switch", "Textarea"]
+# 每个 Palette 控件一页；Tab 不是独立页，它由 Tabview 页内的宿主保存。
+PAGES = ["Arc", "Bar", "Button", "ButtonMatrix", "Calendar", "Canvas", "Chart",
+         "Checkbox", "Container", "Dropdown", "Image", "Imgbutton", "Keyboard",
+         "Label", "Led", "Line", "List", "Lottie", "Menu", "MessageBox",
+         "Panel", "QRCode", "Roller", "Scale", "Slider", "Spangroup", "Spinbox",
+         "Spinner", "Switch", "Table", "Tabview", "Textarea", "TileView",
+         "Window", "AnimationImage"]
 
 
 def ph(prefix, role):
@@ -33,6 +37,13 @@ def placeholders(node, prefix=""):
             o.pop("identifier", None)
             for i, c in enumerate(o.get("children", [])):
                 rec(c, (pre + "_" if pre else "") + "CHILD%d" % i)
+            # 非 children 的对象列表（如 Spangroup 的 spans）也带 objID
+            for k, v in o.items():
+                if k in ("children", "style", "localStyles") or not isinstance(v, list):
+                    continue
+                for i, c in enumerate(v):
+                    if isinstance(c, dict) and "objID" in c:
+                        rec(c, (pre + "_" if pre else "") + "%s%d" % (k.upper(), i))
         elif isinstance(o, list):
             for c in o:
                 rec(c, pre)
@@ -45,11 +56,18 @@ def placeholders(node, prefix=""):
 
 def default_value(tpl):
     d = copy.deepcopy(tpl)
-    for k in ("objID", "identifier", "style", "localStyles", "left", "top"):
-        d.pop(k, None)
-    for c in d.get("children", []):
-        for k in ("objID", "identifier", "style", "localStyles", "left", "top"):
-            c.pop(k, None)
+
+    def strip(o):
+        if isinstance(o, dict):
+            for k in ("objID", "identifier", "style", "localStyles", "left", "top"):
+                o.pop(k, None)
+            for v in o.values():
+                strip(v)
+        elif isinstance(o, list):
+            for v in o:
+                strip(v)
+
+    strip(d)
     return d
 
 
@@ -58,13 +76,30 @@ def main():
     pages = {p["name"]: p for p in proj["userPages"]}
     os.makedirs(os.path.join(HERE, "templates"), exist_ok=True)
     tpls = {}
-    for name in TYPES:
+    typ2page = {}
+    for name in PAGES:
         pg = pages[name]
         w = pg["components"][0]["children"][0]
         tpls[w["type"]] = placeholders(w)
+        typ2page[w["type"]] = name
+
+    # Tab 只能作为 Tabview 的子控件存在，从宿主页内提取。
+    def find(node, typ):
+        if node.get("type") == typ:
+            return node
+        for c in node.get("children", []):
+            hit = find(c, typ)
+            if hit:
+                return hit
+
+    tab = find(pages["Tabview"]["components"][0], "LVGLTabWidget")
+    tpls["LVGLTabWidget"] = placeholders(tab)
+    typ2page["LVGLTabWidget"] = "Tabview"
+
     root = placeholders(pages["Label"]["components"][0])
     root["children"] = []
     tpls["LVGLScreenWidget"] = root
+    typ2page["LVGLScreenWidget"] = "Label"
 
     for typ, t in tpls.items():
         json.dump(t, open(os.path.join(HERE, "templates", typ + ".json"),
@@ -75,14 +110,14 @@ def main():
                           "templates": len(tpls)}}
     manifest = {}
     for typ, t in sorted(tpls.items()):
-        page = "Label" if typ == "LVGLScreenWidget" else next(
-            n for n, p in pages.items()
-            if p.get("components") and p["components"][0].get("children")
-            and p["components"][0]["children"][0].get("type") == typ)
+        page = typ2page[typ]
         defaults[typ] = {"page": page, "defaultFlags": t.get("widgetFlags", ""),
                          "defaultValue": default_value(t)}
         manifest[typ] = {"page": page, "file": "templates/%s.json" % typ,
                          "source": "EEZ Studio UI drag-created"}
+        palette = {"LVGLTabWidget": "Tab", "LVGLSpanWidget": "Spangroup"}.get(typ, page)
+        if typ != "LVGLScreenWidget":
+            manifest[typ]["palette"] = palette
     json.dump(defaults, open(os.path.join(HERE, "defaults.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
     json.dump(manifest, open(os.path.join(HERE, "manifest.json"), "w", encoding="utf-8"),
