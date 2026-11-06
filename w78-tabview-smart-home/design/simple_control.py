@@ -62,7 +62,8 @@ def line(x1, y1, x2, y2, color=EDGE, w=1):
 
 
 def card(x, y, w, h, rx=12):
-    return r(x, y, w, h, CARD, EDGE, rx)
+    # data-card 只用于导出布局框（L6 等距检查），不参与渲染
+    return r(x, y, w, h, CARD, EDGE, rx).replace("<rect ", '<rect data-card="1" ', 1)
 
 
 def btn(x, y, w, h, label, fill=ACCENT, fg=BG, size=11, sub=""):
