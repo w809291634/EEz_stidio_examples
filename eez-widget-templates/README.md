@@ -52,6 +52,9 @@
   在画布上松手只会得到页面级兄弟对象。
 - 门禁：`validate_templates.py` 逐字段对照 UI 工程（含变体四重核对）；
   `tab_parent_check.py` 卡 Tab 的父级结构。
+- **可改属性字段以经验库 `reference/16_widget_properties.md` 为准**（EEZ 前端属性面板
+  `classInfo` × 官方手册 W 章节 × 本目录落盘值三方核对，逐控件列全字段/枚举/默认值/分组）；
+  该表之外的字段不得写入工程。
 
 
 ## 面板名与类型名

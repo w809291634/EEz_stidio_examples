@@ -53,6 +53,8 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
    输入→Textarea、进度→Bar、图表→Chart）；大卡片用容器 + 卡内真控件；A12 硬门禁，禁止透明容器冒充。
    **Switch 样板必须带 `CHECKABLE`**（A13），否则点击不切换状态。
    **字段集必须等于 UI 拖拽保存语法**（A14）：不得按 classInfo/defaultValue 片段或拖动 payload 补字段。
+   **可改属性字段以经验库 `reference/16_widget_properties.md` 为准**（EEZ 前端属性面板 × 手册 W 章节 × 模板落盘
+   三方核对，36 类 + Screen 全字段表）；表外字段不得写，新增字段先回 EEZ UI 改出来 → 回填表 → 重提模板。
    **新建控件唯一来源**：根目录 `eez-widget-templates/templates/`（kit `reference/eez_widget_syntax`），
    模板来自 EEZ UI 拖拽创建并保存后的工程，不允许临时去其他工程抓样板；不要用脚本生成/修改 `.eez-project`；
    不得带源工程配色/字体/尺寸；克隆后只改几何/identifier/文本/样式值。
