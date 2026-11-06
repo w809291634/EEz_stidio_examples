@@ -161,39 +161,19 @@ def main():
                           % (r["opt"], r["ui_flash"] / 1024.0, r["ui_ram"] / 1024.0, mark))
         else:
             print("ESP32：工具链不可用（%s）" % est["error"])
-            print("      先构建一次测量模板；当前回退 PC 上限")
+            print("      先构建一次测量模板；本报告只统计 ESP32 工具链估算")
         if esp and fresh:
             print("精确链接缓存：Flash %.1fKB / RAM %.1fKB（%s，按需复核）"
                   % (esp["ui_flash"] / 1024.0, esp["ui_ram"] / 1024.0, esp["measured_at"]))
-        print("PC（x86_64 gcc -O1，未链接上限）")
-        print("|- 字体 Flash %.0fKB（%d 档）" % (f_flash / 1024.0, len(fonts)))
-        for p in sorted(fonts, key=lambda x: -binmap.get(x, (0, 0))[0]):
-            n = os.path.basename(p)[len("ui_font_"):-2]
-            v = binmap.get(p)
-            tag = "  <- 唯一汉字档" if n == "cn12" else ""
-            print("|  |- %s %.0fKB%s" % (n, (v[0] / 1024.0 if v else 0), tag))
-        for p in others:
-            if not os.path.isfile(p):
-                continue
-            v = binmap.get(p)
-            print("|- %s Flash %.0fKB / bss %.0fKB"
-                  % (os.path.basename(p), (v[0] / 1024.0 if v else 0), (v[1] / 1024.0 if v else 0)))
-        print("`- 合计 Flash %.0fKB + RAM %.0fKB（预算 %.0fKB）"
-              % (flash / 1024.0, ram / 1024.0, budget["ui_mb"] * 1024))
         print("字库")
         print("|- 镜像：12px 汉字 + 24/32 ASCII")
         print("`- SD 卡：未启用（启用后不占镜像，镜像保留 1 档兜底）")
-        print("PC 仿真接口")
-        print("|- main.exe %s" % ("%.2fMB（仅 PC，不进固件）" % mb(exe) if os.path.isfile(exe) else "未构建"))
-        print("|- liblvgl.a %s" % ("%.2fMB（仅 PC）" % mb(lib) if os.path.isfile(lib) else "未构建"))
-        print("`- 运行期：LV_MEM %s | 帧缓冲 800x480x%sbpp ≈ %s | snapshot 1.5MB 按需" % (mem, depth, fb))
     if est_ok:
         print("[MEM-BIN] fonts=%.0fKB ui=%.0fKB ram=%.0fKB target=%s opt=%s source=toolchain-estimate"
               % (est["fonts_flash"] / 1024.0, est["ui_flash"] / 1024.0, est["ui_ram"] / 1024.0,
                  est["target"], est.get("opt", "?")))
     else:
         print("[MEM-BIN] fonts=%.0fKB ui=%.0fKB ram=%.0fKB target=pc" % (f_flash / 1024.0, flash / 1024.0, ram / 1024.0))
-    print("[MEM-PC] fonts=%.0fKB ui=%.0fKB ram=%.0fKB" % (f_flash / 1024.0, flash / 1024.0, ram / 1024.0))
     if esp and fresh:
         print("[MEM-EXACT] fonts=%.0fKB ui=%.0fKB ram=%.0fKB target=%s"
               % (esp["fonts_flash"] / 1024.0, esp["ui_flash"] / 1024.0, esp["ui_ram"] / 1024.0, esp["target"]))
