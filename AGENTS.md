@@ -70,6 +70,11 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
 
 14. **字号 ≤3 档且共用**：设计源一套令牌全工程共用；**镜像字库只有 1 档带汉字（尽量小，如 12px）**，其余档只放 ASCII/数字；**SD 卡字库不受限**（保留镜像 1 档兜底）；设计阶段先确认字库存放位置（NO_FLOW §2.5/F4）。
 
+15. **EEZ 优先 + 先查官方手册**：用 EEZ 建 UI 时，参数（控件属性、工程设置、位图 Color format、字体条目等）
+    **先查 EEZ 官方手册确认，再在 EEZ 里设参数并构建看 `.c` 产物**；脚本只允许复刻已确认的值，
+    禁止用脚本试探枚举、或绕过 EEZ 选项去间接改 `.eez-project` / `src/ui`；
+    手册说"可选"的能力不得凭猜测判"EEZ 做不到"（反例：I4，`bpp` 存的是 CF id 43）。细则见 NO_FLOW §2.2b。
+
 > 细节只在对应文档里写一次：流程 = `EEZ_FIRST_WORKFLOW_NO_FLOW.md`；方法论 = `PLAYBOOK.md`；
 > 字段级 = `reference/07`（工程 JSON / 字体）、`reference/14`（H5 评审页）、`reference/15`（Wi-Fi 连接页结构）。
 > **新增规则只加两处**：这里一行（入口）+ 对应文档一节（细节）。别在第三处复述。
