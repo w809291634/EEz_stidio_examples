@@ -90,6 +90,32 @@ if /i "%~1"=="test" (
     python "%SIM_TARGET_PROJ_DIR%\design\esp32_mem_report.py" --brief
     exit /b 0
 )
+if /i "%~1"=="fstest" (
+    set "W78_FS_TEST=1"
+    set "SDL_VIDEODRIVER=dummy"
+    echo [run_sim] headless filesystem test...
+    start /b /wait "" "%LOCAL_EXE%"
+    if errorlevel 1 (
+        echo [run_sim] FSTEST FAILED
+        pause
+        exit /b 1
+    )
+    echo [run_sim] FSTEST PASS
+    exit /b 0
+)
+if /i "%~1"=="simtest" (
+    set "W78_SIM_TEST=1"
+    set "SDL_VIDEODRIVER=dummy"
+    echo [run_sim] headless dynamic-read test...
+    start /b /wait "" "%LOCAL_EXE%"
+    if errorlevel 1 (
+        echo [run_sim] SIMTEST FAILED
+        pause
+        exit /b 1
+    )
+    echo [run_sim] SIMTEST PASS
+    exit /b 0
+)
 if /i "%~1"=="wifitest" (
     set "W78_WIFI_TEST=1"
     set "SDL_VIDEODRIVER=dummy"

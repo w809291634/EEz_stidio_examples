@@ -21,6 +21,8 @@
 #include "nav_bind.h"
 #include "value_bind.h"
 #include "ui_behavior.h"
+#include "app/sim_reads.h"
+#include "app/sim_fs.h"
 #include "nav_bind_table.h"
 #include "app/wifi_logic.h"
 #include "app/wifi_events.h"
@@ -96,6 +98,7 @@ static void pump(int frames)
         SDL_Delay(10);
         lv_tick_inc(10);
         lv_timer_handler();
+        sim_reads_tick();
     }
 }
 
@@ -213,25 +216,95 @@ static int behavior_test(void)
     return fail ? 1 : 0;
 }
 
+static int sim_test(void)
+{
+    char a[64], b[64], c[64], d[64], e[64], f[64], g[64], h[64];
+    const char *t;
+    int i;
+    pump(4);
+#define GRAB(dst, obj) do { \
+        t = (obj) ? lv_label_get_text(obj) : ""; \
+        snprintf(dst, sizeof(dst), "%s", t ? t : ""); } while (0)
+    GRAB(a, objects.main_hr03);
+    GRAB(c, objects.detail_sensor_hr03);
+    GRAB(e, objects.energy_hr03);
+    GRAB(g, objects.detail_light_hr05);
+    for (i = 0; i < 50; i++) {          /* SDL 端口用真实时钟（SDL_GetTicks），等 1.5s 才过 1 个外部读节拍 */
+        SDL_Delay(30);
+        lv_timer_handler();
+        sim_reads_tick();
+    }
+    GRAB(b, objects.main_hr03);
+    GRAB(d, objects.detail_sensor_hr03);
+    GRAB(f, objects.energy_hr03);
+    GRAB(h, objects.detail_light_hr05);
+    printf("[SIM] main_hr03 '%s' → '%s'\n", a, b);
+    printf("[SIM] sensor_temp '%s' → '%s'\n", c, d);
+    printf("[SIM] energy_hr03 '%s' → '%s'\n", e, f);
+    printf("[SIM] light_min '%s' → '%s'\n", g, h);
+    i = strcmp(g, h) != 0;              /* 分钟计数每秒必增，作为"外部读在变"的硬判据 */
+    printf("[SIM] %s\n", i ? "PASS" : "FAIL");
+#undef GRAB
+    return i ? 0 : 1;
+}
+
+static int fs_test(void)
+{
+    lv_fs_file_t f;
+    uint32_t br = 0;
+    char buf[64] = { 0 };
+    int ok;
+    lv_fs_res_t r = lv_fs_open(&f, "A:/assets/fs_probe.txt", LV_FS_MODE_RD);
+    if (r != LV_FS_RES_OK) {
+        printf("[FS] open A:/assets/fs_probe.txt FAIL res=%d\n", (int)r);
+        return 1;
+    }
+    lv_fs_read(&f, buf, sizeof(buf) - 1, &br);
+    lv_fs_close(&f);
+    printf("[FS] read %u bytes: '%s'\n", (unsigned)br, buf);
+    ok = strstr(buf, "w78-fs-ok") != NULL;
+    printf("[FS] %s\n", ok ? "PASS" : "FAIL");
+    return ok ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     int auto_mode = getenv("W78_AUTOTEST") != NULL ||
-                    getenv("W78_UI_BEHAVIOR_TEST") != NULL;
+                    getenv("W78_UI_BEHAVIOR_TEST") != NULL ||
+                    getenv("W78_FS_TEST") != NULL;
     setvbuf(stdout, NULL, _IONBF, 0);
     (void)argc; (void)argv;
     if (auto_mode) SDL_setenv("SDL_VIDEODRIVER", "dummy", 0);
 
     lv_init();
+    sim_fs_init();
     hal_init(SIM_W, SIM_H);
     ui_init();
     nav_bind_init();
     value_bind_init();
     ui_behavior_init();
+    sim_reads_init();
 
     if (getenv("W78_UI_BEHAVIOR_TEST")) {
         int rc;
         pump(5);
         rc = behavior_test();
+        SDL_Quit();
+        return rc;
+    }
+
+    if (getenv("W78_FS_TEST")) {           /* 自证：A: 能读到工程内文件 */
+        int rc;
+        pump(2);
+        rc = fs_test();
+        SDL_Quit();
+        return rc;
+    }
+
+    if (getenv("W78_SIM_TEST")) {          /* 自证：外部读真的在变 */
+        int rc;
+        pump(5);
+        rc = sim_test();
         SDL_Quit();
         return rc;
     }
@@ -271,9 +344,9 @@ int main(int argc, char **argv)
         wifi_bind_init();
         user_io_init();
         { app_value_t sv; sv.i = 1; app_set_output(APP_OUT_WIFI_SCAN, sv); }
-        for (i = 0; i < 80; i++) { user_io_tick(); lv_tick_inc(50); lv_timer_handler(); SDL_Delay(50); if (app_get_input_i(APP_IN_SCAN_STATE) == 2) break; }
-        for (i = 0; i < 8; i++) { user_io_tick(); lv_tick_inc(30); lv_timer_handler(); SDL_Delay(30); }
-#define SHOT_ONE(sid, field) do {             lv_screen_load(nav_screen_obj(sid));             for (i = 0; i < 8; i++) { lv_tick_inc(30); lv_timer_handler(); SDL_Delay(20); }             take_shot("tmp/sim_" #field ".bmp");         } while (0);
+        for (i = 0; i < 80; i++) { user_io_tick(); sim_reads_tick(); lv_tick_inc(50); lv_timer_handler(); SDL_Delay(50); if (app_get_input_i(APP_IN_SCAN_STATE) == 2) break; }
+        for (i = 0; i < 8; i++) { user_io_tick(); sim_reads_tick(); lv_tick_inc(30); lv_timer_handler(); SDL_Delay(30); }
+#define SHOT_ONE(sid, field) do {             lv_screen_load(nav_screen_obj(sid));             for (i = 0; i < 8; i++) { lv_tick_inc(30); lv_timer_handler(); sim_reads_tick(); SDL_Delay(20); }             take_shot("tmp/sim_" #field ".bmp");         } while (0);
         NAV_PAGE_LIST(SHOT_ONE)
         SDL_Quit();
         return 0;
@@ -413,6 +486,7 @@ int main(int argc, char **argv)
         lv_timer_handler();
         ui_tick();
         user_io_tick();
+        sim_reads_tick();
         SDL_Delay(5);
     }
     return 0;
