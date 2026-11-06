@@ -69,8 +69,18 @@ def main():
         "| 屏 | 层 | 徽标 | 名称 | 控件类型 | 数据流向 | 作用（点击/滑动后） | 跳转目标 | 代号 | 框 (x,y,w,h) |",
         "|---|---|---|---|---|---|---|---|---|---|",
     ]
+    dyn = ["", "## 动态条目区（设计图不画对象，运行期由应用代码创建）",
+           "",
+           "> 条目数量随程序/环境变化，不固化为控件，也不画进设计图；"
+           "H5 以青色虚线框标出（`design/pages.py` 的 `DYN_ZONES` 是唯一真值）。",
+           "",
+           "| 屏 | 区域 | 说明 | 框 (x,y,w,h) |",
+           "|---|---|---|---|"]
+    for z in pg.DYN_ZONES:
+        dyn.append("| %s | %s | %s | (%d,%d,%d,%d) |" % (
+            z["page"], z["name"], z["note"], *z["box"]))
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    io.open(OUT, "w", encoding="utf-8", newline="\n").write("\n".join(head + rows) + "\n")
+    io.open(OUT, "w", encoding="utf-8", newline="\n").write("\n".join(head + rows + dyn) + "\n")
 
     # 门禁：导航闭环 + 六类齐全 + 计数与设计源一致
     no_back = [p for p in data["order"] if p != data["order"][0]
@@ -86,6 +96,8 @@ def main():
     assert set(io_cnt) >= {"in_read", "out_read", "in_write", "out_write", "nav", "gesture"}, \
         "6 类数据流向里缺类"
     assert not no_back, "这些页没有任何跳转/返回控件：%s" % no_back
+    assert all(z["page"] in data["order"] for z in pg.DYN_ZONES), \
+        "动态条目区指向不存在的页"
 
 
 if __name__ == "__main__":

@@ -350,6 +350,45 @@ def main():
                 a14_ok += 1
     print("[A14] 标准模板字段集 %d/%d" % (a14_ok, a14_ok + a14_bad))
 
+    # A15 结构性控件不得"部分重叠"（D5 相似度看不出来：设计源叠了，两边就都叠）
+    # 不算：deco 装饰层、隐藏浮层及其子孙、文本标签/按钮、父子嵌套（一方完全包住另一方）
+    STRUCT = {"LVGLContainerWidget", "LVGLListWidget", "LVGLChartWidget", "LVGLBarWidget",
+              "LVGLSliderWidget", "LVGLTextareaWidget", "LVGLKeyboardWidget"}
+
+    def abs_nodes(cs, ox=0, oy=0, hidden=False, anc=()):
+        for c in cs:
+            h = hidden or c.get("hiddenFlag") is True
+            x, y = ox + c["left"], oy + c["top"]
+            yield c, x, y, h, anc
+            for k in abs_nodes(c.get("children") or [], x, y, h, anc + (id(c),)):
+                yield k
+
+    for pgx in proj["userPages"]:
+        ns = [(w, x, y, a) for w, x, y, h, a in abs_nodes(pgx["components"])
+              if w["type"] in STRUCT and not h
+              and w.get("identifier") and "_deco" not in w["identifier"]]
+        for i in range(len(ns)):
+            for j in range(i + 1, len(ns)):
+                a, ax, ay, anc_a = ns[i]
+                b, bx, by, anc_b = ns[j]
+                if id(a) in anc_b or id(b) in anc_a:      # 父子嵌套不算重叠
+                    continue
+                aw, ah = a["width"], a["height"]
+                bw, bh = b["width"], b["height"]
+                ix = max(0, min(ax + aw, bx + bw) - max(ax, bx))
+                iy = max(0, min(ay + ah, by + bh) - max(ay, by))
+                if ix * iy <= 0:
+                    continue
+                contain = ((ax <= bx and ay <= by and ax + aw >= bx + bw and ay + ah >= by + bh) or
+                           (bx <= ax and by <= ay and bx + bw >= ax + aw and by + bh >= ay + ah))
+                if contain:
+                    continue
+                small = min(aw * ah, bw * bh)
+                if small and ix * iy / float(small) >= 0.2:
+                    fails.append("A15 页 %s 控件 %s 与 %s 部分重叠 %d%%"
+                                 % (pgx["name"], a["identifier"], b["identifier"],
+                                    int(ix * iy * 100 / small)))
+
     fs_path = os.path.join(HERE, "font_storage.json")
     storage = "image"
     if os.path.isfile(fs_path):

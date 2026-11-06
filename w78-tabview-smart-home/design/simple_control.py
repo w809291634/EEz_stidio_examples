@@ -329,12 +329,17 @@ SETTINGS_BOXES = {
     "dark": (696, 118, 60, 32),
     "notify": (696, 178, 60, 32),
     "lock": (500, 244, 240, 22),
-    "net": (40, 276, 720, 52),
-    "about": (40, 336, 720, 52),
-    "reset": (40, 400, 140, 32),
+    "net": (40, 284, 720, 52),
+    "about": (40, 344, 720, 52),
+    "reset": (40, 404, 140, 32),
 }
 SETTINGS_ROWS = [("深色模式", "界面配色"), ("通知提醒", "主控铃铛角标"),
                  ("自动锁屏", "无操作后 60 秒")]
+# 设置页所有整行卡共用同一行距（52 高 + 8 间隙）；禁止再写死 y，避免某行贴住上一行
+SETTINGS_ROW_H = 52
+SETTINGS_ROW_GAP = 8
+SETTINGS_ROW_PITCH = SETTINGS_ROW_H + SETTINGS_ROW_GAP
+SETTINGS_ROW_Y0 = 104
 
 
 def sub_header(title, sub, back_label):
@@ -357,10 +362,7 @@ def detail_frame():
             slider(60, 276, 300, 0.45), t(300, 258, "3000K", 10, T3),
             card(400, 104, 360, 180),
             t(420, 130, "定时", 12, T2, "600"),
-            t(420, 152, "22:30 自动关灯", 10, T1),
-            toggle(*b["timer1"][:2], True),
-            t(420, 202, "07:00 缓慢亮起", 10, T1),
-            toggle(*b["timer2"][:2], False),
+            # 动态条目区：设计图不画对象，运行期由应用代码创建定时行
             btn(*b["timer_add"], "添加定时", CARD2, ACCENT, 9),
             card(40, 300, 720, 140),
             t(60, 328, "设备信息（只读）", 12, T2, "600"),
@@ -374,19 +376,9 @@ def detail_frame():
 
 def notify_frame():
     b = NOTIFY_BOXES
-    out = sub_header("通知", "3 条 · 2 条未读", "‹ 主控")
+    out = sub_header("通知", "示例：3 条 · 2 条未读", "‹ 主控")
     out.append(btn(*b["read_all"], "全部已读", CARD2, ACCENT, 9))
-    rows = [("客厅主灯已开启", "刚才 · 来自 回家场景", True),
-            ("浴室漏水传感离线", "12 分钟前 · 需检查", True),
-            ("昨晚用电量 8.2 kWh", "昨天 23:00", False)]
-    for i, (title, sub, unread) in enumerate(rows):
-        y = 104 + i * 84
-        out += [card(40, y, 720, 72),
-                r(56, y + 20, 8, 8, ACCENT if unread else EDGE, "none", 4),
-                t(74, y + 30, title, 12, T1, "600"),
-                t(74, y + 50, sub, 9, T3)]
-        rx, ry, rw, rh = b["rows"][i]
-        out.append(btn(rx, ry, rw, rh, "查看", CARD2, ACCENT, 9))
+    # 动态条目区：设计图不画对象，运行期由应用代码创建通知行
     out.append(btn(*b["clear"], "清空列表", CARD2, T1, 9))
     return "".join(out)
 
@@ -420,8 +412,8 @@ def settings_frame():
     b = SETTINGS_BOXES
     out = sub_header("设置", "Haven Home · 网关在线", "‹ 主控")
     for i, (name, sub) in enumerate(SETTINGS_ROWS):
-        y = 104 + i * 60
-        out += [card(40, y, 720, 52),
+        y = SETTINGS_ROW_Y0 + i * SETTINGS_ROW_PITCH
+        out += [card(40, y, 720, SETTINGS_ROW_H),
                 t(60, y + 24, name, 12, T1, "600"),
                 t(60, y + 40, sub, 8.5, T3)]
     out.append(toggle(*b["dark"][:2], True))
@@ -429,8 +421,8 @@ def settings_frame():
     out += [slider(520, 252, 200, 0.5)]
     for i, (name, val) in enumerate([("Wi-Fi", "Haven_5G · 已连接 · 信号强"),
                                      ("关于", "版本 1.0.0 · 构建 2026-05-18")]):
-        y = 276 + i * 60
-        out += [card(40, y, 720, 52),
+        y = SETTINGS_ROW_Y0 + (i + len(SETTINGS_ROWS)) * SETTINGS_ROW_PITCH
+        out += [card(40, y, 720, SETTINGS_ROW_H),
                 t(60, y + 24, name, 12, T1, "600"),
                 t(60, y + 40, val, 8.5, T3),
                 t(736, y + 29, "›", 16, ACCENT, "400", "end")]
@@ -440,8 +432,9 @@ def settings_frame():
 
 # ---------------- Wi-Fi 连接（完全参考 app-wifi-scan-conn-no-flow 的单页+弹层结构） ----------------
 WIFI_BOXES = {
-    "scan": (640, 96, 120, 30),
-    "list": (40, 136, 720, 316),
+    # 与其它二级页同一页骨架：动作按钮在页头带 (y=28,h=28)，内容从 y=104 起
+    "scan": (640, 28, 120, 28),
+    "list": (40, 104, 720, 348),
     "hint": (40, 458, 700, 16),
     # 密码半页（默认隐藏）
     "scrim": (0, 0, 800, 480),
