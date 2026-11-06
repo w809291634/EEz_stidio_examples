@@ -4,6 +4,8 @@
 #include "actions.h"
 #include "vars.h"
 
+#include <string.h>
+
 static int16_t currentScreen = -1;
 
 static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
@@ -21,7 +23,7 @@ void loadScreen(enum ScreensEnum screenId) {
 
 void ui_init() {
     create_screens();
-    loadScreen(SCREEN_ID_TPL_LABEL);
+    loadScreen(SCREEN_ID_LABEL);
 
 }
 

@@ -42,19 +42,19 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
 6. **载体与交付**：设计阶段以 H5 三视图为主；**高清设计图默认叠加全部控件标注（开关/滑条/按钮/输入/图表都要有号），可一键关**；**H5 批注**：右键右侧控件清单行/底部控件标签 → 删除/修改/加提示，右键效果图空白 → 落坐标标签，导出 `annotations.json` 给 AI 改设计源，浏览器不改工程；核对给 HTML 绝对路径、不内嵌、不出查看器页；改 H5 交互/实时效果要同步高清设计图。
 7. **覆盖表只补真值**：例外/映射表不得推翻设计源行为字段，配 assert 门禁。
 8. **控件只克隆 EEZ 拖拽样板**：新建控件从根目录 `eez-widget-templates/templates/` 克隆
-   （字段集来自真实拖拽，值/flags 按 `defaults.json` 的 EEZ classInfo 标准复位，`validate_templates.py` 校验）；
+   （模板来自 EEZ UI 拖拽创建并保存后的工程，`validate_templates.py` 逐字段校验）；
    生成器只改几何/identifier/文本/样式值，**禁止手写或新增字段**（A10 门禁逐控件核对）。
    `tools/eez_defaults.py` 只用于已有工程的自定义样板采样/对照，不再作为新建控件来源。
-   按钮无 `text`（文字在子标签）；克隆后复位表达式型属性（`hiddenFlag` 等），否则会带入别工程的 `get_var_*`。
+   按钮无 `text`（文字在子标签）；克隆后复位表达式型属性，否则会带入别工程的 `get_var_*`。
    生成器还有十条硬口径：页名 ASCII / identifier 按类别码命名 / 字号 ≤3 档令牌 / 替换字符进子集 /
    卡片只做底板 / 行式按钮 LEFT_MID+设计文案 / 颜色只收 `#RRGGBB` / 装饰容器去 CLICKABLE（只改 flags）/
    控件 JSON 只克隆拖拽样板（A10 字段集校验）——细则见 NO_FLOW §2.2。
    **设计标注的控件必须按类型真实建立**（开关→Switch、滑条→Slider、动作/跳转→Button、
    输入→Textarea、进度→Bar、图表→Chart）；大卡片用容器 + 卡内真控件；A12 硬门禁，禁止透明容器冒充。
    **Switch 样板必须带 `CHECKABLE`**（A13），否则点击不切换状态。
-   **字段集必须等于标准模板库**（A14）：模板统一带 `hiddenFlag=false` 基础字段，只许改值。
+   **字段集必须等于 UI 拖拽保存语法**（A14）：不得按 classInfo/defaultValue 片段或拖动 payload 补字段。
    **新建控件唯一来源**：根目录 `eez-widget-templates/templates/`（kit `reference/eez_widget_syntax`），
-   不允许临时去其他工程抓样板；模板值必须等于 EEZ classInfo 标准默认值（`defaults.json`），
+   模板来自 EEZ UI 拖拽创建并保存后的工程，不允许临时去其他工程抓样板；不要用脚本生成/修改 `.eez-project`；
    不得带源工程配色/字体/尺寸；克隆后只改几何/identifier/文本/样式值。
    **设备读数也是控件**（温度/湿度/百分比/功率/电量/在线状态/日期时间等），按 value 类标注并生成 Label（`hr` 码）；
    随 UI 滑条/开关变化的值（含滑条/进度条旁的数值）自动归 `in_read`；标题、说明、按钮文案不算读数（标注范围见 NO_FLOW §2.1）。
