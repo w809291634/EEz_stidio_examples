@@ -76,6 +76,15 @@ if not exist "%LOCAL_EXE%" (
 )
 echo [run_sim] exe = %LOCAL_EXE%
 if /i "%~1"=="build" exit /b 0
+REM 开机动画帧是生成物（方案 B）：缺失时从 assets\boot.mp4 自动转帧
+if not exist "%SIM_TARGET_PROJ_DIR%\assets\boot\boot_000.jpg" (
+    echo [run_sim] boot frames missing - converting assets\boot.mp4 ...
+    python "%SIM_TARGET_PROJ_DIR%\design\boot_from_mp4.py"
+    if errorlevel 1 (
+        echo [run_sim] boot frame generation FAILED
+        exit /b 1
+    )
+)
 if /i "%~1"=="test" (
     set "W78_AUTOTEST=1"
     set "SDL_VIDEODRIVER=dummy"
@@ -88,6 +97,20 @@ if /i "%~1"=="test" (
     )
     echo [run_sim] AUTOTEST PASS
     python "%SIM_TARGET_PROJ_DIR%\design\esp32_mem_report.py" --brief
+    exit /b 0
+)
+if /i "%~1"=="boottest" (
+    set "W78_BOOT_TEST=1"
+    set "SDL_VIDEODRIVER=dummy"
+    cd /d "%SIM_TARGET_PROJ_DIR%"
+    echo [run_sim] headless boot-animation test...
+    start /b /wait "" "%LOCAL_EXE%"
+    if errorlevel 1 (
+        echo [run_sim] BOOTTEST FAILED
+        pause
+        exit /b 1
+    )
+    echo [run_sim] BOOTTEST PASS
     exit /b 0
 )
 if /i "%~1"=="fstest" (

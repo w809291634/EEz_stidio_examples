@@ -23,6 +23,8 @@
 #include "ui_behavior.h"
 #include "app/sim_reads.h"
 #include "app/sim_fs.h"
+#include "app/boot_anim.h"
+#include "app/boot_frames.h"
 #include "nav_bind_table.h"
 #include "app/wifi_logic.h"
 #include "app/wifi_events.h"
@@ -50,9 +52,9 @@ static lv_display_t *hal_init(int32_t w, int32_t h)
     return disp;
 }
 
-static void take_shot(const char *path)
+static void take_shot_obj(lv_obj_t *obj, const char *path)
 {
-    lv_draw_buf_t *buf = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_XRGB8888);
+    lv_draw_buf_t *buf = lv_snapshot_take(obj, LV_COLOR_FORMAT_XRGB8888);
     if (!buf) { printf("[SHOT] snapshot failed\n"); return; }
     int w = (int)buf->header.w, h = (int)buf->header.h;
     int stride = (int)buf->header.stride;
@@ -75,6 +77,11 @@ static void take_shot(const char *path)
         printf("[SHOT] saved %s (%dx%d)\n", path, w, h);
     }
     lv_draw_buf_destroy(buf);
+}
+
+static void take_shot(const char *path)
+{
+    take_shot_obj(lv_screen_active(), path);
 }
 
 static void push_mouse(uint32_t type, int x, int y){
@@ -267,11 +274,31 @@ static int fs_test(void)
     return ok ? 0 : 1;
 }
 
+static int boot_test(void)
+{
+    int i;
+    boot_anim_play();
+    if (!boot_anim_active()) {
+        printf("[BOOT] 未启动（帧文件或 FS 不可用）\n");
+        return 1;
+    }
+    for (i = 0; i < 220 && boot_anim_active(); i++) {
+        if (i == 20) take_shot_obj(lv_layer_top(), "tmp/boot_mid.bmp");   /* 约 0.4s，取中间帧 */
+        pump(2);
+    }
+    printf("[BOOT] frames=%d/%d active=%d\n", boot_anim_frames_played(),
+           BOOT_FRAME_COUNT, (int)boot_anim_active());
+    i = (!boot_anim_active() && boot_anim_frames_played() == BOOT_FRAME_COUNT);
+    printf("[BOOT] %s\n", i ? "PASS" : "FAIL");
+    return i ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     int auto_mode = getenv("W78_AUTOTEST") != NULL ||
                     getenv("W78_UI_BEHAVIOR_TEST") != NULL ||
-                    getenv("W78_FS_TEST") != NULL;
+                    getenv("W78_FS_TEST") != NULL ||
+                    getenv("W78_BOOT_TEST") != NULL;
     setvbuf(stdout, NULL, _IONBF, 0);
     (void)argc; (void)argv;
     if (auto_mode) SDL_setenv("SDL_VIDEODRIVER", "dummy", 0);
@@ -297,6 +324,13 @@ int main(int argc, char **argv)
         int rc;
         pump(2);
         rc = fs_test();
+        SDL_Quit();
+        return rc;
+    }
+
+    if (getenv("W78_BOOT_TEST")) {         /* 自证：开机动画按帧播完并自动收起 */
+        int rc;
+        rc = boot_test();
         SDL_Quit();
         return rc;
     }
@@ -469,6 +503,7 @@ int main(int argc, char **argv)
 
     wifi_bind_init();
     user_io_init();
+    boot_anim_play();                        /* 开机动画：播完自动露出主界面 */
     for (;;) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
