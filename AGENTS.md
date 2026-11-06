@@ -43,12 +43,12 @@ flow   方式：C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_
 7. **覆盖表只补真值**：例外/映射表不得推翻设计源行为字段，配 assert 门禁。
 8. **控件只克隆 EEZ 拖拽样板**：新建控件从根目录 `eez-widget-templates/templates/` 克隆
    （模板来自 EEZ UI 拖拽创建并保存后的工程，`validate_templates.py` 逐字段校验）；
-   生成器只改几何/identifier/文本/样式值，**禁止手写或新增字段**（A10 门禁逐控件核对）。
+   生成器只改几何/identifier/文本/样式值，**禁止手写或新增字段**（A14 卡字段集，A10 卡样式键）。
    `tools/eez_defaults.py` 只用于已有工程的自定义样板采样/对照，不再作为新建控件来源。
    按钮无 `text`（文字在子标签）；克隆后复位表达式型属性，否则会带入别工程的 `get_var_*`。
    生成器还有十条硬口径：页名 ASCII / identifier 按类别码命名 / 字号 ≤3 档令牌 / 替换字符进子集 /
    卡片只做底板 / 行式按钮 LEFT_MID+设计文案 / 颜色只收 `#RRGGBB` / 装饰容器去 CLICKABLE（只改 flags）/
-   控件 JSON 只克隆拖拽样板（A10 字段集校验）——细则见 NO_FLOW §2.2。
+   控件 JSON 只克隆拖拽样板（A14 字段集 / A10 样式键）——细则见 NO_FLOW §2.2。
    **设计标注的控件必须按类型真实建立**（开关→Switch、滑条→Slider、动作/跳转→Button、
    输入→Textarea、进度→Bar、图表→Chart）；大卡片用容器 + 卡内真控件；A12 硬门禁，禁止透明容器冒充。
    **Switch 样板必须带 `CHECKABLE`**（A13），否则点击不切换状态。

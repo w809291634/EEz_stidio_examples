@@ -9,6 +9,7 @@
 
 用法：python design/eez_gen.py        # 产物：w78-smart-home.eez-project
 """
+import copy
 import io
 import json
 import os
@@ -18,6 +19,9 @@ import uuid
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
+# 控件只从根目录 eez-widget-templates 克隆（禁止手拼字段）
+sys.path.insert(0, os.path.dirname(ROOT))
+from eez_widget_clone import clone, clone_dict   # noqa: E402
 
 import pages as pg                  # noqa: E402
 import overview_pro as ov           # noqa: E402  io_of 是六类判定的唯一实现
@@ -75,8 +79,6 @@ SETTINGS_SRC = os.path.join(os.path.dirname(ROOT), "app-wifi-scan-flow-no-flow",
 # 黑体里没有的装饰字符 → 用等价 ASCII 顶上（否则界面上是豆腐块）
 SUBST = {"‹": "<", "›": ">", "−": "-", "▶": ">", "◀": "<", "✓": "√", "✔": "√"}
 W, H = 800, 480
-DEFAULTS_PATH = os.path.join(HERE, "eez_defaults.json")
-DEFAULTS = json.load(io.open(DEFAULTS_PATH, encoding="utf-8"))
 
 
 def charset():
@@ -152,24 +154,29 @@ def _force_font(node):
     return node
 
 
-def fresh(node):
-    """深拷贝默认结构，换新 objID，并把"表达式型"属性复位。
+def fresh(spec):
+    """克隆标准模板（"A" 或 "A+B"）／深拷贝字典块，换新 objID，并复位"表达式型"属性。
 
+    控件字段集只来自根目录 eez-widget-templates（禁止手拼字段）；
     采来的模板会带别的工程的表达式（如 hiddenFlag: "pick_ssid == ''"），
     不清掉会生成 get_var_pick_ssid…() 这种未声明调用 → C 编译报错。
     """
-    if isinstance(node, dict):
-        out = {k: (oid() if k == "objID" else fresh(v)) for k, v in node.items()}
-        if "hiddenFlag" in out:
-            out["hiddenFlagType"] = "literal"
-            out["hiddenFlag"] = False
-        for k in ("checkedState", "disabledState", "clickableFlag"):
-            t = k + "Type"
-            if t in out:
-                out[t] = "literal"
-        return out
-    if isinstance(node, list):
-        return [fresh(x) for x in node]
+    node = clone(spec) if isinstance(spec, str) else clone_dict(spec)
+
+    def reset(n):
+        if isinstance(n, dict):
+            if "hiddenFlag" in n:
+                n["hiddenFlagType"] = "literal"
+                n["hiddenFlag"] = False
+            for k in ("checkedStateType", "disabledStateType", "clickableFlagType"):
+                if k in n:
+                    n[k] = "literal"
+            for v in n.values():
+                reset(v)
+        elif isinstance(n, list):
+            for x in n:
+                reset(x)
+    reset(node)
     return node
 
 
@@ -180,25 +187,69 @@ def oid():
 PAD0 = {"pad_top": 0, "pad_bottom": 0, "pad_left": 0, "pad_right": 0,
         "pad_row": 0, "pad_column": 0, "border_width": 0, "outline_width": 0}
 
+# 各类型的设计基础样式（配色/内边距/圆角属工程设计令牌；模板只提供字段集）
+BASE_STYLE = {
+    "LVGLScreenWidget": {"MAIN": {"DEFAULT": {"bg_color": "0x101828", "bg_opa": 255,
+                                              "radius": 0, "border_width": 0}}},
+    "LVGLLabelWidget": {"MAIN": {"DEFAULT": dict(PAD0, text_color="0xFFFFFF",
+                                                 text_font="cn12")}},
+    "LVGLContainerWidget": {"MAIN": {"DEFAULT": dict(PAD0, bg_color="0x1A2438",
+                                                     bg_opa=255, radius=12)}},
+    "LVGLButtonWidget": {"MAIN": {"DEFAULT": dict(PAD0, bg_color="0x1c2440",
+                                                  bg_opa=255, radius=8)}},
+    "LVGLListWidget": {"MAIN": {"DEFAULT": dict(PAD0, bg_color="0x0b0f1a",
+                                                bg_opa=0, radius=0)}},
+    "LVGLChartWidget": {"MAIN": {"DEFAULT": dict(PAD0, bg_color="0x0C1220", bg_opa=255,
+                                                 radius=8, line_width=0,
+                                                 line_color="0x000000", line_opa=0)}},
+    "LVGLBarWidget": {
+        "MAIN": {"DEFAULT": dict(pad_top=4, pad_bottom=8, **{k: 0 for k in
+                                                             ("pad_left", "pad_right", "pad_row",
+                                                              "pad_column", "border_width", "outline_width")},
+                                 bg_color="0x222B38", radius=4)},
+        "INDICATOR": {"DEFAULT": {"bg_color": "0xF2B45C", "radius": 4}},
+    },
+    "LVGLSliderWidget": {
+        "MAIN": {"DEFAULT": dict(PAD0, pad_bottom=14, bg_color="0x222B38", radius=3)},
+        "INDICATOR": {"DEFAULT": {"bg_color": "0xF2B45C", "radius": 3}},
+        "KNOB": {"DEFAULT": {"bg_color": "0xFFFFFF", "radius": 60}},
+    },
+    "LVGLSwitchWidget": {
+        "MAIN": {"DEFAULT": dict(PAD0, bg_color="0x222B38", bg_opa=255, radius=15),
+                 "CHECKED": dict(PAD0, bg_color="0xF2B45C", bg_opa=255, radius=15)},
+        "INDICATOR": {"DEFAULT": dict(PAD0, bg_color="0xF2B45C", bg_opa=0),
+                      "CHECKED": dict(PAD0, bg_color="0xF2B45C", bg_opa=255)},
+        "KNOB": {"DEFAULT": dict(PAD0, bg_color="0xFFFFFF", bg_opa=255, radius=15),
+                 "CHECKED": dict(PAD0, bg_color="0xFFFFFF", bg_opa=255, radius=15)},
+    },
+    "LVGLTextareaWidget": {"MAIN": {"DEFAULT": {
+        "pad_top": 8, "pad_bottom": 8, "pad_left": 8, "pad_right": 0,
+        "pad_row": 0, "pad_column": 0, "border_width": 1, "outline_width": 0,
+        "bg_color": "0x101a28", "bg_opa": 255, "radius": 8,
+        "border_color": "0x26314a", "text_color": "0xf0f4fc", "text_font": "cn12"}}},
+    "LVGLKeyboardWidget": {"MAIN": {"DEFAULT": {
+        "align": "TOP_LEFT", "pad_top": 0, "pad_bottom": 0, "pad_left": 0,
+        "pad_right": 0, "pad_row": 4, "pad_column": 4, "border_width": 0,
+        "outline_width": 0, "bg_color": "0x1c2440", "bg_opa": 255, "radius": 0}}},
+}
 
-def base(kind, ident, left, top, w, h, style_def):
-    return {
-        "objID": oid(), "type": kind,
-        "left": left, "top": top, "width": w, "height": h,
-        "customInputs": [], "customOutputs": [],
-        "style": {"objID": oid(), "useStyle": "default",
-                  "conditionalStyles": [], "childStyles": []},
-        "timeline": [], "eventHandlers": [],
-        "leftUnit": "px", "topUnit": "px", "widthUnit": "px", "heightUnit": "px",
-        "widgetFlags": ("CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|"
-                        "SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER" if kind == "LVGLButtonWidget"
-                        else "GESTURE_BUBBLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER"),
-        "hiddenFlagType": "literal", "hiddenFlag": False,
-        "clickableFlagType": "literal", "flagScrollbarMode": "OFF",
-        "checkedStateType": "literal", "disabledStateType": "literal",
-        "states": "", "groupIndex": 0, "identifier": ident,
-        "localStyles": {"objID": oid(), "definition": {"MAIN": {"DEFAULT": style_def}}},
-    }
+
+def _widget(spec):
+    """克隆模板（"A"/"A+B"）并套本工程的设计基础样式。"""
+    node = fresh(spec)
+    if spec in BASE_STYLE:
+        node["localStyles"]["definition"] = copy.deepcopy(BASE_STYLE[spec])
+    if "flagScrollbarMode" in node:
+        node["flagScrollbarMode"] = "OFF"       # 设计不带滚动条（列表在 make_list 里单独设 AUTO）
+    return node
+
+
+def _static(n):
+    """纯展示件不吃滚动/焦点：模板默认带 SCROLLABLE|ELASTIC|MOMENTUM，会把拖动变成滑动内容。"""
+    keep = {"GESTURE_BUBBLE", "SCROLL_CHAIN_HOR", "SCROLL_CHAIN_VER"}
+    n["widgetFlags"] = "|".join(x for x in str(n.get("widgetFlags", "")).split("|")
+                                if x in keep)
+    return n
 
 
 def design_texts(frame):
@@ -254,13 +305,23 @@ def design_rects(frame):
     return out
 
 
+def _no_scroll(n):
+    """卡片不做滚动容器：设计里卡片是静态底板，拖动不该让卡内子件滑动（只保留事件链）。"""
+    keep = {"CLICK_FOCUSABLE", "GESTURE_BUBBLE", "PRESS_LOCK",
+            "SCROLL_CHAIN_HOR", "SCROLL_CHAIN_VER"}
+    n["widgetFlags"] = "|".join(x for x in str(n.get("widgetFlags", "")).split("|")
+                                if x in keep)
+    return n
+
+
 def make_label(ident, text, box, color=None, size=None):
     """标签 = 默认 LVGLLabelWidget 克隆，只改几何/文本/字色。"""
-    c = fresh(_force_font(DEFAULTS["LVGLLabelWidget"]))
+    c = _static(_force_font(_widget("LVGLLabelWidget")))
     x, y, w, h = box
     if size:
         c["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_font"] = font_name(size)
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h,
+              "widthUnit": "px", "heightUnit": "px",
               "text": _fix_text(text), "textType": "literal", "useStaticText": True})
     if color:
         c["localStyles"]["definition"]["MAIN"]["DEFAULT"]["text_color"] = color
@@ -272,7 +333,7 @@ def make_button(ident, text, box, bg=None, radius=None, fg=None):
 
     EEZ 的按钮没有 text 字段；文字必须放在子标签里（align=CENTER）。
     """
-    b = fresh(DEFAULTS["LVGLButtonWidget"])
+    b = _widget("LVGLButtonWidget")
     x, y, w, h = box
     b.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h})
     main = b["localStyles"]["definition"]["MAIN"]["DEFAULT"]
@@ -280,7 +341,7 @@ def make_button(ident, text, box, bg=None, radius=None, fg=None):
         main["bg_color"] = bg
     if radius is not None:
         main["radius"] = radius
-    lb = fresh(DEFAULTS["LVGLButtonWidget+LVGLLabelWidget"])
+    lb = _static(_widget("LVGLButtonWidget+LVGLLabelWidget"))
     lb.update({"identifier": ident + "_lb",
                "left": 0, "top": 0, "width": w, "height": h,
                "text": _fix_text(text), "textType": "literal", "useStaticText": True})
@@ -293,7 +354,7 @@ def make_button(ident, text, box, bg=None, radius=None, fg=None):
 
 def make_screen():
     """根 = 默认 LVGLScreenWidget 克隆。"""
-    c = fresh(DEFAULTS["LVGLScreenWidget"])
+    c = _widget("LVGLScreenWidget")
     c.update({"left": 0, "top": 0, "width": W, "height": H, "children": []})
     d = c["localStyles"]["definition"]["MAIN"]["DEFAULT"]
     d.update({"bg_color": "0x05080F", "bg_opa": 255})
@@ -312,7 +373,7 @@ def no_click(n):
 
 def make_container(ident, box, bg=None, radius=None, text="", color=None):
     """卡片 = 默认 LVGLContainerWidget + 居中子标签（容器本身没有 text 字段）。"""
-    c = fresh(DEFAULTS["LVGLContainerWidget"])
+    c = _no_scroll(_widget("LVGLContainerWidget"))
     x, y, w, h = box
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h})
     main = c["localStyles"]["definition"]["MAIN"]["DEFAULT"]
@@ -321,7 +382,7 @@ def make_container(ident, box, bg=None, radius=None, text="", color=None):
     if radius is not None:
         main["radius"] = radius
     if text:
-        lb = fresh(DEFAULTS["LVGLContainerWidget+LVGLLabelWidget"])
+        lb = _widget("LVGLContainerWidget+LVGLLabelWidget")
         lb.update({"left": 0, "top": 0, "width": w, "height": h,
                    "text": _fix_text(text), "textType": "literal", "useStaticText": True})
         d = lb["localStyles"]["definition"]["MAIN"]["DEFAULT"]
@@ -333,7 +394,7 @@ def make_container(ident, box, bg=None, radius=None, text="", color=None):
 
 
 def make_switch(ident, box, on=False):
-    c = fresh(DEFAULTS["LVGLSwitchWidget"])
+    c = _widget("LVGLSwitchWidget")
     x, y, w, h = box
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h})
     if on:
@@ -342,7 +403,7 @@ def make_switch(ident, box, on=False):
 
 
 def make_slider(ident, box, value=0):
-    c = fresh(DEFAULTS["LVGLSliderWidget"])
+    c = _widget("LVGLSliderWidget")
     x, y, w, h = box
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h})
     if "value" in c:
@@ -351,7 +412,7 @@ def make_slider(ident, box, value=0):
 
 
 def make_list(ident, box):
-    c = fresh(DEFAULTS["LVGLListWidget"])
+    c = _widget("LVGLListWidget")
     x, y, w, h = box
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h,
               "flagScrollbarMode": "AUTO"})
@@ -362,7 +423,7 @@ def make_list(ident, box):
 
 
 def make_textarea(ident, box, placeholder):
-    c = fresh(DEFAULTS["LVGLTextareaWidget"])
+    c = _widget("LVGLTextareaWidget")
     x, y, w, h = box
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h,
               "text": "", "textType": "literal", "placeholder": placeholder,
@@ -379,7 +440,7 @@ def make_textarea(ident, box, placeholder):
 
 
 def make_keyboard(ident, box, ta_ident):
-    c = fresh(DEFAULTS["LVGLKeyboardWidget"])
+    c = _widget("LVGLKeyboardWidget")
     x, y, w, h = box
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h,
               "textarea": ta_ident, "mode": "TEXT_LOWER"})
@@ -475,7 +536,7 @@ def glyph_box(frame, kind, box):
 
 
 def make_bar(ident, box, value=50):
-    c = fresh(DEFAULTS["LVGLBarWidget"])
+    c = _widget("LVGLBarWidget")
     x, y, w, h = box
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h})
     if "value" in c:
@@ -484,7 +545,7 @@ def make_bar(ident, box, value=50):
 
 
 def make_chart(ident, box):
-    c = fresh(DEFAULTS["LVGLChartWidget"])
+    c = _widget("LVGLChartWidget")
     x, y, w, h = box
     c.update({"identifier": ident, "left": x, "top": y, "width": w, "height": h})
     c["localStyles"]["definition"]["MAIN"]["DEFAULT"]["bg_opa"] = 0

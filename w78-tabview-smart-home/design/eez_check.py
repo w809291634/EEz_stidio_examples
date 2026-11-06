@@ -36,8 +36,28 @@ KIND_TYPE = {"button": "LVGLButtonWidget", "switch": "LVGLSwitchWidget",
              "label": "LVGLLabelWidget", "container": "LVGLContainerWidget"}
 
 PROJ = os.path.join(ROOT, "w78-smart-home.eez-project")
-DEFAULTS = json.load(io.open(os.path.join(HERE, "eez_defaults.json"), encoding="utf-8"))
+TPL_DIR = os.path.join(os.path.dirname(ROOT), "eez-widget-templates", "templates")
 W, H = 800, 480
+
+# EEZ 样式编辑器里的 LVGL 样式属性（拼错的键 EEZ 不报错、只会静默失效）
+STYLE_KEYS = {
+    "align", "text_align", "text_color", "text_font",
+    "line_width", "line_color", "line_opa",
+    "bg_color", "bg_opa", "border_color", "border_width", "outline_width", "radius",
+    "pad_top", "pad_bottom", "pad_left", "pad_right", "pad_row", "pad_column",
+    "arc_width", "arc_rounded",
+}
+
+
+def templates():
+    """标准模板（只读缓存）：控件类型 → 模板节点。"""
+    if not hasattr(templates, "_cache"):
+        d = {}
+        for f in glob.glob(os.path.join(TPL_DIR, "*.json")):
+            t = json.load(io.open(f, encoding="utf-8"))
+            d[t["type"]] = t
+        templates._cache = d
+    return templates._cache
 
 # 类别码：长码在前，避免 hw01 被当成 w01
 CODE_RE = re.compile(r"_(hw|hr|go|w|r)(\d{2})$")
@@ -282,36 +302,17 @@ def main():
     if bad_color:
         fails.append("A8 非法颜色值 %d 处（例 %s）" % (len(bad_color), bad_color[:3]))
 
-    # A10 控件 JSON 只能来自 EEZ 拖拽样板：字段集不得超出 eez_defaults 的并集
-    allow_top, allow_style = {}, {}
-    for t in {w["type"] for pgx in proj["userPages"] for w in walk(pgx["components"], "")}:
-        tops, styles = set(), set()
-        for k in (t, "LVGLScreenWidget+" + t, "LVGLContainerWidget+" + t, "LVGLButtonWidget+" + t):
-            if k in DEFAULTS:
-                tops |= set(DEFAULTS[k].keys())
-                styles |= set(DEFAULTS[k].get("localStyles", {}).get("definition", {})
-                              .get("MAIN", {}).get("DEFAULT", {}).keys())
-        allow_top[t], allow_style[t] = tops, styles
+    # A10 控件样式只能写 EEZ 的 LVGL 样式属性（字段集本身由 A14 卡模板库）
     for pgx in proj["userPages"]:
         for w in walk(pgx["components"], ""):
-            t = w["type"]
-            extra = set(w.keys()) - allow_top.get(t, set())
-            # 与 A14 同口径：identifier 放置时才有；hiddenFlag 只允许真正隐藏的遮罩
-            # （=True）；Keyboard 绑定后才出现 textarea。
-            extra -= {"identifier"}
-            if w.get("hiddenFlag") is True:
-                extra -= {"hiddenFlag"}
-            if t == "LVGLKeyboardWidget":
-                extra -= {"textarea"}
-            if extra:
-                fails.append("A10 %s 控件 %s 出现样板外字段：%s"
-                             % (t, w.get("identifier"), sorted(extra)))
-            st = (w.get("localStyles", {}).get("definition", {}).get("MAIN", {})
-                  .get("DEFAULT", {}))
-            extra_s = set(st.keys()) - allow_style.get(t, set())
-            if extra_s:
-                fails.append("A10 %s 控件 %s 样式出现样板外字段：%s"
-                             % (t, w.get("identifier"), sorted(extra_s)))
+            defn = w.get("localStyles", {}).get("definition") or {}
+            bad = set()
+            for part in defn.values():
+                for state in (part or {}).values():
+                    bad |= set(state.keys()) - STYLE_KEYS
+            if bad:
+                fails.append("A10 %s 控件 %s 样式出现非 LVGL 属性：%s"
+                             % (w.get("type"), w.get("identifier"), sorted(bad)))
 
     # A13 开关必须可切换：EEZ 生成的 Switch 样板缺 CHECKABLE 时点击不会变状态
     for pgx in proj["userPages"]:
@@ -322,11 +323,7 @@ def main():
                                  % w.get("identifier"))
 
     # A14 每个控件的字段集必须等于标准模板库（只允许改值，不允许增删字段）
-    std = {}
-    tpl_dir = os.path.join(os.path.dirname(ROOT), "eez-widget-templates", "templates")
-    for f in glob.glob(os.path.join(tpl_dir, "*.json")):
-        t = json.load(io.open(f, encoding="utf-8"))
-        std[t["type"]] = set(t.keys())
+    std = {t: set(node.keys()) for t, node in templates().items()}
     a14_ok = a14_bad = 0
     for pgx in proj["userPages"]:
         for w in walk(pgx["components"], ""):
