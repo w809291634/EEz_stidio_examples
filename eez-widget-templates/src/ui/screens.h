@@ -45,11 +45,11 @@ enum ScreensEnum {
     SCREEN_ID_ANIMATION_IMAGE = 32,
     SCREEN_ID_CANVAS = 33,
     SCREEN_ID_LINE = 34,
-    SCREEN_ID_LOTTIE = 35,
-    SCREEN_ID_TABVIEW0 = 36,
-    SCREEN_ID_TABVIEW1 = 37,
-    SCREEN_ID_TABVIEW2 = 38,
-    SCREEN_ID_TABVIEW3 = 39,
+    SCREEN_ID_TABVIEW0 = 35,
+    SCREEN_ID_TABVIEW1 = 36,
+    SCREEN_ID_TABVIEW2 = 37,
+    SCREEN_ID_TABVIEW3 = 38,
+    SCREEN_ID_LOTTIE = 39,
     _SCREEN_ID_LAST = 39
 };
 
@@ -88,11 +88,11 @@ typedef struct _objects_t {
     lv_obj_t *animation_image;
     lv_obj_t *canvas;
     lv_obj_t *line;
-    lv_obj_t *lottie;
     lv_obj_t *tabview0;
     lv_obj_t *tabview1;
     lv_obj_t *tabview2;
     lv_obj_t *tabview3;
+    lv_obj_t *lottie;
     lv_obj_t *obj0;
     lv_obj_t *obj1;
     lv_obj_t *obj2;
@@ -208,9 +208,6 @@ void tick_screen_canvas();
 void create_screen_line();
 void tick_screen_line();
 
-void create_screen_lottie();
-void tick_screen_lottie();
-
 void create_screen_tabview0();
 void tick_screen_tabview0();
 
@@ -222,6 +219,9 @@ void tick_screen_tabview2();
 
 void create_screen_tabview3();
 void tick_screen_tabview3();
+
+void create_screen_lottie();
+void tick_screen_lottie();
 
 void tick_screen_by_id(enum ScreensEnum screenId);
 void tick_screen(int screen_index);

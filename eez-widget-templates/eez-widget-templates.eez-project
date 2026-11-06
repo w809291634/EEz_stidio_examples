@@ -3461,10 +3461,10 @@
       "deleteOnScreenUnload": false
     },
     {
-      "objID": "077f6e1c-785b-4136-c283-ba4097c500ba",
+      "objID": "ba81db14-3f40-4187-8eb1-817dd6a93747",
       "components": [
         {
-          "objID": "b7414b44-5346-4d3d-e713-7f6b7032f16f",
+          "objID": "1aea3020-c2b3-4253-ea09-232a69b6e09f",
           "type": "LVGLScreenWidget",
           "left": 0,
           "top": 0,
@@ -3473,7 +3473,7 @@
           "customInputs": [],
           "customOutputs": [],
           "style": {
-            "objID": "56a202b5-f58b-4553-efe9-43c2f62c93fc",
+            "objID": "a49b5be0-cc5c-49a1-ac19-c97f2d98c5da",
             "useStyle": "default",
             "conditionalStyles": [],
             "childStyles": []
@@ -3486,8 +3486,8 @@
           "heightUnit": "px",
           "children": [
             {
-              "objID": "a18cb349-056e-4819-9cd5-3b586685c02f",
-              "type": "LVGLLottieWidget",
+              "objID": "2f7d5ff5-ebc9-4f01-b4d3-419d5864cac7",
+              "type": "LVGLTabviewWidget",
               "left": 283,
               "top": 264,
               "width": 180,
@@ -3495,7 +3495,7 @@
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "8f2b4219-a5c8-47de-d8a4-871462d6fe7c",
+                "objID": "a6f511f7-22d3-4fc2-91de-2244ee0ca97e",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -3519,98 +3519,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "1614c33f-5494-41c0-ec45-a5de13cea78f"
-              },
-              "group": "",
-              "groupIndex": 0
-            }
-          ],
-          "widgetFlags": "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
-          "hiddenFlagType": "literal",
-          "clickableFlag": true,
-          "clickableFlagType": "literal",
-          "checkedStateType": "literal",
-          "disabledStateType": "literal",
-          "states": "",
-          "localStyles": {
-            "objID": "4c8e8925-f466-40a0-8aa0-65ae6d2f91d9"
-          },
-          "groupIndex": 0
-        }
-      ],
-      "connectionLines": [],
-      "localVariables": [],
-      "componentGroups": [],
-      "userProperties": [],
-      "name": "Lottie",
-      "left": 0,
-      "top": 0,
-      "width": 800,
-      "height": 480,
-      "isUsedAsUserWidget": false,
-      "createAtStart": true,
-      "deleteOnScreenUnload": false
-    },
-    {
-      "objID": "dcaf5fbb-cf34-41c0-9406-e21b7e619e27",
-      "components": [
-        {
-          "objID": "ec09e8eb-326d-4481-a1c0-2d5a946ebc9c",
-          "type": "LVGLScreenWidget",
-          "left": 0,
-          "top": 0,
-          "width": 800,
-          "height": 480,
-          "customInputs": [],
-          "customOutputs": [],
-          "style": {
-            "objID": "33b24901-e722-497f-93ed-3e63febf6520",
-            "useStyle": "default",
-            "conditionalStyles": [],
-            "childStyles": []
-          },
-          "timeline": [],
-          "eventHandlers": [],
-          "leftUnit": "px",
-          "topUnit": "px",
-          "widthUnit": "px",
-          "heightUnit": "px",
-          "children": [
-            {
-              "objID": "2b7b3a80-b37d-4b6b-e764-6996e98ac0f8",
-              "type": "LVGLTabviewWidget",
-              "left": 310,
-              "top": 190,
-              "width": 180,
-              "height": 100,
-              "customInputs": [],
-              "customOutputs": [],
-              "style": {
-                "objID": "d5a10305-5c68-4249-be87-fef536f3590d",
-                "useStyle": "default",
-                "conditionalStyles": [],
-                "childStyles": []
-              },
-              "timeline": [],
-              "eventHandlers": [],
-              "leftUnit": "px",
-              "topUnit": "px",
-              "widthUnit": "px",
-              "heightUnit": "px",
-              "children": [],
-              "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-              "hiddenFlagType": "literal",
-              "clickableFlag": true,
-              "clickableFlagType": "literal",
-              "flagScrollbarMode": "",
-              "flagScrollDirection": "",
-              "scrollSnapX": "",
-              "scrollSnapY": "",
-              "checkedStateType": "literal",
-              "disabledStateType": "literal",
-              "states": "",
-              "localStyles": {
-                "objID": "108b91c0-0a66-46f9-d790-f222f08f253a"
+                "objID": "087bbd67-02ec-4a8c-9e72-e7e4210a8f70"
               },
               "group": "",
               "groupIndex": 0,
@@ -3628,7 +3537,7 @@
           "disabledStateType": "literal",
           "states": "",
           "localStyles": {
-            "objID": "138fcb76-321e-40a0-8a4d-09cc31d4a0d5"
+            "objID": "18599d53-44ce-4f41-de8e-5aa808683211"
           },
           "groupIndex": 0
         }
@@ -3647,10 +3556,10 @@
       "deleteOnScreenUnload": false
     },
     {
-      "objID": "46443b97-4ee3-4bea-f320-98d1039cd3d1",
+      "objID": "5bfe9d2a-7bcd-47d4-9f3b-7786ab3798a5",
       "components": [
         {
-          "objID": "2361a32d-9b20-4983-ed3d-8c38abf6a0c7",
+          "objID": "39e48793-5052-4634-c4cf-c6a8e85f208c",
           "type": "LVGLScreenWidget",
           "left": 0,
           "top": 0,
@@ -3659,7 +3568,7 @@
           "customInputs": [],
           "customOutputs": [],
           "style": {
-            "objID": "7d2ca7cc-605f-412b-dba7-75f6a4021a0d",
+            "objID": "4062a484-91a5-4801-ec86-482c9c6c7d9b",
             "useStyle": "default",
             "conditionalStyles": [],
             "childStyles": []
@@ -3672,16 +3581,16 @@
           "heightUnit": "px",
           "children": [
             {
-              "objID": "8ced5733-1ac0-4c4f-a9e9-6ab417419e17",
+              "objID": "52caa8dd-d698-4ef3-a0d1-1173a950ccb1",
               "type": "LVGLTabviewWidget",
-              "left": 310,
-              "top": 190,
+              "left": 283,
+              "top": 264,
               "width": 180,
               "height": 100,
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "c284fe9f-88d2-43bc-9e3c-0627673404a2",
+                "objID": "499cf6a5-57e4-4263-8812-4280cfb3d4ed",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -3694,7 +3603,7 @@
               "heightUnit": "px",
               "children": [
                 {
-                  "objID": "428bd841-55ad-40da-d172-c9951e1e5818",
+                  "objID": "f6653fd6-a928-4f0a-eaa1-19ef3f1dd664",
                   "type": "LVGLTabWidget",
                   "left": 0,
                   "top": 0,
@@ -3703,7 +3612,7 @@
                   "customInputs": [],
                   "customOutputs": [],
                   "style": {
-                    "objID": "d4d8e434-6467-43fb-ede4-0f43337c0b7b",
+                    "objID": "2ab3fcfd-32ff-4217-df8f-6e79c2bc81c9",
                     "useStyle": "default",
                     "conditionalStyles": [],
                     "childStyles": []
@@ -3727,7 +3636,7 @@
                   "disabledStateType": "literal",
                   "states": "",
                   "localStyles": {
-                    "objID": "3505bfc4-441e-4cab-93bc-65a82b1c4ef5"
+                    "objID": "57e28137-9389-46e7-bc66-51212f657b7c"
                   },
                   "group": "",
                   "groupIndex": 0,
@@ -3747,7 +3656,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "68acb5af-9354-4c4e-aa08-7c9653ea1912"
+                "objID": "e7094c78-fa8a-48d9-a653-6befc2217829"
               },
               "group": "",
               "groupIndex": 0,
@@ -3765,7 +3674,7 @@
           "disabledStateType": "literal",
           "states": "",
           "localStyles": {
-            "objID": "96788f85-d085-43c3-dba4-f5faf9c0b872"
+            "objID": "f3fb8261-5cc9-4d6a-d1a9-9bf194e5954a"
           },
           "groupIndex": 0
         }
@@ -3784,10 +3693,10 @@
       "deleteOnScreenUnload": false
     },
     {
-      "objID": "f325809f-ddd1-439d-d52f-66dac808dca2",
+      "objID": "dbc175d5-225c-4120-aca1-c0af6bbd9217",
       "components": [
         {
-          "objID": "c2f2acad-07c5-487c-c9df-bcf517ee1bbc",
+          "objID": "e1e47216-6c55-4831-a6d0-9132dd5a72b1",
           "type": "LVGLScreenWidget",
           "left": 0,
           "top": 0,
@@ -3796,7 +3705,7 @@
           "customInputs": [],
           "customOutputs": [],
           "style": {
-            "objID": "2a605b90-9a9c-4170-f041-b70f6b161f3f",
+            "objID": "b90d1e68-6dd7-4d5e-a176-d38aef2dee26",
             "useStyle": "default",
             "conditionalStyles": [],
             "childStyles": []
@@ -3809,16 +3718,16 @@
           "heightUnit": "px",
           "children": [
             {
-              "objID": "d5350ea8-0845-4026-9666-e937bb566e25",
+              "objID": "a470d4e5-bcda-42d8-919d-2b52784c28bf",
               "type": "LVGLTabviewWidget",
-              "left": 310,
-              "top": 190,
+              "left": 283,
+              "top": 264,
               "width": 180,
               "height": 100,
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "0fdabea3-b641-4e84-a039-750a7d6d77cc",
+                "objID": "05d633d7-ad65-464d-85b3-5af8d551433e",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -3831,7 +3740,7 @@
               "heightUnit": "px",
               "children": [
                 {
-                  "objID": "aafce708-9ac7-4524-b574-4528140bd602",
+                  "objID": "1c8dee92-9b8e-4909-cfc9-12aa35abf18b",
                   "type": "LVGLTabWidget",
                   "left": 0,
                   "top": 0,
@@ -3840,7 +3749,7 @@
                   "customInputs": [],
                   "customOutputs": [],
                   "style": {
-                    "objID": "c9bfbf23-83f2-4d03-baad-bb307ef4fcfe",
+                    "objID": "6c699973-783e-4a92-83d3-4ec905b795f9",
                     "useStyle": "default",
                     "conditionalStyles": [],
                     "childStyles": []
@@ -3864,7 +3773,7 @@
                   "disabledStateType": "literal",
                   "states": "",
                   "localStyles": {
-                    "objID": "412f85d7-a0ba-4117-ccdb-f7925c5fca62"
+                    "objID": "79936f29-e578-4801-c689-2a38cccfb5bd"
                   },
                   "group": "",
                   "groupIndex": 0,
@@ -3872,7 +3781,7 @@
                   "tabNameType": "literal"
                 },
                 {
-                  "objID": "484f7d0b-97eb-40e9-ce8d-9c0b9908a394",
+                  "objID": "7c23e800-5cd7-4910-a928-073c8b326294",
                   "type": "LVGLTabWidget",
                   "left": 0,
                   "top": 0,
@@ -3881,7 +3790,7 @@
                   "customInputs": [],
                   "customOutputs": [],
                   "style": {
-                    "objID": "e48a2388-a2f7-45bb-b7fe-9c6de10fb575",
+                    "objID": "f4e9ccd5-577a-4468-8c60-4c3ed238e418",
                     "useStyle": "default",
                     "conditionalStyles": [],
                     "childStyles": []
@@ -3905,7 +3814,7 @@
                   "disabledStateType": "literal",
                   "states": "",
                   "localStyles": {
-                    "objID": "4bfd2f6a-b80e-4c1a-d51c-f9d074d02da1"
+                    "objID": "b3585b2f-d2da-4cf7-e8fd-10b5c90a4a6b"
                   },
                   "group": "",
                   "groupIndex": 0,
@@ -3925,7 +3834,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "6c7e76ae-b2c6-4b8d-c03a-1901b2d1e9f6"
+                "objID": "506d8436-33c9-4691-b122-98f1c16e4e24"
               },
               "group": "",
               "groupIndex": 0,
@@ -3943,7 +3852,7 @@
           "disabledStateType": "literal",
           "states": "",
           "localStyles": {
-            "objID": "125146e0-d818-4d2b-f405-7b08ea832265"
+            "objID": "edcf1304-fc9b-41b0-a395-8fe280520e12"
           },
           "groupIndex": 0
         }
@@ -3962,10 +3871,10 @@
       "deleteOnScreenUnload": false
     },
     {
-      "objID": "6b81d8b9-6e2c-470a-90f8-a20305bb31f7",
+      "objID": "accdef52-0493-48fb-9011-e924a80974b3",
       "components": [
         {
-          "objID": "5ee6f648-e95f-4783-aa91-20724a7abc9a",
+          "objID": "aeeed07b-7670-48d5-e173-16608f472e55",
           "type": "LVGLScreenWidget",
           "left": 0,
           "top": 0,
@@ -3974,7 +3883,7 @@
           "customInputs": [],
           "customOutputs": [],
           "style": {
-            "objID": "b1074cc8-a80d-4c6a-fbcb-7a92f97c763d",
+            "objID": "9a029fa4-d319-4a28-bea2-a6b5a731df13",
             "useStyle": "default",
             "conditionalStyles": [],
             "childStyles": []
@@ -3987,16 +3896,16 @@
           "heightUnit": "px",
           "children": [
             {
-              "objID": "a5eb325e-0cb2-4eeb-de10-d7271ab88b65",
+              "objID": "831bf2b1-e801-4e1d-89bb-2a0bb5498d0d",
               "type": "LVGLTabviewWidget",
-              "left": 310,
-              "top": 190,
+              "left": 283,
+              "top": 264,
               "width": 180,
               "height": 100,
               "customInputs": [],
               "customOutputs": [],
               "style": {
-                "objID": "a1ac95aa-7497-468b-8694-1e0a55b28ac0",
+                "objID": "b63fc59c-8d77-41dc-a68d-2b328203ad1f",
                 "useStyle": "default",
                 "conditionalStyles": [],
                 "childStyles": []
@@ -4009,7 +3918,7 @@
               "heightUnit": "px",
               "children": [
                 {
-                  "objID": "88d9db14-2ad4-40f0-fc20-6cb94e9d9c75",
+                  "objID": "cabd7b25-2d8b-4683-a730-cbcbada0ba47",
                   "type": "LVGLTabWidget",
                   "left": 0,
                   "top": 0,
@@ -4018,7 +3927,7 @@
                   "customInputs": [],
                   "customOutputs": [],
                   "style": {
-                    "objID": "02065fb4-6bfd-4bb2-82fb-8ac3ae6388f7",
+                    "objID": "0c54fb7a-c1fc-4c06-f6c4-cac4d6e2621b",
                     "useStyle": "default",
                     "conditionalStyles": [],
                     "childStyles": []
@@ -4042,7 +3951,7 @@
                   "disabledStateType": "literal",
                   "states": "",
                   "localStyles": {
-                    "objID": "855c00ea-a8af-46fb-c88f-0c12bc935ca3"
+                    "objID": "04b989e0-4656-4ebe-a1ce-0f2f66675c89"
                   },
                   "group": "",
                   "groupIndex": 0,
@@ -4050,7 +3959,7 @@
                   "tabNameType": "literal"
                 },
                 {
-                  "objID": "c9574ce8-ac5c-47f4-ef40-f56e818eb663",
+                  "objID": "0a18d34f-33bb-45ed-f0b1-d9da0f24a39d",
                   "type": "LVGLTabWidget",
                   "left": 0,
                   "top": 0,
@@ -4059,7 +3968,7 @@
                   "customInputs": [],
                   "customOutputs": [],
                   "style": {
-                    "objID": "c1bdc180-d815-4848-b0ab-e00182637bc3",
+                    "objID": "fc025524-dc37-439c-8d3b-24c836987f59",
                     "useStyle": "default",
                     "conditionalStyles": [],
                     "childStyles": []
@@ -4083,7 +3992,7 @@
                   "disabledStateType": "literal",
                   "states": "",
                   "localStyles": {
-                    "objID": "b756ca42-4e1e-4509-d953-521e5f310e1f"
+                    "objID": "f824a956-1bbc-411c-94e5-5deb8b03ba7b"
                   },
                   "group": "",
                   "groupIndex": 0,
@@ -4091,7 +4000,7 @@
                   "tabNameType": "literal"
                 },
                 {
-                  "objID": "d1188697-1e9b-4ed8-a76e-2213df7bc900",
+                  "objID": "4ed4e86a-4566-4b31-e5ae-525151158b7d",
                   "type": "LVGLTabWidget",
                   "left": 0,
                   "top": 0,
@@ -4100,7 +4009,7 @@
                   "customInputs": [],
                   "customOutputs": [],
                   "style": {
-                    "objID": "d34765f5-72e1-4272-9f85-5f4b6ecbc656",
+                    "objID": "e98485b6-c1d5-423b-8ceb-75220c262958",
                     "useStyle": "default",
                     "conditionalStyles": [],
                     "childStyles": []
@@ -4124,7 +4033,7 @@
                   "disabledStateType": "literal",
                   "states": "",
                   "localStyles": {
-                    "objID": "93a18d85-1985-4bac-a988-0a3933a1efc4"
+                    "objID": "5f383fe5-5333-45e8-9fbc-64889ae78acc"
                   },
                   "group": "",
                   "groupIndex": 0,
@@ -4144,7 +4053,7 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "24eb1b15-8197-4279-8167-8805d27f7d52"
+                "objID": "72d81694-edaa-409e-f4ec-425a706b80da"
               },
               "group": "",
               "groupIndex": 0,
@@ -4162,7 +4071,7 @@
           "disabledStateType": "literal",
           "states": "",
           "localStyles": {
-            "objID": "9b25a3c7-0dba-40c5-eecf-f44971fb1c75"
+            "objID": "10dbdf2b-5d87-4b71-9d2c-8192b622a7e2"
           },
           "groupIndex": 0
         }
@@ -4172,6 +4081,97 @@
       "componentGroups": [],
       "userProperties": [],
       "name": "Tabview3",
+      "left": 0,
+      "top": 0,
+      "width": 800,
+      "height": 480,
+      "isUsedAsUserWidget": false,
+      "createAtStart": true,
+      "deleteOnScreenUnload": false
+    },
+    {
+      "objID": "91f8eda1-93d6-4905-e0c9-af250c956d8f",
+      "components": [
+        {
+          "objID": "bbdbf153-8c11-4233-c595-00f82d4dda37",
+          "type": "LVGLScreenWidget",
+          "left": 0,
+          "top": 0,
+          "width": 800,
+          "height": 480,
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "objID": "dc2107de-99d4-4a35-9e6f-5fe84f33f9dd",
+            "useStyle": "default",
+            "conditionalStyles": [],
+            "childStyles": []
+          },
+          "timeline": [],
+          "eventHandlers": [],
+          "leftUnit": "px",
+          "topUnit": "px",
+          "widthUnit": "px",
+          "heightUnit": "px",
+          "children": [
+            {
+              "objID": "759c0ef5-f9a2-4f40-8f51-61b09f8aae32",
+              "type": "LVGLLottieWidget",
+              "left": 283,
+              "top": 264,
+              "width": 180,
+              "height": 100,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "11649a0a-1e9d-4c8b-b127-9cfa8ba7df05",
+                "useStyle": "default",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "children": [],
+              "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+              "hiddenFlagType": "literal",
+              "clickableFlag": true,
+              "clickableFlagType": "literal",
+              "flagScrollbarMode": "",
+              "flagScrollDirection": "",
+              "scrollSnapX": "",
+              "scrollSnapY": "",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "localStyles": {
+                "objID": "fbb2d5d0-aad3-417a-f55b-2c98953a781a"
+              },
+              "group": "",
+              "groupIndex": 0
+            }
+          ],
+          "widgetFlags": "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+          "hiddenFlagType": "literal",
+          "clickableFlag": true,
+          "clickableFlagType": "literal",
+          "checkedStateType": "literal",
+          "disabledStateType": "literal",
+          "states": "",
+          "localStyles": {
+            "objID": "37c5e5d5-53d7-4b7b-c3a3-601cd1d6049b"
+          },
+          "groupIndex": 0
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "componentGroups": [],
+      "userProperties": [],
+      "name": "Lottie",
       "left": 0,
       "top": 0,
       "width": 800,
