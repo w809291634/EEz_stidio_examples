@@ -808,6 +808,121 @@ void create_screen_lottie() {
 void tick_screen_lottie() {
 }
 
+void create_screen_tabview0() {
+    lv_obj_t *obj = lv_obj_create(0);
+    objects.tabview0 = obj;
+    lv_obj_set_pos(obj, 0, 0);
+    lv_obj_set_size(obj, 800, 480);
+    {
+        lv_obj_t *parent_obj = obj;
+        {
+            lv_obj_t *obj = lv_tabview_create(parent_obj);
+            lv_obj_set_pos(obj, 310, 190);
+            lv_obj_set_size(obj, 180, 100);
+            lv_tabview_set_tab_bar_position(obj, LV_DIR_TOP);
+            lv_tabview_set_tab_bar_size(obj, 32);
+        }
+    }
+    
+    tick_screen_tabview0();
+}
+
+void tick_screen_tabview0() {
+}
+
+void create_screen_tabview1() {
+    lv_obj_t *obj = lv_obj_create(0);
+    objects.tabview1 = obj;
+    lv_obj_set_pos(obj, 0, 0);
+    lv_obj_set_size(obj, 800, 480);
+    {
+        lv_obj_t *parent_obj = obj;
+        {
+            lv_obj_t *obj = lv_tabview_create(parent_obj);
+            lv_obj_set_pos(obj, 310, 190);
+            lv_obj_set_size(obj, 180, 100);
+            lv_tabview_set_tab_bar_position(obj, LV_DIR_TOP);
+            lv_tabview_set_tab_bar_size(obj, 32);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    lv_obj_t *obj = lv_tabview_add_tab(parent_obj, "Tab");
+                }
+            }
+        }
+    }
+    
+    tick_screen_tabview1();
+}
+
+void tick_screen_tabview1() {
+}
+
+void create_screen_tabview2() {
+    lv_obj_t *obj = lv_obj_create(0);
+    objects.tabview2 = obj;
+    lv_obj_set_pos(obj, 0, 0);
+    lv_obj_set_size(obj, 800, 480);
+    {
+        lv_obj_t *parent_obj = obj;
+        {
+            lv_obj_t *obj = lv_tabview_create(parent_obj);
+            lv_obj_set_pos(obj, 310, 190);
+            lv_obj_set_size(obj, 180, 100);
+            lv_tabview_set_tab_bar_position(obj, LV_DIR_TOP);
+            lv_tabview_set_tab_bar_size(obj, 32);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    lv_obj_t *obj = lv_tabview_add_tab(parent_obj, "Tab");
+                }
+                {
+                    lv_obj_t *obj = lv_tabview_add_tab(parent_obj, "Tab");
+                }
+            }
+        }
+    }
+    
+    tick_screen_tabview2();
+}
+
+void tick_screen_tabview2() {
+}
+
+void create_screen_tabview3() {
+    lv_obj_t *obj = lv_obj_create(0);
+    objects.tabview3 = obj;
+    lv_obj_set_pos(obj, 0, 0);
+    lv_obj_set_size(obj, 800, 480);
+    {
+        lv_obj_t *parent_obj = obj;
+        {
+            lv_obj_t *obj = lv_tabview_create(parent_obj);
+            lv_obj_set_pos(obj, 310, 190);
+            lv_obj_set_size(obj, 180, 100);
+            lv_tabview_set_tab_bar_position(obj, LV_DIR_TOP);
+            lv_tabview_set_tab_bar_size(obj, 32);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    lv_obj_t *obj = lv_tabview_add_tab(parent_obj, "Tab");
+                }
+                {
+                    lv_obj_t *obj = lv_tabview_add_tab(parent_obj, "Tab");
+                }
+                {
+                    lv_obj_t *obj = lv_tabview_add_tab(parent_obj, "Tab");
+                }
+            }
+        }
+    }
+    
+    tick_screen_tabview3();
+}
+
+void tick_screen_tabview3() {
+}
+
 typedef void (*tick_screen_func_t)();
 tick_screen_func_t tick_screen_funcs[] = {
     tick_screen_label,
@@ -845,9 +960,13 @@ tick_screen_func_t tick_screen_funcs[] = {
     tick_screen_canvas,
     tick_screen_line,
     tick_screen_lottie,
+    tick_screen_tabview0,
+    tick_screen_tabview1,
+    tick_screen_tabview2,
+    tick_screen_tabview3,
 };
 void tick_screen(int screen_index) {
-    if (screen_index >= 0 && screen_index < 35) {
+    if (screen_index >= 0 && screen_index < 39) {
         tick_screen_funcs[screen_index]();
     }
 }
@@ -979,4 +1098,8 @@ void create_screens() {
     create_screen_canvas();
     create_screen_line();
     create_screen_lottie();
+    create_screen_tabview0();
+    create_screen_tabview1();
+    create_screen_tabview2();
+    create_screen_tabview3();
 }

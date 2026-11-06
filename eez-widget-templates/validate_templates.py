@@ -7,13 +7,14 @@ import os
 import re
 import sys
 
-from extract_templates import placeholders, default_value
+from extract_templates import placeholders, default_value, VARIANT_PAGES
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJ = os.path.join(HERE, "eez-widget-templates.eez-project")
 TPL = os.path.join(HERE, "templates")
-EXPECTED_PAGES = 35
+EXPECTED_PAGES = 39
 EXPECTED_TEMPLATES = 37
+EXPECTED_VARIANTS = len(VARIANT_PAGES)
 PALETTE_NAME = {"LVGLTabWidget": "Tab", "LVGLSpanWidget": "Spangroup"}
 PALETTE = set("""Arc Button ButtonMatrix Container Image Label List Menu MessageBox
 QRCode Panel Spangroup Table Tabview Tab Textarea TileView Window Calendar Checkbox
@@ -83,6 +84,11 @@ def main():
         ch = comps[0].get("children") or []
         if len(ch) != 1:
             errs.append("%s 子控件数=%d，应为 1" % (name, len(ch)))
+            continue
+        if name in VARIANT_PAGES:
+            if ch[0].get("type") != "LVGLTabviewWidget":
+                errs.append("变体页 %s 根控件不是 LVGLTabviewWidget，实际 %s"
+                            % (name, ch[0].get("type")))
             continue
         for w in widgets(comps[0]):
             typ = w.get("type")
@@ -191,6 +197,74 @@ def main():
                                 % (typ, m.get("palette"), want))
         types.append(typ)
 
+    # ---- Tabview 变体（0/1/2/3 个 Tab）：整块必须等于变体页，且除 children 外等于基础模板 ----
+    base_tv = json.load(open(os.path.join(TPL, "LVGLTabviewWidget.json"), encoding="utf-8"))
+    base_tab = json.load(open(os.path.join(TPL, "LVGLTabWidget.json"), encoding="utf-8"))
+    vdir = os.path.join(TPL, "variants")
+    vfiles = sorted(glob.glob(os.path.join(vdir, "*.json")))
+    if len(vfiles) != EXPECTED_VARIANTS:
+        errs.append("变体数=%d，应为 %d" % (len(vfiles), EXPECTED_VARIANTS))
+    for page, n in sorted(VARIANT_PAGES.items(), key=lambda kv: kv[1]):
+        fname = "LVGLTabviewWidget.tabs%d.json" % n
+        f = os.path.join(vdir, fname)
+        if not os.path.isfile(f):
+            errs.append("缺变体 %s" % fname)
+            continue
+        if page not in pages:
+            errs.append("变体 %s 找不到页面 %s" % (fname, page))
+            continue
+        w = pages[page]["components"][0]["children"][0]
+        t = json.load(open(f, encoding="utf-8"))
+        expected = placeholders(w)
+        if t != expected:
+            ka, kb = set(t), set(expected)
+            if ka - kb:
+                errs.append("%s 多字段 %s" % (fname, sorted(ka - kb)))
+            if kb - ka:
+                errs.append("%s 少字段 %s" % (fname, sorted(kb - ka)))
+            for k in sorted(ka & kb):
+                if t[k] != expected[k]:
+                    errs.append("%s.%s 与 UI 工程不一致" % (fname, k))
+        if list(t.keys()) != list(expected.keys()):
+            errs.append("%s 键序与 UI 工程不一致" % fname)
+        tabs = t.get("children") or []
+        if len(tabs) != n:
+            errs.append("%s children=%d，应为 %d" % (fname, len(tabs), n))
+        a = {k: v for k, v in t.items() if k != "children"}
+        b = {k: v for k, v in base_tv.items() if k != "children"}
+        if a != b:
+            errs.append("%s 非 children 字段与基础 Tabview 模板不一致：%s"
+                        % (fname, sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))))
+        for i, tab in enumerate(tabs):
+            norm = json.loads(json.dumps(tab).replace("__CHILD%d_" % i, "__"))
+            if norm != base_tab:
+                errs.append("%s 的 tab[%d] 与 Tab 模板不一致" % (fname, i))
+        ids = collect_ids(t)
+        if len(ids) != len(set(ids)):
+            errs.append("%s 占位符撞 ID：%s" % (fname, ids))
+        if has_key(t, "identifier"):
+            errs.append("%s 不应带 identifier（放置/克隆时赋）" % fname)
+        if UUID_RE.search(json.dumps(t, ensure_ascii=False)):
+            errs.append("%s 残留真实 UUID" % fname)
+
+    vm = manifest.get("_variants")
+    if not vm:
+        errs.append("manifest 缺 _variants")
+    else:
+        if set(vm) != set(str(n) for n in VARIANT_PAGES.values()):
+            errs.append("_variants 覆盖不全：%s" % sorted(vm))
+        for key, info in vm.items():
+            n = int(key)
+            if VARIANT_PAGES.get(info.get("page")) != n:
+                errs.append("_variants[%s] page=%s 与 tabs 数不符" % (key, info.get("page")))
+            want = "templates/variants/LVGLTabviewWidget.tabs%d.json" % n
+            if info.get("file") != want:
+                errs.append("_variants[%s] file=%r，应为 %r" % (key, info.get("file"), want))
+            elif not os.path.isfile(os.path.join(HERE, want)):
+                errs.append("_variants[%s] 文件不存在" % key)
+            if "UI" not in (info.get("source") or ""):
+                errs.append("_variants[%s] source 未标明 UI 创建" % key)
+
     expected_types = set(page_types) | {"LVGLScreenWidget"}
     if set(types) != expected_types:
         extra = sorted(set(types) - expected_types)
@@ -207,12 +281,12 @@ def main():
         errs.append("defaults 条目与模板不一致：多 %s 缺 %s"
                     % (sorted(default_types - set(types)),
                        sorted(set(types) - default_types)))
-    if set(manifest) != set(types):
+    if set(manifest) - {"_variants"} != set(types):
         errs.append("manifest 条目与模板不一致：多 %s 缺 %s"
-                    % (sorted(set(manifest) - set(types)),
+                    % (sorted(set(manifest) - {"_variants"} - set(types)),
                        sorted(set(types) - set(manifest))))
     covered = {m.get("palette") for typ, m in manifest.items()
-               if typ != "LVGLScreenWidget"}
+               if typ not in ("LVGLScreenWidget", "_variants")}
     if covered != PALETTE:
         errs.append("Palette 覆盖不一致：缺 %s 多 %s"
                     % (sorted(PALETTE - covered), sorted(covered - PALETTE)))
@@ -222,12 +296,16 @@ def main():
     if meta.get("templates") != len(types):
         errs.append("defaults._meta.templates=%r，应为 %d"
                     % (meta.get("templates"), len(types)))
+    if meta.get("variants") != len(vfiles):
+        errs.append("defaults._meta.variants=%r，应为 %d"
+                    % (meta.get("variants"), len(vfiles)))
     if meta.get("project") != os.path.basename(PROJ):
         errs.append("defaults._meta.project=%r" % (meta.get("project"),))
     if "UI" not in meta.get("source", ""):
         errs.append("defaults._meta.source 未标明 UI 创建")
 
-    print("[TPL_CHECK] %s（%d 个模板）" % ("PASS" if not errs else "FAIL", len(types)))
+    print("[TPL_CHECK] %s（%d 个模板 + %d 个变体）"
+          % ("PASS" if not errs else "FAIL", len(types), len(vfiles)))
     for e in errs:
         print("  !!", e)
     sys.exit(1 if errs else 0)

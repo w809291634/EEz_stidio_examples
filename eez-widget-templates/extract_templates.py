@@ -17,6 +17,9 @@ PAGES = ["Arc", "Bar", "Button", "ButtonMatrix", "Calendar", "Canvas", "Chart",
          "Spinner", "Switch", "Table", "Tabview", "Textarea", "TileView",
          "Window", "AnimationImage"]
 
+# Tabview 变体页：0/1/2/3 个 Tab，均由 UI 真实拖拽 + 结构树拖放生成，不是手拼。
+VARIANT_PAGES = {"Tabview0": 0, "Tabview1": 1, "Tabview2": 2, "Tabview3": 3}
+
 
 def ph(prefix, role):
     return "__%s%s__" % ((prefix + "_") if prefix else "", role)
@@ -71,6 +74,28 @@ def default_value(tpl):
     return d
 
 
+def extract_variants(pages):
+    """Tabview 的 0/1/2/3 Tab 形态：整块从变体页取，禁止用基础模板手拼 children。"""
+    vdir = os.path.join(HERE, "templates", "variants")
+    os.makedirs(vdir, exist_ok=True)
+    variants = {}
+    for page, n in sorted(VARIANT_PAGES.items(), key=lambda kv: kv[1]):
+        if page not in pages:
+            raise SystemExit("缺变体页：%s" % page)
+        tv = pages[page]["components"][0]["children"][0]
+        tabs = [c for c in tv.get("children", []) if c.get("type") == "LVGLTabWidget"]
+        if len(tabs) != n:
+            raise SystemExit("变体页 %s 的 Tab 数=%d，应为 %d" % (page, len(tabs), n))
+        t = placeholders(tv)
+        fname = "LVGLTabviewWidget.tabs%d.json" % n
+        json.dump(t, open(os.path.join(vdir, fname), "w", encoding="utf-8"),
+                  ensure_ascii=False, indent=1)
+        variants[str(n)] = {"page": page, "tabs": n,
+                            "file": "templates/variants/" + fname,
+                            "source": "EEZ Studio UI drag-created"}
+    return variants
+
+
 def main():
     proj = json.load(open(PROJ, encoding="utf-8"))
     pages = {p["name"]: p for p in proj["userPages"]}
@@ -105,9 +130,11 @@ def main():
         json.dump(t, open(os.path.join(HERE, "templates", typ + ".json"),
                           "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
+    variants = extract_variants(pages)
+
     defaults = {"_meta": {"source": "EEZ Studio UI drag-created project; saved post-drag syntax",
                           "project": os.path.basename(PROJ), "pages": len(proj["userPages"]),
-                          "templates": len(tpls)}}
+                          "templates": len(tpls), "variants": len(variants)}}
     manifest = {}
     for typ, t in sorted(tpls.items()):
         page = typ2page[typ]
@@ -118,11 +145,13 @@ def main():
         palette = {"LVGLTabWidget": "Tab", "LVGLSpanWidget": "Spangroup"}.get(typ, page)
         if typ != "LVGLScreenWidget":
             manifest[typ]["palette"] = palette
+    manifest["_variants"] = variants
     json.dump(defaults, open(os.path.join(HERE, "defaults.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
     json.dump(manifest, open(os.path.join(HERE, "manifest.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
-    print("extracted %d templates from %s" % (len(tpls), os.path.basename(PROJ)))
+    print("extracted %d templates + %d variants from %s"
+          % (len(tpls), len(variants), os.path.basename(PROJ)))
 
 
 if __name__ == "__main__":
