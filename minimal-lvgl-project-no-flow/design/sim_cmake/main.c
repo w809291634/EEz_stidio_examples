@@ -30,7 +30,7 @@
 #include "SDL2/SDL.h"
 #include "lv_sdl_window.h"   /* lv_sdl_window_get_window：真鼠标事件要拿 SDL_Window* 换 windowID */
 #include "ui.h"              /* EEZ 生成：ui_init / ui_tick（C 安全，不引入额外 C++ 头） */
-#include "app/sim_fs.h"      /* PC 文件系统：A: → 工程根 */
+#include "platform/pc/sim_fs.h"      /* PC 文件系统：A: → 工程根 */
 
 extern void ui_init(void);
 extern void ui_tick(void);
