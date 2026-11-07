@@ -1,5 +1,5 @@
 {
- "ui_hash": "a6ad9364f9318aaf75f04f1667ea6ee40855bcd9c497996e70089d2c078b7b8a",
+ "ui_hash": "eec241ee3d05ad05c85cc3e1f1bb98e1c47eb9b0c51a74eeeb43b6e0dcd075cd",
  "rows": [
   {
    "opt": "-O0",
@@ -32,5 +32,5 @@
    "fonts_flash": 0
   }
  ],
- "measured_at": "2026-11-06 19:52:46"
+ "measured_at": "2026-11-07 16:38:23"
 }
