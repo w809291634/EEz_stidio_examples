@@ -39,6 +39,9 @@ def text(d, xy, s, size, color, bold=False, anchor="la", spacing=0):
     f = font(size, bold)
     if spacing:
         x = xy[0] * S
+        if anchor[0] == "m":
+            total = sum(d.textlength(ch, font=f) for ch in s) + spacing * S * (len(s) - 1)
+            x -= total / 2.0
         for ch in s:
             d.text((x, xy[1] * S), ch, font=f, fill=color, anchor="la")
             x += d.textlength(ch, font=f) + spacing * S
@@ -87,11 +90,28 @@ def main():
     text(d, (82.5, 60), "系统自检", 11, SUB)
     text(d, (W - 40, 40), "v1.0.0", 11, MUTED, anchor="ra")
 
-    # 中央：圆角应用标 + 房子图形
-    m, ms = 92, 96
-    mx, my = (W - ms) // 2, 84
-    rr(d, (mx, my, ms, ms), 26, (22, 38, 62), outline=(58, 104, 146), width=1)
-    rr(d, (mx + 1, my + 1, ms - 2, ms // 2), 25, (32, 58, 90))
+    # 中央：环形进度（r=88）+ 圆角应用标 + 房子图形
+    # 几何与 LVGL/H5 统一：中心 (400,128)，徽标 112×112 @ (344,72)，环 r=88
+    ccx, ccy, cr = W // 2, 128, 88
+    # 外发光圈（对应 H5 的 stroke-opacity 0.12 / LVGL 的 arc 底）
+    ring = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    rd = ImageDraw.Draw(ring)
+    rd.ellipse([(ccx - cr - 2) * S, (ccy - cr - 2) * S,
+                (ccx + cr + 2) * S, (ccy + cr + 2) * S],
+               outline=(76, 194, 255, 30), width=8 * S)
+    img.alpha_composite(ring)
+    d = ImageDraw.Draw(img)
+    d.ellipse([(ccx - cr) * S, (ccy - cr) * S,
+               (ccx + cr) * S, (ccy + cr) * S],
+              outline=(42, 59, 82), width=3 * S)
+    d.arc([(ccx - cr) * S, (ccy - cr) * S,
+           (ccx + cr) * S, (ccy + cr) * S],
+          start=-90, end=-90 + int(360 * 0.42), fill=ACCENT, width=3 * S)
+
+    ms = 112
+    mx, my = (W - ms) // 2, 72
+    rr(d, (mx, my, ms, ms), 28, (22, 38, 62), outline=(58, 104, 146), width=1)
+    rr(d, (mx + 1, my + 1, ms - 2, ms // 2), 27, (32, 58, 90))
     cx, cy = mx + ms // 2, my + ms // 2 + 2
     # 屋顶
     d.polygon([((cx) * S, (cy - 26) * S), ((cx - 24) * S, (cy - 4) * S),
@@ -103,26 +123,25 @@ def main():
     d.rectangle([(cx - 7) * S, (cy + 6) * S, (cx + 7) * S, (cy + 24) * S],
                 fill=(30, 52, 82))
 
-    text(d, (W // 2, my + ms + 26), "系统初始化", 15, INK, True, anchor="ma")
-    text(d, (W // 2, my + ms + 52), "正在检查硬件与网络", 11, SUB, anchor="ma")
+    text(d, (W // 2, 222), "系统初始化", 16, INK, True, anchor="ma", spacing=2)
+    text(d, (W // 2, 254), "正在检查硬件与网络", 11, SUB, anchor="ma")
 
-    # 进度条
+    # 进度条（标签 / 条 / 百分比与 LVGL、H5 同坐标）
     bx, by, bw, bh = 140, 300, 520, 8
+    text(d, (bx, 284), "自检进度", 10, SUB)
     rr(d, (bx, by, bw, bh), 4, (26, 37, 53))
     fill_w = int(bw * 0.42)
     rr(d, (bx, by, fill_w, bh), 4, ACCENT)
     d.ellipse([(bx + fill_w - 8) * S, (by - 3) * S,
                (bx + fill_w + 2) * S, (by + bh + 3) * S], fill=ACCENT2)
-    text(d, (bx + bw, by - 24), "42%", 12, (176, 197, 220), True, anchor="ra")
+    text(d, (bx + bw, 278), "42%", 12, (176, 197, 220), True, anchor="ra")
 
     # 状态字条：一个小圆点 + 单行文本（随检测项变化）
     s = "正在检查 Wi-Fi 模块…"
-    f = font(14)
-    tw = d.textlength(s, font=f) / S
-    dx = W / 2 - tw / 2 - 14
-    dy = by + 26
-    d.ellipse([(dx - 10) * S, dy * S, (dx - 1) * S, (dy + 9) * S], fill=ACCENT)
-    text(d, (dx + 4, dy - 3), s, 14, (212, 225, 240))
+    dx, dy = 304, 338
+    d.ellipse([(dx - 4) * S, (dy - 4) * S,
+               (dx + 4) * S, (dy + 4) * S], fill=ACCENT)
+    text(d, (316, dy), s, 13, (212, 225, 240), anchor="lm")
 
     # 页脚
     d.line([(40 * S, 432 * S), ((W - 40) * S, 432 * S)], fill=LINE, width=1 * S)

@@ -183,11 +183,11 @@ def boot_init_frame():
            t(82, 60, "系统自检", 10, T3),
            t(760, 40, "v1.0.0", 10, T3, "400", "end")]
     # 中央应用标：圆角方块 + 房子 + 环形进度
-    out += ['<circle cx="400" cy="128" r="76" fill="none" stroke="#4CC2FF" '
+    out += ['<circle cx="400" cy="128" r="88" fill="none" stroke="#4CC2FF" '
             'stroke-opacity="0.12" stroke-width="8"/>',
-            '<circle cx="400" cy="128" r="76" fill="none" stroke="#2A3B52" stroke-width="3"/>',
-            '<circle cx="400" cy="128" r="76" fill="none" stroke="#4CC2FF" stroke-width="3" '
-            'stroke-linecap="round" stroke-dasharray="200.6 477.5" '
+            '<circle cx="400" cy="128" r="88" fill="none" stroke="#2A3B52" stroke-width="3"/>',
+            '<circle cx="400" cy="128" r="88" fill="none" stroke="#4CC2FF" stroke-width="3" '
+            'stroke-linecap="round" stroke-dasharray="232.2 552.9" '
             'transform="rotate(-90 400 128)"/>',
             '<rect x="344" y="72" width="112" height="112" rx="28" '
             'fill="url(#boot-mark)" stroke="#3A688F" stroke-width="1"/>',
