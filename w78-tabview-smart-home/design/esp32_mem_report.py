@@ -24,8 +24,11 @@ BRIEF = "--brief" in sys.argv
 
 
 def ui_hash():
-    files = sorted(glob.glob(os.path.join(UI, "**", "*.c"), recursive=True) +
-                   glob.glob(os.path.join(UI, "**", "*.h"), recursive=True))
+    files = (sorted(glob.glob(os.path.join(UI, "**", "*.c"), recursive=True)) +
+             sorted(glob.glob(os.path.join(UI, "**", "*.h"), recursive=True)) +
+             esp32_estimate.native_sources() +
+             sorted(glob.glob(os.path.join(ROOT, "src", "native", "**", "*.h"),
+                              recursive=True)))
     digest = hashlib.sha256()
     for path in files:
         digest.update(os.path.relpath(path, ROOT).replace(os.sep, "/").encode())
@@ -70,7 +73,9 @@ def main():
         print("      请先构建一次 ESP32-P4 测量模板；不回退到宿主编译统计。")
         return 2
 
-    ok = (estimate["ui_flash"] <= budget["ui_mb"] * 1048576 and
+    total_flash = estimate["total_flash"]
+    total_ram = estimate["total_ram"]
+    ok = (total_flash <= budget["ui_mb"] * 1048576 and
           estimate["fonts_flash"] <= budget["fonts_mb"] * 1048576)
     exact, exact_fresh = exact_data()
 
@@ -88,6 +93,11 @@ def main():
             if final and final["flash"] != item["flash"]:
                 line += "  <- 最终链接 %s" % kb(final["flash"])
             print(line)
+        print("|- Native UI Flash %.1fKB / RAM %.1fKB" %
+              (estimate["native_flash"] / 1024.0, estimate["native_ram"] / 1024.0))
+        for item in estimate["native_files"]:
+            print("|  |- %s %s / RAM %s" %
+                  (item["name"], kb(item["flash"]), kb(item["ram"])))
         print("`- 未链接：缺 gc/链接脚本，Flash 通常偏高约17%；精确值按需跑 python design/esp32_size.py")
 
         rows = opt_table()
@@ -103,16 +113,16 @@ def main():
                   (exact["ui_flash"] / 1024.0, exact["ui_ram"] / 1024.0, exact["measured_at"]))
 
     print("[MEM-BIN] fonts=%.0fKB ui=%.0fKB ram=%.0fKB target=%s opt=%s source=toolchain-estimate" %
-          (estimate["fonts_flash"] / 1024.0, estimate["ui_flash"] / 1024.0,
-           estimate["ui_ram"] / 1024.0, estimate["target"], estimate.get("opt", "?")))
+          (estimate["fonts_flash"] / 1024.0, total_flash / 1024.0,
+           total_ram / 1024.0, estimate["target"], estimate.get("opt", "?")))
     if exact and exact_fresh:
         print("[MEM-EXACT] fonts=%.0fKB ui=%.0fKB ram=%.0fKB target=%s" %
               (exact["fonts_flash"] / 1024.0, exact["ui_flash"] / 1024.0,
                exact["ui_ram"] / 1024.0, exact["target"]))
     print("[MEM] %s 工具链估算（只编译，优化 %s，偏高约17%%）：Flash %.0fKB（字体 %.0fKB）+ RAM %.0fKB；预算 字体 %.0fKB / UI %.0fKB ｜ %s" %
           (estimate["target"].upper().replace("ESP32P", "ESP32-P"), estimate.get("opt", "?"),
-           estimate["ui_flash"] / 1024.0, estimate["fonts_flash"] / 1024.0,
-           estimate["ui_ram"] / 1024.0, budget["fonts_mb"] * 1024,
+           total_flash / 1024.0, estimate["fonts_flash"] / 1024.0,
+           total_ram / 1024.0, budget["fonts_mb"] * 1024,
            budget["ui_mb"] * 1024, "PASS" if ok else "FAIL 超预算"))
     return 0 if ok else 1
 

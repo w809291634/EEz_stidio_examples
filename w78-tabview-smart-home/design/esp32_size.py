@@ -22,6 +22,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 UI = os.path.join(ROOT, "src", "ui")
 
+sys.path.insert(0, HERE)
+import esp32_estimate as est      # noqa: E402  native UI 文件清单的唯一实现
+
 DEFAULT_TEMPLATE = (r"D:\esp32_8266_files\esp-idf-v5.5.5_ol\examples"
                     r"\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_template_no_flow")
 DEFAULT_IDF = r"D:\esp32_8266_files\esp-idf-v5.5.5_ol"
@@ -39,8 +42,11 @@ if hasattr(sys.stdout, "reconfigure"):
 
 
 def ui_hash():
-    files = sorted(glob.glob(os.path.join(UI, "**", "*.c"), recursive=True) +
-                   glob.glob(os.path.join(UI, "**", "*.h"), recursive=True))
+    files = (sorted(glob.glob(os.path.join(UI, "**", "*.c"), recursive=True)) +
+             sorted(glob.glob(os.path.join(UI, "**", "*.h"), recursive=True)) +
+             est.native_sources() +
+             sorted(glob.glob(os.path.join(ROOT, "src", "native", "**", "*.h"),
+                              recursive=True)))
     h = hashlib.sha256()
     for f in files:
         h.update(os.path.relpath(f, ROOT).replace(os.sep, "/").encode())

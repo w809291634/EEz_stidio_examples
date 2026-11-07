@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """简化主控 + 房间页设计图：主控（场景+房间），房间页（设备方格）。"""
+import base64
 import io
 import os
 
@@ -61,6 +62,24 @@ def line(x1, y1, x2, y2, color=EDGE, w=1):
             f'stroke="{color}" stroke-width="{w}"/>')
 
 
+_BG_B64 = None
+
+
+def bg_image():
+    """页面固定背景图（与运行期 A:/assets/ui_bg.png 同一张，base64 内嵌）。"""
+    global _BG_B64
+    if _BG_B64 is None:
+        try:
+            with open(os.path.join(ROOT, "assets", "ui_bg.png"), "rb") as f:
+                _BG_B64 = base64.b64encode(f.read()).decode("ascii")
+        except OSError:
+            _BG_B64 = ""
+    if not _BG_B64:
+        return r(0, 0, 800, 480, BG)
+    return ('<image x="0" y="0" width="800" height="480" preserveAspectRatio="none" '
+            'href="data:image/png;base64,%s"/>' % _BG_B64)
+
+
 def card(x, y, w, h, rx=12):
     # data-card 只用于导出布局框（L6 等距检查），不参与渲染
     return r(x, y, w, h, CARD, EDGE, rx).replace("<rect ", '<rect data-card="1" ', 1)
@@ -100,7 +119,7 @@ SECURITY_PILL = (640, 86, 116, 20)
 
 
 def header_home():
-    out = [r(0, 0, 800, 480, BG),
+    out = [bg_image(),
            t(40, 44, "主控", 26, T1, "700"),
            t(40, 66, "晚上好，李然 · 5月18日 周一", 10, T3),
            t(268, 40, "22° 晴", 12, T2, "600"),
@@ -121,7 +140,7 @@ def header_home():
 
 
 def header_room(name, sub):
-    out = [r(0, 0, 800, 480, BG),
+    out = [bg_image(),
            btn(*BACK_BOX, "‹ 主控", CARD2, T1, 9),
            t(128, 46, name, 24, T1, "700"),
            t(128, 66, sub, 10, T3),
@@ -398,7 +417,7 @@ SETTINGS_ROW_Y0 = 104
 
 
 def sub_header(title, sub, back_label):
-    return [r(0, 0, 800, 480, BG),
+    return [bg_image(),
             btn(*SUB_BACK_BOX, back_label, CARD2, T1, 9),
             t(152, 46, title, 24, T1, "700"),
             t(152, 66, sub, 10, T3),

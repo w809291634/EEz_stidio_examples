@@ -19,6 +19,7 @@
 #include "ui.h"
 #include "screens.h"
 #include "nav_bind.h"
+#include "ui_bg.h"
 #include "value_bind.h"
 #include "ui_behavior.h"
 #include "platform/pc/sim_reads.h"
@@ -288,6 +289,7 @@ static int boot_test(void)
     }
     printf("[BOOT] selftest=%d video=%d active=%d\n", boot_selftest_progress(),
            sim_video_frames(), (int)sim_video_active());
+    take_shot("tmp/main_bg.bmp");            /* 视频结束后主界面：目检固定背景图 */
     i = (boot_selftest_progress() == 100 && sim_video_frames() > 0 && !sim_video_active());
     printf("[BOOT] %s\n", i ? "PASS" : "FAIL");
     return i ? 0 : 1;
@@ -307,6 +309,7 @@ int main(int argc, char **argv)
     sim_fs_init();
     hal_init(SIM_W, SIM_H);
     ui_init();
+    ui_bg_apply();                           /* 固定背景图：A:/assets/ui_bg.png */
     nav_bind_init();
     value_bind_init();
     ui_behavior_init();
