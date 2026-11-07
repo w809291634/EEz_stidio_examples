@@ -158,6 +158,60 @@ def scene_box(i):
     return (s["x"] + i * s["dx"], s["y"], s["w"], s["h"])
 
 
+def boot_init_frame():
+    """开机自检页（设计预览，不进 EEZ）：渐变背景 + 发光徽标 + 进度条 + 单行动态字条。"""
+    out = ['<defs>'
+           '<linearGradient id="boot-bg" x1="0" y1="0" x2="0" y2="1">'
+           '<stop offset="0" stop-color="#080D18"/><stop offset="1" stop-color="#0F1829"/>'
+           '</linearGradient>'
+           '<linearGradient id="boot-mark" x1="0" y1="0" x2="1" y2="1">'
+           '<stop offset="0" stop-color="#27466A"/><stop offset="1" stop-color="#16263E"/>'
+           '</linearGradient>'
+           '<linearGradient id="boot-bar" x1="0" y1="0" x2="1" y2="0">'
+           '<stop offset="0" stop-color="#4CC2FF"/><stop offset="1" stop-color="#8FE6FF"/>'
+           '</linearGradient>'
+           '<radialGradient id="boot-glow">'
+           '<stop offset="0" stop-color="#4CC2FF" stop-opacity="0.30"/>'
+           '<stop offset="1" stop-color="#4CC2FF" stop-opacity="0"/>'
+           '</radialGradient>'
+           '</defs>',
+           r(0, 0, 800, 480, "url(#boot-bg)"),
+           '<ellipse cx="400" cy="140" rx="180" ry="126" fill="url(#boot-glow)"/>',
+           r(40, 34, 30, 30, ACCENT, "none", 9),
+           t(55, 54, "H", 14, BG, "700", "middle"),
+           t(82, 37, "HAVEN HOME", 17, T1, "700"),
+           t(82, 60, "系统自检", 10, T3),
+           t(760, 40, "v1.0.0", 10, T3, "400", "end")]
+    # 中央应用标：圆角方块 + 房子 + 环形进度
+    out += ['<circle cx="400" cy="128" r="76" fill="none" stroke="#4CC2FF" '
+            'stroke-opacity="0.12" stroke-width="8"/>',
+            '<circle cx="400" cy="128" r="76" fill="none" stroke="#2A3B52" stroke-width="3"/>',
+            '<circle cx="400" cy="128" r="76" fill="none" stroke="#4CC2FF" stroke-width="3" '
+            'stroke-linecap="round" stroke-dasharray="200.6 477.5" '
+            'transform="rotate(-90 400 128)"/>',
+            '<rect x="344" y="72" width="112" height="112" rx="28" '
+            'fill="url(#boot-mark)" stroke="#3A688F" stroke-width="1"/>',
+            '<polygon points="400,118 370,148 430,148" fill="#F0F7FF"/>',
+            r(378, 148, 44, 32, "#F0F7FF", "none", 2),
+            r(392, 162, 16, 18, "#1E3452", "none", 1),
+            t(400, 222, "系统初始化", 16, T1, "700", "middle"),
+            t(400, 246, "正在检查硬件与网络", 10, T3, "400", "middle")]
+    # 进度条（42%）
+    out += [t(140, 286, "自检进度", 10, T3),
+            r(140, 300, 520, 8, "#1A2535", "none", 4),
+            r(140, 300, 218, 8, "url(#boot-bar)", "none", 4),
+            '<circle cx="358" cy="304" r="6" fill="#D6F2FF"/>',
+            t(660, 282, "42%", 11, T2, "700", "end")]
+    # 单行动态字条
+    out += ['<circle cx="304" cy="338" r="4" fill="#4CC2FF"/>',
+            t(316, 343, "正在检查 Wi-Fi 模块…", 13, T2)]
+    # 页脚
+    out += [line(40, 432, 760, 432),
+            t(40, 446, "请勿断电", 10, T3),
+            t(760, 446, "HAVEN HOME", 10, T3, "400", "end")]
+    return "".join(out)
+
+
 def main_frame():
     out = [header_home(),
            t(40, 148, "场景", 11, T3)]

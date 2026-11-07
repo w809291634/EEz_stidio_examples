@@ -199,7 +199,20 @@ def build():
             "tag": tag, "tagw": len(tag) * 11 + 16})
     for p in out:
         out[p]["dynz"] = zones.get(p, [])
-    lost = [(p, r["n"], r["name"]) for p in order for r in out[p]["rows"]
+    # 开机自检：H5 设计预览页（不进 EEZ、不参与导航；单行动态字条）
+    boot_rows = [
+        {"n": 1, "name": "进度条", "io": "out_read", "cat": "read",
+         "act": "自检进度 0–100%", "box": [140, 300, 520, 8], "target": "",
+         "markBox": None, "dyn": False},
+        {"n": 2, "name": "状态字条", "io": "out_read", "cat": "read",
+         "act": "随当前检测项切换（单行）", "box": [300, 332, 186, 18],
+         "target": "", "markBox": None, "dyn": True},
+    ]
+    out["开机自检"] = {"svg": sc.boot_init_frame(), "rows": boot_rows, "layer": 1,
+                       "status": False, "entry": "上电", "exit": "主控",
+                       "gesture": [], "dynz": []}
+    order = ["开机自检"] + order
+    lost = [(p, r["n"], r["name"]) for p in order if p in data for r in out[p]["rows"]
             if any(q["name"] == r["name"] and q["behav"] == "换页" for q in data[p]["rows"])
             and r["io"] != "nav"]
     assert not lost, "覆盖判类吃掉了换页控件的跳转：%s" % lost
